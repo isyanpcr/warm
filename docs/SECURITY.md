@@ -248,7 +248,7 @@ Lower values provide stronger poisoning resistance at the cost of reduced discri
 ```rust
 // In Cargo.toml
 [dependencies]
-warm-rust = { version = "0.6", features = ["security"] }
+warm-rust = { version = "0.7", features = ["security"] }
 ```
 
 ```rust

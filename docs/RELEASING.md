@@ -18,18 +18,18 @@ on `main`, or publication from the Python release workflows. MCP manual runs do 
 | `mcp-vX.Y.Z` | `.github/workflows/warm-mcp-release.yml` | five `warm-mcp` binaries, checksum tables embedded in npm and PyPI launchers, a GitHub release, then the launcher packages and official MCP Registry entry |
 
 Publish a new model pack before a native wheel that requires that new version through `[embed]`.
-The existing `warm-models==0.1.0` pin does not require another model release for engine 0.6.8.
+The existing `warm-models==0.1.0` pin does not require another model release for engine 0.7.0.
 The Python distributions have separate release tags and Trusted Publisher workflows. For a full
 engine release, push both `vX.Y.Z` and `py-vX.Y.Z` at the same commit; the native wheels build twice.
 
-The npm native binding `writerslogic-warm` follows the engine version, currently 0.6.8.
-The JavaScript and Python HTTP clients share SDK version 0.2.1 and the `sdk-v0.2.1` tag;
+The npm native binding `writerslogic-warm` follows the engine version, currently 0.7.0.
+The JavaScript and Python HTTP clients share SDK version 0.2.2 and the `sdk-v0.2.2` tag;
 their manifests are `bindings/js/warm-sdk/package.json` and
 `bindings/python/warm-sdk/pyproject.toml`. The engine version script does not bump the SDKs
-or MCP launchers. The MCP launchers use version 0.1.7 and the `mcp-v0.1.7` tag.
+or MCP launchers. The MCP launchers use version 0.1.8 and the `mcp-v0.1.8` tag.
 Framework adapters in `integrations/js`
 and `integrations/python`, and the two Claude memory-tool packages, have no publication workflow
-in this release pipeline. Their first publication is separate from the 0.6.8 maintenance release.
+in this release pipeline. Their first publication is separate from the 0.7.0 release.
 
 ## Portable HTTP SDK release
 
@@ -224,14 +224,14 @@ These cannot be committed; the publish jobs wait on them.
 
 ### JavaScript package availability
 
-The JavaScript packages are portable `warm-sdk` 0.2.1 and embedded `writerslogic-warm` 0.6.8.
+The JavaScript packages are portable `warm-sdk` 0.2.2 and embedded `writerslogic-warm` 0.7.0.
 Check available npm versions for [the client](https://www.npmjs.com/package/warm-sdk?activeTab=versions)
 and [the embedded engine](https://www.npmjs.com/package/writerslogic-warm?activeTab=versions)
 before choosing a registry release. The [installation guide](get-started/install.md) also covers
 source builds. The existing native `writerslogic-warm` family is retained; it is not deprecated
 or replaced by the client.
 
-For the SDK, verify `npm view warm-sdk@0.2.1 version`, install that exact version in a clean
+For the SDK, verify `npm view warm-sdk@0.2.2 version`, install that exact version in a clean
 consumer, verify signatures, and run an authenticated memory round trip against the supported
 server. Verify the Python client independently under the same SDK tag. Keep native platform
 build/install gates, provenance and registry consumer checks for the embedded package.
