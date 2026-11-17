@@ -50,7 +50,7 @@ For Python, create and activate a virtual environment first: `uv venv`, then
     vectors you supply:
 
     ```sh
-    uv pip install warm-sdk
+    uv venv && uv pip install warm-sdk   # run Python as .venv/bin/python
     ```
 
     Build and install the server (needs Rust 1.89 or newer), then start it:
