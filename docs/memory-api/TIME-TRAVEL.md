@@ -96,29 +96,12 @@ return a truncated list. To read a revision's content, open a view at its `writt
 
 ## Deletes and purges
 
-- **A delete is history, not erasure.** Without a purge, the journal keeps a deleted document's
-  frame until the next compaction ([README.md](README.md#forgetting)). A view at a position
-  before the delete returns that document, with its text and embeddings, exactly as the store
-  held it. This also applies to facts that `forget` removed without `purge`. A caller that must
-  not see forgotten content in history must purge.
-- **A purge removes the history.** A purge (the default for `forget`) is a scrubbing
-  compaction. It publishes a new generation that holds only the live state and overwrites the
-  old generation with zeros through the file API.
-  Purged text and embeddings are never returned at any position, including positions from
-  before the purge, for three reasons:
-  1. a position from before the purge names the old generation and fails with
-     `GenerationNotRetained`;
-  2. no position in the new generation can show the purged documents, because its frames never
-     held them, and positions inside the compaction's synthetic prefix are not retained;
-  3. a `HistoryView` built before the purge holds decoded state in memory. Every read takes the
-     compaction lock and checks that the view's generation is still live, so after any
-     compaction the view fails with `Compacted` and returns nothing more. A view is built
-     under the same lock, so a compaction cannot swap the generation while frames are being
-     read. Views kept under an opt-in reuse budget (see [Cost and limits](#cost-and-limits))
-     are dropped
-     before any compaction publishes its generation.
-- Bytes a caller already received before the purge are outside any API's control, as in
-  [README.md](README.md#forgetting).
+- **A delete is history, not erasure.** Without a purge the journal keeps a deleted document's frame until the next compaction ([ERASURE.md](ERASURE.md#what-remains-with-purge-false)). A view at a position before the delete returns that document, with its text and embeddings, exactly as the store held it; this also applies to facts that `forget` removed without `purge`. A caller that must not see forgotten content in history must purge.
+- **A purge removes the history.** A purge (the default for `forget`) is a scrubbing compaction ([ERASURE.md](ERASURE.md)) that publishes a new generation holding only the live state. Purged text and embeddings are never returned at any position, including positions from before the purge:
+  1. a position from before the purge names the old generation and fails with `GenerationNotRetained`;
+  2. no position in the new generation can show the purged documents, because its frames never held them, and positions inside the compaction's synthetic prefix are not retained;
+  3. a `HistoryView` built before the purge holds decoded state in memory, but every read takes the compaction lock and checks that the view's generation is still live, so after any compaction the view fails with `Compacted` and returns nothing more. A view is built under the same lock, so a compaction cannot swap the generation mid-read. Views kept under an opt-in reuse budget (see [Cost and limits](#cost-and-limits)) are dropped before any compaction publishes its generation.
+- Bytes a caller already received before the purge are outside any API's control ([ERASURE.md](ERASURE.md#what-each-step-erases)).
 
 ## What a view contains
 

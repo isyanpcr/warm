@@ -1,10 +1,6 @@
 # Experience core
 
-The experience core is memory for observations that are trees and that repeat: the accessibility
-tree of a web page an agent looks at after every action, a UI hierarchy, a directory listing. It is
-part of the engine and always built: the memory API's `remember` sends an observation to it by
-shape, and `recall`, `explain` and `forget` cover it (see below). A store that never receives an
-observation has no experience files, and search over documents and facts is not changed by it.
+Memory for observations that are trees and that repeat: the accessibility tree of a web page an agent looks at after every action, a UI hierarchy, a directory listing. It is always built; the memory API's `remember` sends an observation to it by shape, and `recall`, `explain` and `forget` cover it ([On the memory path](#on-the-memory-path)). A store that never receives an observation has no experience files, and document and fact search is unchanged.
 
 ## What it stores
 
@@ -24,34 +20,16 @@ and frees every node, region and symbol that no other episode holds.
 
 ## When it helps
 
-Observations are trees, consecutive and parallel episodes repeat large parts of them (navigation
-menus, headers, the same page visited again), and questions are about what a page shows or what an
-action changes. Then a region is scored once however often it recurs, and "what happens after
-clicking Save on this page" is a table lookup.
+It helps when observations are trees, consecutive and parallel episodes repeat large parts of them (menus, headers, a page visited again), and questions are about what a page shows or what an action changes: a region is scored once however often it recurs, and "what happens after clicking Save on this page" is a table lookup. It does not help prose, which has no subtree to share and no action to compare; use the document store.
 
-It does not help prose. A paragraph has no subtree to share and no action to compare, so use the
-document store.
+## Evidence
 
-## Prototype measurements
+| Source | Setting | Result |
+|---|---|---|
+| Python research prototype (not this implementation) | recorded agent trajectories over accessibility trees, two environments, 228 development questions, gold-phrase coverage | Regions: +0.133 coverage over chunked BM25 at an 8k-token budget (0.562 vs 0.429), +0.116 at 16k (0.589 vs 0.473). Unit store about 5% of raw tree text. The effect table raised coverage on questions about changes by 0.067 to 0.133. |
+| [`experience_ingest_synthetic.json`](https://github.com/writerslogic/warm/blob/main/benchmarks/results/experience_ingest_synthetic.json) | `cargo run --release --features experience --example experience_ingest_bench`; 12 page types sharing a 30-link menu, 164 nodes per step, 30 steps per episode; 8-vCPU x86 cloud VM; tested 10, 100, 1000 episodes | table below |
 
-These are measurements of the Python research prototype on recorded agent trajectories over
-accessibility trees (two environments, 228 development questions, gold-phrase coverage of the
-retrieved text), not of this implementation:
-
-- Regions retrieved +0.133 more gold-phrase coverage than chunked BM25 at an 8k-token budget
-  (0.562 against 0.429) and +0.116 at 16k tokens (0.589 against 0.473).
-- The unit store was about 5% of the raw tree text.
-- Adding the effect table raised coverage on questions about changes by 0.067 to 0.133.
-
-An end-to-end reader test with a compact pack did not beat the baseline reader on answerable
-questions, so these are retrieval-coverage results and not an accuracy claim.
-
-## Measured here
-
-[`benchmarks/results/experience_ingest_synthetic.json`](https://github.com/writerslogic/warm/blob/main/benchmarks/results/experience_ingest_synthetic.json)
-holds `cargo run --release --features experience --example experience_ingest_bench` on synthetic
-trees (12 page types sharing a 30-link menu, 164 nodes per step, 30 steps per episode) on an 8-vCPU
-x86 cloud VM. Tested range: 10, 100 and 1000 episodes.
+An end-to-end reader test with a compact pack did not beat the baseline reader on answerable questions, so the prototype numbers are retrieval coverage, not accuracy.
 
 | Episodes | Steps | Ingest, steps per second | Snapshot bytes per step | Raw tree text bytes per step | Snapshot / raw |
 |---:|---:|---:|---:|---:|---:|
@@ -59,8 +37,7 @@ x86 cloud VM. Tested range: 10, 100 and 1000 episodes.
 | 100 | 3000 | 3056 | 457 | 4983 | 0.092 |
 | 1000 | 30000 | 3723 | 108 | 4983 | 0.022 |
 
-The ratio falls as pages repeat; it is a property of this synthetic repetition and not a
-prediction for other data. Nothing was run past 1000 episodes.
+The ratio falls as pages repeat; it is a property of this synthetic repetition, not a prediction for other data. Nothing was run past 1000 episodes.
 
 ## Rust API
 
@@ -81,12 +58,25 @@ x.purge_episode("run-1");
 x.save(dir)?;                                        // Experience::open(dir, cfg) reads it back
 ```
 
-Ingesting a step again with identical content changes nothing (`Ingested::Duplicate`); a different
-tree at the same step is `ExperienceError::Conflict`; a step before the last one is
-`ExperienceError::OutOfOrder`. `ExperienceConfig` bounds depth (default 128, at most 512), nodes
-per tree (200000), bytes per string (16384), episode id bytes (256), goal bytes (65536), steps
-per episode (1048576) and accessibility-tree text bytes (4 MiB); a tree over a limit is rejected
-before anything is stored. Its `form_state` switch is described under [Form state](#form-state).
+| Case | Result |
+|---|---|
+| Same step, identical content | nothing changes (`Ingested::Duplicate`) |
+| Same step, different tree (or different controls) | `ExperienceError::Conflict` |
+| Step before the last one | `ExperienceError::OutOfOrder` |
+
+`ExperienceConfig` limits (a tree over a limit is rejected before anything is stored):
+
+| Limit | Value |
+|---|---|
+| depth | 128 default, at most 512 |
+| nodes per tree | 200000 |
+| bytes per string | 16384 |
+| episode id bytes | 256 |
+| goal bytes | 65536 |
+| steps per episode | 1048576 |
+| accessibility-tree text bytes | 4 MiB |
+
+Its `form_state` switch is described under [Form state](#form-state).
 
 `Action::Call` takes a call such as `click('12')` and resolves the handle against the previous
 observation of the same episode. The handle map of each episode's latest observation is stored in
@@ -101,48 +91,27 @@ has no map, and its first call after opening labels an unresolved handle `bid 12
 
 No flag and no separate API are needed.
 
-- `remember`: a request (or an entry of `facts`) that is an object with an `episode` string, a
-  `step` number and a `tree` object is an observation: `{"episode", "step", "tree", "url"?,
-  "action"?, "goal"?, "outcome"?, "accessibilityTree"?}`. `tree` nodes are `{"role", "name", "props"?, "handle"?,
-  "children"?}`. Everything else is a fact and is handled exactly as before. Facts in one call are
-  stored in one transaction first; observations follow in order, each durable when the call
-  returns, and a failing observation leaves the ones before it stored. `Memory::remember_observations`
-  is the typed form. Depth, node count and string bytes are checked on the JSON value before a
-  tree is built from it (`ExperienceConfig`), and `warm-server` checks them before the core sees
-  the request. Over HTTP the JSON parser refuses nesting past 128 levels, and a tree level takes
-  two (an object and a `children` array), so a request can carry 63 tree levels; the depth limit
-  of 128 applies to the library and the bindings. A request nested deeper than the parser allows is
-  refused with 400 `nesting_too_deep`. `warm-server`'s `--max-documents-per-tenant` counts one unit
-  per stored document plus one per episode, step, region and effect row, and one per started
-  4 KiB of a step's form-control text; a step that would pass it gets 429 `quota_exceeded` and
-  leaves nothing stored (steps before it in the same call stay). Apart from the control text the
-  quota counts entries, not bytes. The shape and limits of every entry in a batch are
-  checked before anything in it is stored; an out-of-order or conflicting step is still found only
-  when it is applied.
-- `recall`: the best regions and the best action-effect rows merge with the fact results into one
-  list. Regions, effect rows and facts are ranked by three lexical indexes (the effect index holds
-  each row as rendered text, `On page 'P': click X (x3) -> now shown: ...`); they have separate
-  corpus statistics, so their scores are not on one scale and are not compared. The merge uses
-  ranks only: a result at position `r` of its list contributes `1 / (60 + r)`, results are ordered
-  by that value (a fact before a region on a tie, a better rank before a worse one) and `score` is
-  the merged value. A recall without regions, or one that sets `subject`, `entities`, `filter`,
-  `knownAt` or historical mode (which regions do not have), returns the fact results unchanged,
-  with their own scores. Region results have the id `experience:r<N>`, the page text and
-  breadcrumb as `text`, and `metadata.provenance` listing up to eight `{episode, step, count}`.
-  Effect rows have the id `experience:x<template>:<action>` and the rendered row as `text`; their
-  provenance lists the first transitions that produced the row (found by scanning the stored
-  steps, so `explain` on an effect row is linear in the stored steps).
-  Region ids are stable while the store stays open and across a snapshot reload; a purge followed
-  by new observations can reuse a freed id.
-- `explain`: for an id `experience:r<N>` or `experience:x<template>:<action>`, rank among the best 100 regions, lexical score, matched
-  terms and `provenance`.
-- `forget` with `{"kind": "episode", "episode": "<id>"}` removes the episode and everything only it
-  held. It is always a scrubbing purge: the purge is journaled, the snapshot is rewritten without
-  the episode, and the old snapshot and journal are overwritten with zeros before the call
-  returns (`dryRun` lists what would go; `purge` and `synchronous` do not apply). A region that
-  other episodes also show is kept, but what the episode contributed to it (its value variants and
-  the page title, breadcrumb and text taken from its first occurrence) is re-derived from the
-  episodes that remain, so no text of the forgotten episode stays in the snapshot.
+**`remember`.** A request (or an entry of `facts`) that is an object with an `episode` string, a `step` number and a `tree` object is an observation: `{"episode", "step", "tree", "url"?, "action"?, "goal"?, "outcome"?, "accessibilityTree"?}`, with `tree` nodes `{"role", "name", "props"?, "handle"?, "children"?}`. Everything else is a fact, handled as before. `Memory::remember_observations` is the typed form.
+
+- Facts in one call are stored in one transaction first; observations follow in order, each durable when the call returns, and a failing observation leaves the ones before it stored.
+- Depth, node count and string bytes are checked on the JSON value before a tree is built (`ExperienceConfig`); `warm-server` checks them before the core sees the request. The shape and limits of every entry in a batch are checked before anything is stored; an out-of-order or conflicting step is found only when it is applied.
+- Over HTTP the JSON parser refuses nesting past 128 levels and a tree level takes two (an object and a `children` array), so a request carries 63 tree levels; the depth limit of 128 applies to the library and bindings. Deeper requests are refused with 400 `nesting_too_deep`.
+- `--max-documents-per-tenant` counts one unit per stored document plus one per episode, step, region and effect row, and one per started 4 KiB of a step's form-control text; a step that would pass it gets 429 `quota_exceeded` and leaves nothing stored (earlier steps in the same call stay). Apart from the control text the quota counts entries, not bytes.
+
+**`recall`.** The best regions and best action-effect rows merge with the fact results into one list.
+
+- Regions, effect rows and facts come from three lexical indexes (the effect index holds each row as rendered text, `On page 'P': click X (x3) -> now shown: ...`) with separate corpus statistics, so their scores are not on one scale and are not compared.
+- The merge uses ranks only: a result at position `r` of its list contributes `1 / (60 + r)`; results are ordered by that value (a fact before a region on a tie, a better rank before a worse one) and `score` is the merged value.
+- A recall without regions, or one that sets `subject`, `entities`, `filter`, `knownAt` or historical mode (which regions do not have), returns the fact results unchanged with their own scores.
+
+| Result | Id | `text` | Provenance |
+|---|---|---|---|
+| Region | `experience:r<N>` (stable while the store stays open and across a snapshot reload; a purge followed by new observations can reuse a freed id) | page text and breadcrumb | `metadata.provenance` lists up to eight `{episode, step, count}` |
+| Effect row | `experience:x<template>:<action>` | the rendered row | the first transitions that produced the row, found by scanning stored steps, so `explain` on an effect row is linear in the stored steps |
+
+**`explain`.** For an id `experience:r<N>` or `experience:x<template>:<action>`: rank among the best 100 regions, lexical score, matched terms and `provenance`.
+
+**`forget`** with `{"kind": "episode", "episode": "<id>"}` removes the episode and everything only it held. It is always a scrubbing purge: the purge is journaled, the snapshot is rewritten without the episode, and the old snapshot and journal are overwritten with zeros before the call returns (`dryRun` lists what would go; `purge` and `synchronous` do not apply). A region that other episodes also show is kept, but what the episode contributed to it (its value variants and the page title, breadcrumb and text taken from its first occurrence) is re-derived from the remaining episodes, so no text of the forgotten episode stays in the snapshot.
 
 ## Form state
 
@@ -190,7 +159,7 @@ controls a caller built itself under the same caps and the 1 MiB budget, and the
 and the snapshot loader check them again. The controls are part of a step's content: the same
 step sent again with other controls is a conflict, also after a reopen.
 
-`ExperienceConfig::form_state` is on by default. It changes nothing for a store whose
+`ExperienceConfig::form_state` (Python `Warm(..., experience_form_state=False)`) is on by default. It changes nothing for a store whose
 observations carry no `accessibilityTree`: such a store writes the same journal records and the
 same version 2 snapshot as before. Off, the text is not parsed and is dropped, but it is still
 refused over `max_page_bytes`. The parsed controls are journaled with the step (an `IngestForm`
@@ -200,19 +169,9 @@ different controls, so the retry is a `Conflict`, not a duplicate.
 
 ## Persistence
 
-Experience state lives in the store directory (`experience.wexp`, `experience.wexj`), created on
-the first observation. Each accepted change (a step, an episode description, a purge) is one
-journal record, synced before its call returns; a checkpoint writes the snapshot and empties the
-journal. Checkpoints run with every document checkpoint (`compact`, background compaction),
-with `flush`, when the journal passes 64 MiB, and after a purge. In an encrypted store both files
-are sealed with the store's key. Opening a store replays the journal over the snapshot, drops a
-record the crash cut short, and finishes an interrupted purge. See
-[the format](../file-format/EXPERIENCE.md). The standalone `Experience::save` and `open` still
-write and read a snapshot with no journal.
+State lives in the store directory (`experience.wexp`, `experience.wexj`), created on the first observation. Each accepted change (a step, an episode description, a purge) is one journal record, synced before its call returns. Checkpoints write the snapshot and empty the journal: with every document checkpoint (`compact`, background compaction), with `flush`, when the journal passes 64 MiB, and after a purge. Encrypted stores seal both files with the store's key. The layout, replay and crash behavior are in [the format](../file-format/EXPERIENCE.md); the standalone `Experience::save` and `open` write and read a snapshot with no journal.
 
-Not measured or not done: the whole snapshot is rewritten at each checkpoint, so its cost grows
-with the store; only a kill of the process is tested, not power loss; scrubbing overwrites files in
-place and cannot reach copies that a copy-on-write or wear-levelled disk keeps.
+Not measured or not done: the whole snapshot is rewritten at each checkpoint, so its cost grows with the store; only a kill of the process is tested, not power loss; scrubbing overwrites files in place and cannot reach copies that a copy-on-write or wear-levelled disk keeps.
 
 ## Not built
 

@@ -5,11 +5,11 @@ search:
 
 # warm-server
 
-`warm-server` is the HTTP service for WARM. It implements the endpoints used by the portable `warm-sdk` clients for JavaScript/TypeScript (`bindings/js/warm-sdk`) and Python (`bindings/python/warm-sdk`), wrapping one `WarmCore` store per tenant, and adds what a service needs: scoped per-tenant authentication, limits and backpressure, observability, TLS and unix sockets, snapshots, compaction and graceful shutdown. The clients are separate from the optional embedded Node package, `writerslogic-warm`.
+`warm-server` is the HTTP service for WARM: the endpoints behind the portable `warm-sdk` clients for JavaScript/TypeScript (`bindings/js/warm-sdk`) and Python (`bindings/python/warm-sdk`), one `WarmCore` store per tenant, plus scoped per-tenant authentication, limits and backpressure, observability, TLS and unix sockets, snapshots, compaction and graceful shutdown. The clients are separate from the optional embedded Node package, `writerslogic-warm`.
 
 | Document | Contents |
 |---|---|
-| this page | Run it, the API at a glance, behavior and limits |
+| this page | Run it, the API at a glance, request behavior, storage |
 | [`server/openapi.json`](server/openapi.json) | The OpenAPI 3.1 contract, generated from the server (also served at `/openapi.json`) |
 | [`server/configuration.md`](server/configuration.md) | Every flag and `WARM_*` variable, defaults, meaning |
 | [`server/auth.md`](server/auth.md) | Keys, scopes, tenant binding, rotation |
@@ -43,11 +43,11 @@ from writerslogic_warm_sdk import WarmClient
 client = WarmClient(url="http://127.0.0.1:8080", api_key="<token>", tenant_id="acme")
 ```
 
-The release binaries are built with `--features server,mimalloc`: the server installs `writerslogic_warm::allocator::Tuned`, mimalloc with arenas committed on demand and an immediate purge. A build without the feature (`cargo build --features server`) uses the system allocator; results are identical, ingest is slower by about the allocator's share (roughly 15% at 250k documents) and the peak resident size is the same. `MIMALLOC_ARENA_EAGER_COMMIT` and `MIMALLOC_PURGE_DELAY` override the options.
+Release binaries are built with `--features server,mimalloc` and install `writerslogic_warm::allocator::Tuned` (mimalloc, arenas committed on demand, immediate purge); `MIMALLOC_ARENA_EAGER_COMMIT` and `MIMALLOC_PURGE_DELAY` override the options. A build without `mimalloc` uses the system allocator: identical results, ingest slower by about the allocator's share (roughly 15% at 250k documents), same peak resident size.
 
 ## API keys
 
-Every request carries an API key. `WARM_API_KEY` sets one key valid for every tenant; `--keys-file` loads per-tenant API keys with read, write or admin scopes, created with `warm-server keygen`. Key format, scopes and rotation are in [server/auth.md](server/auth.md).
+Every request carries an API key. `WARM_API_KEY` sets one key valid for every tenant; `--keys-file` loads per-tenant keys with read, write or admin scopes, created with `warm-server keygen`. Format, scopes and rotation: [server/auth.md](server/auth.md).
 
 ## API at a glance
 
@@ -75,30 +75,23 @@ The contract is [`server/openapi.json`](server/openapi.json). Every operation li
 
 ### Documents and queries
 
-A document is `{"id": str, "vector": [float], "text"?: str, "metadata"?: object}`. `vector` has exactly `--input-dim` finite f64 values, not all zero; query vectors follow the same rule. Normalization handles very large and very small finite magnitudes without narrowing to f32. `id` is 1 to 256 bytes with no control characters and not starting with `hms:`. `text` must fit one engine chunk (at most 4096 words and 64 KiB), because one vector describes one stored chunk; split longer documents and send one vector per part. `metadata` is at most 64 KiB. Adding an existing id replaces it.
+A document is `{"id": str, "vector": [float], "text"?: str, "metadata"?: object}`.
 
-`GET /api/v1/documents/{id}/chunks/{index}` reads one retained chunk with document
-identity, metadata, version, source URI and `chunkCount`. It requires read scope and
-the selected tenant. `text: null` means text was not retained; a missing document
-or out-of-range index returns 404. HTTP-ingested documents have one chunk; native
-stores restored into the server may have more. A chunk contains at most 8 MiB of UTF-8
-text (the native whole-document limit), plus bounded document metadata. JSON
-escaping and serialization copies can make the response and peak allocation larger.
+| Field | Rule |
+|---|---|
+| `vector` | Exactly `--input-dim` finite f64 values, not all zero; query vectors follow the same rule. Normalization handles very large and very small finite magnitudes without narrowing to f32. |
+| `id` | 1 to 256 bytes, no control characters, not starting with `hms:`. Adding an existing id replaces it. |
+| `text` | Must fit one engine chunk (at most 4096 words and 64 KiB), because one vector describes one stored chunk; split longer documents and send one vector per part. |
+| `metadata` | At most 64 KiB. |
+| Batch totals | 8 MiB of ids and text, 8 MiB of metadata, 1,048,576 embedding values; the native prepared transaction is limited to 32 MiB. All documents are validated before one atomic commit; repeated ids keep their last occurrence while `added` stays the incoming count. |
 
-Chunks preserve their stored passages, including internal whitespace. They do not
-recover omitted leading/trailing whitespace, gaps between nonoverlapping chunks,
-unretained text, or original pre-normalization embedding values. Recorded byte
-spans describe the ingested chunk; vector-only HTTP records use an unretained
-placeholder, so their spans are not evidence of original source text. Overlapping
-chunks must not be concatenated blindly.
+`GET /api/v1/documents/{id}/chunks/{index}` reads one retained chunk with document identity, metadata, version, source URI and `chunkCount`. It requires read scope and the selected tenant.
 
-`revision` is an opaque string captured with the chunk. When assembling multiple
-reads, require the same revision throughout and retry if it changes. It is not the
-user-supplied document version and is not a durable cross-restart sequence number.
-Concurrent replacement/deletion or text-segment rebuilding triggers bounded internal
-retries; repeated changes return 503 `concurrent_mutation` with `Retry-After`.
-Storage failures remain errors, not missing text. Chunk reads support ETag and
-If-None-Match for the complete returned representation.
+- `text: null` means text was not retained; a missing document or out-of-range index returns 404. HTTP-ingested documents have one chunk; native stores restored into the server may have more.
+- A chunk holds at most 8 MiB of UTF-8 text (the native whole-document limit), plus bounded document metadata. JSON escaping and serialization copies can make the response and peak allocation larger.
+- Chunks preserve their stored passages, including internal whitespace. They do not recover omitted leading/trailing whitespace, gaps between nonoverlapping chunks, unretained text, or original pre-normalization embedding values. Recorded byte spans describe the ingested chunk; vector-only HTTP records use an unretained placeholder, so their spans are not evidence of original source text. Overlapping chunks must not be concatenated blindly.
+- `revision` is an opaque string captured with the chunk, not the user-supplied document version and not a durable cross-restart sequence number. When assembling multiple reads, require the same revision throughout and retry if it changes. Concurrent replacement/deletion or text-segment rebuilding triggers bounded internal retries; repeated changes return 503 `concurrent_mutation` with `Retry-After`. Storage failures remain errors, not missing text.
+- Chunk reads support ETag and If-None-Match for the complete returned representation.
 
 `POST /api/v1/query` takes `{"query_vector": [...], "top_k"?: 1..=max-top-k (default 3), "filter"?: object}`. `filter` keeps documents whose metadata contains every filter key with an equal JSON value; it is applied before ranking, so it never reduces the number of matches below `top_k` when enough documents match. `score` is the exact cosine similarity between the query and the stored embedding.
 
@@ -106,11 +99,19 @@ If-None-Match for the complete returned representation.
 
 `POST /api/v1/search` takes `{"query": "...", "top_k"?: 1..=max-top-k (default 10), "include"?: ["text", "metadata"]}` and ranks the tenant's documents, memory facts included, by BM25 (through the on-device model stages instead when the server has them), one hit per document. Hits carry only `id` and `score` unless `include` names stored text or metadata; it applies no memory semantics (validity time, supersession), for which use `memory/recall`.
 
-Batch totals are limited to 8 MiB of ids and text, 8 MiB of metadata and 1,048,576 embedding values; the native prepared transaction is limited to 32 MiB. All documents are validated before one atomic commit; repeated ids keep their last occurrence while `added` stays the incoming count.
+`index` routes an unfiltered query:
 
-`index` routes an unfiltered query: `auto` (the default; `--query-index` sets it) uses the graph index when one is built and the exact scan otherwise, `exact` always scans, `graph` answers 409 `index_unavailable` until maintenance has built one. `ef` is the beam width of a graph query (`--query-ef`, default 128). The graph index is persisted with the tenant store: every document ingested with a vector is appended to the tenant's vector log before the engine commits it, index maintenance builds the graph over those rows and writes it next to the store, and a restart opens the written graph instead of rebuilding it. Maintenance after a restart is a no-op until something changed; scheduled compaction rebuilds after 64 mutations. A graph file that does not read back is ignored and its rows still answer, exactly, until the next maintenance; after a stop that was not clean the index checks each of its documents against the engine before serving. The graph covers documents ingested through the documents API; while a tenant also holds embeddings written through the memory API, its unfiltered queries go to the engine's own snapshot instead.
+| `index` | Behavior |
+|---|---|
+| `auto` (default; `--query-index`) | Graph index when one is built, else the exact scan. |
+| `exact` | Always scans. |
+| `graph` | 409 `index_unavailable` until maintenance has built one. |
 
-Index maintenance also builds the tenant's optional document index over stored embeddings and reports whether one is trained; a store too small to train returns `false`. Ingest does not trigger training. If the store changes during training, maintenance returns a fixed internal error and can be retried.
+`ef` is the beam width of a graph query (`--query-ef`, default 128).
+
+The graph index is persisted with the tenant store ([Storage](#storage)): every document ingested with a vector is appended to the tenant's vector log before the engine commits it; maintenance builds the graph over those rows and writes it next to the store; a restart opens the written graph instead of rebuilding it. Maintenance after a restart is a no-op until something changed; scheduled compaction rebuilds after 64 mutations. A graph file that does not read back is ignored and its rows still answer, exactly, until the next maintenance; after a stop that was not clean the index checks each of its documents against the engine before serving. The graph covers documents ingested through the documents API; while a tenant also holds embeddings written through the memory API, its unfiltered queries go to the engine's own snapshot instead.
+
+Maintenance also builds the tenant's optional document index over stored embeddings and reports whether one is trained; a store too small to train returns `false`. Ingest does not trigger training. If the store changes during training, maintenance returns a fixed internal error and can be retried.
 
 ### Bulk ingest
 
@@ -118,26 +119,54 @@ Index maintenance also builds the tenant's optional document index over stored e
 
 ### Retries and conditional requests
 
-- `Idempotency-Key` on `POST /api/v1/documents`, `/documents/batch` and the memory operations replays the recorded status and response bytes for the same key, tenant, method, path and body (`Idempotent-Replayed: true`), including after restart. A different request with the same key gets 422 `idempotency_key_reused`; a running key gets 409 `idempotency_in_flight`. The server durably reserves the key before executing work and persists the response, or a bounded reconciliation marker, before acknowledging it. An interrupted request whose outcome was not recorded gets 409 `idempotency_reconciliation_required`; it is never automatically reexecuted. Known transient failures (5xx, 429, 408) release the key unless the mutation committed, its outcome is uncertain, or erasure invalidated the request. Repeated key headers are rejected before execution. The receipt and business mutation are separate commits: this prevents blind retries across the crash gap but does not make arbitrary operations exactly once.
-- `GET /api/v1/stats`, `GET /api/v1/documents`, and retained-chunk reads return a weak `ETag` derived from the serialized response and process epoch, and answer matching `If-None-Match` conditions with 304. Validators use weak comparison across repeated header lines and quoted lists; a lone `*` matches an existing representation. Malformed conditions are ignored rather than used to produce 304. See [RFC 9110 §13.1.2](https://www.rfc-editor.org/rfc/rfc9110.html#section-13.1.2). Validators are response-specific, not tenant revision tokens: unchanged pages may retain their tag after unrelated writes. Conditional reads render and hash the response before deciding whether to omit its body; this prevents reused validators during concurrent writes but adds work to 304 responses. Chunk validators include the captured revision; they are not whole-document snapshot handles.
+**Idempotency.** `Idempotency-Key` on `POST /api/v1/documents`, `/documents/batch` and the memory operations replays the recorded status and response bytes for the same key, tenant, method, path and body (`Idempotent-Replayed: true`), including after restart. Repeated key headers are rejected before execution.
+
+| Situation | Result |
+|---|---|
+| Same key, different request | 422 `idempotency_key_reused` |
+| Key still running | 409 `idempotency_in_flight` |
+| Interrupted request whose outcome was not recorded | 409 `idempotency_reconciliation_required`; never automatically reexecuted |
+| Known transient failure (5xx, 429, 408) | Key released, unless the mutation committed, its outcome is uncertain, or erasure invalidated the request |
+| Capacity reached (`--idempotency-capacity`) | New keys get 503 before execution; existing keys can still replay |
+| Response does not fit `--idempotency-max-bytes` | Still returned to the original caller; later use of its key requires reconciliation |
+
+The server durably reserves the key before executing work and persists the response, or a bounded reconciliation marker, before acknowledging it. The receipt and business mutation are separate commits: this prevents blind retries across the crash gap but does not make arbitrary operations exactly once. Reconcile an ambiguous outcome or receipt expiry by comparing application-owned ids, versions and resulting state.
+
+**Receipt storage.**
+
+- Receipts live in `DATA_DIR/http-retries`, outside tenant snapshots, under one exclusive process lease. Checksummed private files hold tenant/key digests, request fingerprints, status and response bytes; request bodies and credentials are not copied. Responses can contain source text, so like the server's other unencrypted files, receipts need an encrypted volume when encryption at rest is needed. Copying or deleting this directory independently of the server's data can discard retry protection.
+- Admission preserves running and unexpired completed keys. Size `--idempotency-capacity` for the distinct keys admitted during the TTL plus in-flight work: the defaults (10,000 keys, 600 s) are exceeded by a sustained stream of new keys above roughly 16 per second. `--idempotency-max-bytes` (64 MiB by default) independently bounds retained serialized response buffers; it does not cover response construction, active HTTP sends, key/record overhead or total process RSS (the key-count limit bounds record overhead separately). Response clones share one serialized buffer.
+- Expiry uses a monotonic clock. Restart begins a fresh retention window at least as long as the configured TTL and the longest recorded TTL, so a clock change or shorter startup setting cannot release protected keys early. Running keys never expire in-process; interrupted reservations become reconciliation markers on restart. Startup fails if receipt integrity, ownership or configured storage bounds cannot be satisfied.
+- Before forget, forgetting maintenance, consolidation, document deletion or tenant restore, a durable tenant barrier blocks new keyed calls and scrubs previously retained response bodies; protected key fingerprints remain as reconciliation markers. In-flight completions cannot restore those bodies; the current keyed erasure operation can retain its own result. The barrier spans the operation and survives interruption; startup finishes interrupted receipt scrubbing before admitting requests, and cleanup failure leaves protection unavailable. Restore invalidates receipts once replacement begins, even if it rolls back. Other tenants are unaffected; independent backups are not altered.
+
+**Conditional requests.** `GET /api/v1/stats`, `GET /api/v1/documents` and retained-chunk reads return a weak `ETag` derived from the serialized response and process epoch, and answer matching `If-None-Match` with 304 (weak comparison across repeated header lines and quoted lists; a lone `*` matches an existing representation; malformed conditions are ignored; see [RFC 9110 §13.1.2](https://www.rfc-editor.org/rfc/rfc9110.html#section-13.1.2)). Validators are response-specific, not tenant revision tokens: unchanged pages may keep their tag after unrelated writes. Conditional reads render and hash the response before deciding whether to omit the body, which prevents reused validators during concurrent writes but adds work to 304 responses. Chunk validators include the captured revision; they are not whole-document snapshot handles.
 
 ## Tenants
 
-`X-Tenant-ID` selects the store. Repeated fields, even identical ones, return 400 `invalid_tenant` before store access. Ids are 1 to 64 characters of `[A-Za-z0-9_-]`, anything else is 400; they are case-sensitive. A key bound to one tenant needs no header (see [`server/auth.md`](server/auth.md)); otherwise the default is `default`. Each tenant maps to `<data-dir>/tenants/<hex of id>/`, so ids never reach the filesystem as paths.
+`X-Tenant-ID` selects the store; a key bound to one tenant needs no header ([`server/auth.md`](server/auth.md)), otherwise the default is `default`.
 
-Stores open on first use. Simultaneous first requests share one initialization; pending initializations count toward `--max-tenants`; filesystem work runs outside the registry lock; a failed initialization releases its reservation. A store idle for `--tenant-idle-seconds` is flushed and closed, so `--max-tenants` bounds open stores, not tenants ever served.
+| Rule | Behavior |
+|---|---|
+| Id format | 1 to 64 characters of `[A-Za-z0-9_-]`, case-sensitive; anything else is 400 |
+| Repeated header (even identical) | 400 `invalid_tenant` before store access |
+| Filesystem | `<data-dir>/tenants/<hex of id>/`, so ids never reach the filesystem as paths |
+| Opening | On first use. Simultaneous first requests share one initialization; pending initializations count toward `--max-tenants`; filesystem work runs outside the registry lock; a failed initialization releases its reservation. |
+| Idle | Flushed and closed after `--tenant-idle-seconds`, so `--max-tenants` bounds open stores, not tenants ever served. |
 
 ## Limits and backpressure
 
-- `--max-concurrent-work` bounds admitted requests reading bodies or running engine work. When full, a request is answered 503 `server_busy` with `Retry-After` immediately, or, with `--max-queue` above zero, waits in a bounded queue for up to `--queue-timeout-ms` first. The defaults are one slot per available core (at least 4), a queue of 4096 and a 10 s wait, so a closed-loop client count up to the queue size is queued, not shed; `--max-queue 0` restores immediate shedding. `warm_queue_depth` and `warm_work_slots_in_use` expose the saturation.
-- `--rate-limit-rps`/`--rate-limit-burst` is a per-tenant token bucket (429 `rate_limited`, `Retry-After`). `--max-documents-per-tenant` is a per-tenant document quota (429 `quota_exceeded`). Both are off by default.
-- `--max-connections` caps simultaneous connections; `--header-read-timeout-seconds` drops clients that dribble headers; `--body-timeout-seconds` bounds body reads. A disconnected client releases body admission immediately, but a running blocking operation keeps its work slot until it finishes.
-- Parsing, validation, store initialization, ingest, search and maintenance run on blocking workers; the async runtime only moves bytes.
+Flags and defaults: [server/configuration.md](server/configuration.md#request-limits-and-backpressure).
 
-Document ingestion and memory `remember` serialize quota checks through commit, so concurrent
-requests share the same limit. Supply explicit memory ids for retries at a full quota:
-requests without ids are conservatively counted as new facts. Summaries created by an opt-in
-consolidation policy currently bypass quota admission.
+| Mechanism | Behavior |
+|---|---|
+| `--max-concurrent-work` (default one slot per available core, at least 4) | Admitted requests reading bodies or running engine work. When full: 503 `server_busy` with `Retry-After` immediately, or, with `--max-queue` above zero (default 4096), a bounded wait of up to `--queue-timeout-ms` (10 s). A closed-loop client count up to the queue size is queued, not shed; `--max-queue 0` restores immediate shedding. `warm_queue_depth` and `warm_work_slots_in_use` expose saturation. |
+| `--rate-limit-rps` / `--rate-limit-burst` | Per-tenant token bucket: 429 `rate_limited`, `Retry-After`. Off by default. At most 10,000 tenant buckets; when full, a new tenant gets 429 until idle buckets are reclaimed; existing buckets keep working. |
+| `--max-documents-per-tenant` | Per-tenant document quota: 429 `quota_exceeded`. Off by default. |
+| `--max-connections`, `--header-read-timeout-seconds`, `--body-timeout-seconds` | Cap connections; drop clients that dribble headers; bound body reads. A disconnected client releases body admission immediately, but a running blocking operation keeps its work slot until it finishes. |
+
+Parsing, validation, store initialization, ingest, search and maintenance run on blocking workers; the async runtime only moves bytes.
+
+Document ingestion and memory `remember` serialize quota checks through commit, so concurrent requests share the same limit. Supply explicit memory ids for retries at a full quota: requests without ids are conservatively counted as new facts. Summaries created by an opt-in consolidation policy currently bypass quota admission.
 
 ## Shutdown
 
@@ -145,15 +174,15 @@ SIGINT or SIGTERM makes `/readyz` fail at once. With `--shutdown-delay-seconds` 
 
 ## On-device model stages (`local-models`)
 
-Built with `--features server,local-models`, the server can run the model stages itself instead of requiring client vectors. Every stage is off unless its flag is given; with none given the server behaves exactly as described above.
+Built with `--features server,local-models`, the server can run the model stages itself instead of requiring client vectors. Every stage is off unless its flag is given; with none given the server behaves as described above. Flags and `WARM_*` variables: [server/configuration.md](server/configuration.md#on-device-models-features-local-models-builds).
 
-| Flag | Environment | Stage |
-|---|---|---|
-| `--embed-model DIR --embed-revision SHA` | `WARM_EMBED_MODEL`, `WARM_EMBED_REVISION` | Qwen3-Embedding. Documents may omit `vector` (the text is embedded); `--input-dim` must equal the model's hidden size (1024 for 0.6B). |
-| `--rerank-model DIR --rerank-revision SHA` | `WARM_RERANK_MODEL`, `WARM_RERANK_REVISION` | Qwen3-Reranker over the fused top 20 of a text query. |
-| `--llm-model DIR --llm-revision SHA` | `WARM_LLM_MODEL`, `WARM_LLM_REVISION` | Qwen3 instruct LLM (greedy decoding). |
-| `--extract-facts` | `WARM_EXTRACT_FACTS` | At ingest, the LLM lists the personal facts in each document; they are indexed with it (lexical and embedding key), the stored text is unchanged. |
-| `--rewrite-queries` | `WARM_REWRITE_QUERIES` | The LLM rewrites each text query; the original and the rewrite are searched and merged by RRF. |
+| Flag pair | Stage |
+|---|---|
+| `--embed-model DIR --embed-revision SHA` | Qwen3-Embedding. Documents may omit `vector` (the text is embedded); `--input-dim` must equal the model's hidden size (1024 for 0.6B). |
+| `--rerank-model DIR --rerank-revision SHA` | Qwen3-Reranker over the fused top 20 of a text query. |
+| `--llm-model DIR --llm-revision SHA` | Qwen3 instruct LLM (greedy decoding). |
+| `--extract-facts` | At ingest, the LLM lists the personal facts in each document; they are indexed with it (lexical and embedding key), the stored text is unchanged. |
+| `--rewrite-queries` | The LLM rewrites each text query; the original and the rewrite are searched and merged by RRF. |
 
 A query may then be `{"query": str, "today"?: str, "top_k"?, "filter"?, "query_vector"?}`: hybrid BM25 + cosine per query form, weighted RRF across forms, then the re-rank, with the tuned LongMemEval parameters. `score` is then the fused rank score, not a cosine. Vector-only queries keep the cosine path.
 
@@ -163,52 +192,17 @@ A query may then be `{"query": str, "today"?: str, "top_k"?, "filter"?, "query_v
 
 Each tenant is one engine store. Documents (embedding, text and metadata) go through the engine's document API. A batch writes its final distinct ids in one transaction; a validation failure leaves existing documents unchanged. Embeddings are kept at full precision, so the sparse-code path measured in [public benchmarks](PUBLIC-BENCHMARKS.md) does not apply to this service.
 
-The store records the embedding model, revision and input dimension (`--embedding-model`, `--embedding-revision`, `--input-dim`). Reopening a store with different values is refused, so vectors from different models are never mixed.
+The store records the embedding model, revision and input dimension (`--embedding-model`, `--embedding-revision`, `--input-dim`). Reopening with different values is refused, so vectors from different models are never mixed.
 
-`<tenant>/vindex/` holds the persisted graph index: `rows.log` (one checksummed frame per inserted, replaced or deleted vector, synced per request at the engine's durability class), the snapshot maintenance last published (`CURRENT`, `graph-<epoch>.vertex`, `rows-<epoch>.bin`, `ids-<epoch>.bin`, each written through a temporary file and a rename) and `dirty`, present between the first mutation after open and a clean close. Snapshots copy the directory with the store.
+`<tenant>/vindex/` holds the persisted graph index and is copied with snapshots:
 
-Snapshots, compaction and restore are described in [`server/operations.md`](server/operations.md).
+| File | Contents |
+|---|---|
+| `rows.log` | One checksummed frame per inserted, replaced or deleted vector, synced per request at the engine's durability class |
+| `CURRENT`, `graph-<epoch>.vertex`, `rows-<epoch>.bin`, `ids-<epoch>.bin` | The snapshot maintenance last published, each written through a temporary file and a rename |
+| `dirty` | Present between the first mutation after open and a clean close |
 
-New vector snapshots record a checksum of `rows-<epoch>.bin` in `CURRENT`; a mismatch disables the snapshot so queries fall back to the engine. Older snapshots remain readable and gain the checksum on the next maintenance run.
-
-Admission limits preserve both running and unexpired completed idempotency keys. At
-`--idempotency-capacity`, new keys receive 503 before execution; existing keys can still
-replay. Size this capacity for the number of distinct keys admitted during the TTL plus
-in-flight work: the defaults retain 10,000 keys for 600 seconds, so a sustained stream
-of new keys above roughly 16 per second requires a larger capacity or shorter TTL.
-`--idempotency-max-bytes` independently bounds retained serialized response-buffer
-allocations (64 MiB by default). A response that does not fit is still returned to the
-original caller, but subsequent use of its key requires reconciliation. This limit
-does not cover response construction, active HTTP sends, key/record overhead, or total
-process RSS. The key-count limit bounds record overhead separately. Response clones
-share one serialized buffer instead of retaining and repeatedly serializing a JSON tree.
-
-Retry receipts live in `DATA_DIR/http-retries`, outside tenant snapshots, under one
-exclusive process lease. Checksummed private files contain tenant/key digests, request
-fingerprints, status, and response bytes; request bodies and credentials are not copied.
-Responses can contain source text. Like the server's other unencrypted files, receipts
-require an encrypted volume when encryption at rest is needed. Copying or deleting this
-directory independently of the server's data can discard retry protection.
-
-Expiry uses a monotonic clock. Restart begins a fresh retention window at least as long
-as the configured TTL and the longest recorded TTL; this deliberately extends retention
-and prevents a clock change or a shorter startup setting from releasing protected keys
-early. Running keys never expire in-process; interrupted reservations become reconciliation
-markers on restart. Startup fails if receipt integrity, ownership, or configured storage
-bounds cannot be satisfied.
-
-Before forget, forgetting maintenance, consolidation, document deletion, or tenant restore,
-a durable tenant barrier blocks new keyed calls and scrubs previously retained response
-bodies. Protected key fingerprints remain as reconciliation markers. In-flight completions
-cannot restore those bodies; the current keyed erasure operation can retain its own result.
-The barrier spans the operation and survives interruption. Startup finishes interrupted
-receipt scrubbing before admitting requests; cleanup failure leaves protection unavailable.
-Restore invalidates receipts once replacement begins, even if it subsequently rolls back.
-Other tenants are unaffected. Receipt scrubbing does not alter independent backups.
-
-The rate limiter holds at most 10,000 tenant buckets; when full, requests for a new tenant
-receive 429 until idle buckets can be reclaimed. Existing tenant buckets continue operating
-normally.
+New vector snapshots record a checksum of `rows-<epoch>.bin` in `CURRENT`; a mismatch disables the snapshot so queries fall back to the engine. Older snapshots remain readable and gain the checksum on the next maintenance run. Snapshots, compaction and restore: [`server/operations.md`](server/operations.md).
 
 ## What it does not provide
 

@@ -33,9 +33,7 @@ each names the files involved and how to check the result. [CONTRIBUTING.md](../
 covers setup, the checks CI runs and the DCO sign-off (no CLA). A change that compiles under only
 one Cargo feature set is not done: `default = []`, so nothing is on unless asked for.
 
-Docs: every page is Markdown under `docs/` with an edit button, and pages are listed by folder, so
-a new page needs no configuration. Quickstart code is included from files CI runs, so keep
-examples there. Checks to run before a pull request: [docs pipeline](docs-pipeline.md).
+Docs: every page is Markdown under `docs/` with an edit button; a new page needs no configuration, and quickstart code is included from files CI runs, so keep examples there. Checks before a pull request: [docs pipeline](docs-pipeline.md).
 
 ## Governance and conduct
 

@@ -3,11 +3,7 @@ description: "What holographic means in WARM: superposed hypervectors that degra
 ---
 # What "holographic" means here
 
-In a hologram every part of the plate carries a degraded copy of the whole image. A
-**hypervector** memory works the same way: many items are superposed into one high-dimensional
-vector, no single coordinate stores any one item, and damaging the vector degrades every item a
-little instead of erasing a few. That is the sense in which WARM is holographic. It is a property
-of the vector-symbolic layer, and this page says exactly which parts of the engine have it.
+In a hologram every part of the plate carries a degraded copy of the whole image. A **hypervector** memory works the same way: many items are superposed into one high-dimensional vector, no single coordinate stores any one item, and damage degrades every item a little instead of erasing a few. That is the sense in which WARM is holographic, and it is a property of the vector-symbolic layer only; this page says which parts of the engine have it.
 
 ## The vectors
 
@@ -57,8 +53,7 @@ carries a sparse hypervector from the text encoder, serialised with the chunk, b
 read it. To check this against the code: `src/core/documents/search.rs` has no use of
 `chunk.vector`.
 
-So `search_documents` is a conventional hybrid retriever with a metadata filter, byte offsets
-and atomic replace. Choose it for that, not for holographic behaviour.
+So `search_documents` is a conventional hybrid retriever with a metadata filter, byte offsets and atomic replace; choose it for that, not for holographic behaviour.
 
 ## Graceful degradation, measured
 

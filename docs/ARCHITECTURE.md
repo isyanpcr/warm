@@ -140,44 +140,21 @@ lib.rs                          Public Rust exports and module declarations
       +-- graph.rs              Graph operations (KNN, pruning, centroid)
 ```
 
-The crate root keeps the existing public Rust exports. Experimental modules live under
-`core/experimental/`; their existing `core::module_name` imports remain available through
-re-exports. Cargo keeps every binary name and required feature unchanged. Historical
-benchmark manifests retain the paths at their measured revisions.
+The crate root keeps the existing public Rust exports. Experimental modules live under `core/experimental/`, and their existing `core::module_name` imports remain available through re-exports. Cargo keeps every binary name and required feature unchanged; historical benchmark manifests retain the paths at their measured revisions.
 
 ## Meaning Memory Module Graph
 
-```
-WarmCore (engine/mod.rs)
-  |
-  +-- atom_memory.rs            AtomMemory: concept vector store
-  |     +-- indexed_memory.rs   IndexedMemory: posting lists + IDF + tombstones
-  |           +-- posting.rs    PostingShard: inverted posting lists per dimension
-  |           +-- idf.rs        IdfWeights: IDF weighting with proportional clipping
-  |           +-- tombstone.rs  TombstoneMap: soft-delete tracking
-  |
-  +-- composite_memory.rs       CompositeMemory: role-bound triple vectors
-  |     +-- indexed_memory.rs   (shared substrate with AtomMemory)
-  |
-  +-- triple_store.rs           TripleStore: symbolic (S, R, O) index
-  |                             Four-way FxHash index: by_subject, by_relation,
-  |                             by_object, by_composite
-  |
-  +-- role.rs                   RoleRegistry: role -> cyclic-shift mapping
-  |                             compose(), unbind(), compose_triple()
-  |
-  +-- rules.rs                  RuleStore: CompositionRule definitions
-  |                             Maps relation chains to derived relations
-  |
-  +-- admission.rs              AdmissionControl: fan-out gating
-  |                             Algebraic vs. MaterializedLookup decision
-  |
-  +-- decompose.rs              Decomposer: vector decomposition
-  |
-  +-- engine/
-      +-- structural.rs         fuzzy_structural_query(): algebraic + materialized paths
-      +-- multi_hop.rs          multi_hop_query(): rule rewrite + chained lookup
-```
+Files are described in the module graph above; this is how `WarmCore` (`engine/mod.rs`) wires them.
+
+| Component | Role |
+|---|---|
+| `AtomMemory` and `CompositeMemory` | Concept vectors and role-bound triple vectors; both sit on the shared `IndexedMemory` substrate (`PostingShard` per-dimension posting lists, `IdfWeights` with proportional clipping, `TombstoneMap` soft deletes) |
+| `TripleStore` | Symbolic (S, R, O) index: four-way FxHash index `by_subject`, `by_relation`, `by_object`, `by_composite` |
+| `RoleRegistry` | Role to cyclic-shift mapping: `compose()`, `unbind()`, `compose_triple()` |
+| `RuleStore` | `CompositionRule` definitions mapping relation chains to derived relations |
+| `AdmissionControl` | Fan-out gating: algebraic versus `MaterializedLookup` |
+| `Decomposer` | Vector decomposition |
+| `engine/structural.rs`, `engine/multi_hop.rs` | `fuzzy_structural_query()` (algebraic + materialized paths); `multi_hop_query()` (rule rewrite + chained lookup) |
 
 ### Data Flow: Structural Query
 
@@ -214,11 +191,7 @@ multi_hop_query(start, [rel1, rel2, ...], ctx, rule_store)
 
 ## Transactions and lock ordering
 
-Persistent vector, document, graph, triple, and rule mutations take `mutation_gate.write()`
-before the shard/component locks. Main vector/document/structural/graph queries take its read
-lock. A mutation validates its complete operation list, logs one framed transaction, then
-applies every operation to memory. This gate also serializes compaction and index publication.
-Audit and provenance sidecars are separate operations after the main transaction.
+Persistent vector, document, graph, triple and rule mutations take `mutation_gate.write()` before the shard/component locks; main vector, document, structural and graph queries take its read lock. A mutation validates its complete operation list, logs one framed transaction, then applies every operation to memory. The gate also serializes compaction and index publication. Audit and provenance sidecars are separate operations after the main transaction.
 
 Within a shard, vector/registry/posting changes and cache invalidation follow the shard's lock
 order. Index training copies a consistent snapshot, releases the gate while training, then
@@ -245,18 +218,9 @@ or stale caches are discarded; inverted indices are reconstructed from live vect
 
 ## Compaction
 
-Compaction excludes persistent mutations and main queries. It snapshots live vectors, documents,
-atoms, composites, triples, relation types, relations, rules, and derived-fact ownership into a
-new arena. It flushes and verifies the arena, installs a generation directory, then publishes
-`CURRENT` with an atomic file replacement. Old files are cleaned up only after publication.
-A process interruption therefore selects either the complete old or complete new generation.
-Directory publication is synced on Unix; platform/filesystem durability limits are documented
-in [production-readiness.md](production-readiness.md).
+Compaction excludes persistent mutations and main queries. It snapshots live vectors, documents, atoms, composites, triples, relation types, relations, rules and derived-fact ownership into a new arena, flushes and verifies it, installs a generation directory, then publishes `CURRENT` by atomic file replacement; old files are cleaned up only after publication, so an interruption selects either the complete old or complete new generation. Directory publication is synced on Unix; platform limits are in [production-readiness.md](production-readiness.md); stages and budgets in [file-format/COMPACTION.md](file-format/COMPACTION.md).
 
-Document and meaning-derived chunk IDs have reserved prefixes. Updating or deleting a document
-removes its owned chunks. Replacing or deleting a meaning source removes its owned inferred
-triples; the ownership mapping survives compaction and recovery. Explicit triplet replacement
-removes the prior structural record before inserting the new one.
+Document and meaning-derived chunk IDs have reserved prefixes. Updating or deleting a document removes its owned chunks. Replacing or deleting a meaning source removes its owned inferred triples (the ownership mapping survives compaction and recovery). Explicit triplet replacement removes the prior structural record before inserting the new one.
 
 ## Retrieval paths
 
@@ -270,27 +234,16 @@ flowchart LR
   r --> h["Hits with byte offsets"]
 ```
 
-Sparse vector queries use the adaptive router to select brute-force, inverted, NSG, or IVF
-retrieval. Replacements and deletions update postings incrementally, reuse slots, and invalidate
-incompatible ANN caches. No training is hidden inside ingestion. `indexStatus` reports
-recommendations; the application schedules `maintainIndices`.
-
-Document queries first filter metadata/source/document IDs, then compute BM25 over lexical
-terms and optional exact cosine over normalized stored dense embeddings. Weighted reciprocal
-rank fusion combines the rankings. The optional JavaScript adapter embeds queries locally and
-reranks candidate passages with a local ONNX cross-encoder. This document path currently scans
-eligible chunks; it does not use the sparse ANN graph as a dense-vector approximation.
-
-`semantic.js` batches model inference and provides a bounded operation queue. Async iterable
-ingestion awaits each document, preventing unbounded pending native/model work. Model identity,
-artifact revision, preprocessing fingerprint, dimensions, normalization, and metric must match
-the store's embedding space.
+- Sparse vector queries use the adaptive router to select brute-force, inverted, NSG or IVF retrieval. Replacements and deletions update postings incrementally, reuse slots and invalidate incompatible ANN caches. No training is hidden inside ingestion: `indexStatus` reports recommendations and the application schedules `maintainIndices`.
+- The document path (diagram above) currently scans eligible chunks; it does not use the sparse ANN graph as a dense-vector approximation. The optional JavaScript adapter embeds queries locally and reranks candidates with a local ONNX cross-encoder.
+- `semantic.js` batches model inference and provides a bounded operation queue; async iterable ingestion awaits each document, preventing unbounded pending native/model work. Model identity, artifact revision, preprocessing fingerprint, dimensions, normalization and metric must match the store's embedding space.
 
 ## Validation
 
-`tests/reliability.rs` covers signed projections, structural answers, durable deletes, ANN
-restart/corruption handling, and concurrent writes/compaction. `tests/documents.rs` covers source
-offsets, filters, versions, semantic candidates, bounded ingestion, and atomic source migration.
-Storage unit tests inject child-process exits around compaction publication. Native Node tests
-exercise actual CJS/ESM bindings, encryption failure, file ingestion, and queue backpressure.
-A packed-install smoke test loads the distributable native module and document adapter.
+| Test | Covers |
+|---|---|
+| `tests/reliability.rs` | signed projections, structural answers, durable deletes, ANN restart/corruption handling, concurrent writes/compaction |
+| `tests/documents.rs` | source offsets, filters, versions, semantic candidates, bounded ingestion, atomic source migration |
+| Storage unit tests | child-process exits injected around compaction publication |
+| Native Node tests | actual CJS/ESM bindings, encryption failure, file ingestion, queue backpressure |
+| Packed-install smoke test | the distributable native module and document adapter load |

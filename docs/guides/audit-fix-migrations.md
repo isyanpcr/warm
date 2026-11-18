@@ -5,18 +5,9 @@
 
 ## Model identity
 
-Managed local models now identify the effective embedding function: actual pack or model-file
-bytes, tokenizer/configuration and effective preprocessing, pooling, prefixes, truncation,
-normalization and task behavior. `EmbeddingSpace.revision` contains the versioned fingerprint;
-its public shape stays the same. An explicit external embedding space remains caller-owned.
-HTTP and MCP derive their space from an installed model instead of assigning a nominal label.
+Managed local models identify the effective embedding function ([definition, task selection and migration](../embeddings/README.md#effective-model-identity-and-migration)); `EmbeddingSpace.revision` holds the versioned fingerprint and its public shape is unchanged. An explicit external embedding space remains caller-owned. HTTP and MCP derive their space from an installed model instead of assigning a nominal label.
 
-A managed store with an old nominal identity, or one whose effective model changed, fails
-compatibility checks before new writes. Back up the store and export its retained source text,
-IDs, versions, metadata and URIs with the compatible earlier binary. Create a separate store
-using the intended model, regenerate embeddings, and compare counts, source hashes and query
-fixtures before switching paths. When text was not retained, use the original sources. Do not
-edit `store.json` to relabel vectors produced by a different function.
+A managed store with an old nominal identity, or whose effective model changed, fails compatibility checks before new writes. Back up the store, export its retained source text, IDs, versions, metadata and URIs with the compatible earlier binary, create a separate store with the intended model, regenerate embeddings, and compare counts, source hashes and query fixtures before switching paths. When text was not retained, use the original sources. Do not edit `store.json` to relabel vectors.
 
 ## Imported identities and checkpoints
 
@@ -64,13 +55,6 @@ records what was implemented and validated, with remaining verification limits.
 
 ## Embedding limits and text encoding
 
-Local embedding calls now enforce positive configurable text, byte, token, output and concurrency
-limits; split larger calls or configure `EmbedOptions::limits` for the workload. The soft batch
-token budget remains separate. [Embedding reports](../embeddings/README.md#options) expose both
-truncation stages. Rust model callers should use `try_encode_text` and `try_find_analogy` to
-handle failures; the legacy infallible wrappers panic instead of turning failures into valid
-empty vectors. Durable writes and Node APIs propagate checked errors before mutation.
+Local embedding calls enforce positive configurable text, byte, token, output and concurrency limits, with `try_encode_text` and `try_find_analogy` for checked failures: see [Embeddings, Options](../embeddings/README.md#options). Durable writes and Node APIs propagate checked errors before mutation.
 
-The default text encoder remains V1. Opt into `multiscale-words-v2` by
-[reencoding original sources into a new store](../file-format/ENCODERS.md#text-encoders-text_encoder);
-do not relabel an existing schema or rewrite old golden vectors.
+The default text encoder remains V1. Opt into `multiscale-words-v2` by [reencoding original sources into a new store](../file-format/ENCODERS.md#text-encoders-text_encoder); do not relabel an existing schema or rewrite old golden vectors.
