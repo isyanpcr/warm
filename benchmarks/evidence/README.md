@@ -13,7 +13,10 @@ copied build directories, oversized model-output caches and the non-markdown ses
 under `docs/research/` (logs, archives, review and merge records, patches and git bundles) removed
 from the active tree. Their original bytes remain at the manifest's immutable Git revision, or at
 the record's own `revision` when it names one. Maintained
-summaries and reproduction code remain in the checkout.
+summaries and reproduction code remain in the checkout. Agent-campaign working records
+(coordinator and merge notes, per-session validation logs, platform launcher scripts) under
+`docs/research/technical-audit-2026102*` and `docs/research/milestones-20261102` were removed
+from the tree; they remain in Git history at revision `7f1fdb469e484753b56d1844e3b42ddbcaf5e28f`.
 
 From the repository root:
 

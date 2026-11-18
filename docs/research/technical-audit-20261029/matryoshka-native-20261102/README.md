@@ -144,12 +144,12 @@ The checked-in absolute local paths are provenance; a separate explicitly planne
 reproduction must use new output directories because the runners reject reuse.
 
 ```sh
-export CARGO_TARGET_DIR=/Volumes/A/warm-matryoshka-fresh/target/native-eval
+export CARGO_TARGET_DIR=<workspace>/warm-matryoshka-fresh/target/native-eval
 export CARGO_BUILD_JOBS=2
 export STUDY=docs/research/technical-audit-20261029/matryoshka-native-20261102
 cargo +1.99.0 test --offline --locked --release --manifest-path "$STUDY/driver/Cargo.toml" --bin generate --bin evaluate
 cargo +1.99.0 build --offline --locked --release --manifest-path "$STUDY/driver/Cargo.toml" --bins
-uv --offline run --python /Volumes/A/.hms-bench-cache/competitive/envs/stdlib/bin/python --no-project -m unittest discover -s "$STUDY" -p 'test_*.py' -v
+uv --offline run --python <bench-cache>/competitive/envs/stdlib/bin/python --no-project -m unittest discover -s "$STUDY" -p 'test_*.py' -v
 ```
 
 `prepare.py` verifies the three unpacked SciFact hashes and writes exact ordered
@@ -162,7 +162,7 @@ performs the two CPU preflights, and records the fixed five-replicate Latin orde
 routes and lifecycle PIDs before calculating the frozen gates.
 
 The hash-verified original input, fresh arrays, native receipts and executables are
-preserved locally at `/Volumes/A/.hms-bench-cache/matryoshka-native-20261102-22559c12`;
+preserved locally at `<bench-cache>/matryoshka-native-20261102-22559c12`;
 [generation-archive.json](generation-archive.json) records every checksum. Corpus
 text and large arrays are not committed. [results/](results/) contains lossless
 compressed native outputs, [per-query.json.gz](per-query.json.gz) contains compact

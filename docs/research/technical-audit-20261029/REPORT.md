@@ -3,7 +3,7 @@
 
 # Holographic Memory technical and strategic audit
 
-29 October 2026 · Analysis only · `/Volumes/A/holographic-memory` · `main` at `a736d982558c79e961c5b4f816fe554af76b6222`, including 14 pre-existing modified tracked files recorded in [source-manifest.json](source-manifest.json).
+29 October 2026 · Analysis only · `<workspace>/holographic-memory` · `main` at `a736d982558c79e961c5b4f816fe554af76b6222`, including 14 pre-existing modified tracked files recorded in [source-manifest.json](source-manifest.json).
 
 > Historical assessment of the audited baseline, preserved as commit `de4a2fd6`. Findings and scores below describe that snapshot. Subsequent fixes and verification are tracked in [REMEDIATION.md](REMEDIATION.md). No post-fix score is implied.
 
@@ -331,7 +331,7 @@ The audit adds only this report, evidence manifests, isolated diagnostics and lo
 
 **The fresh Rust run passed 894 tests, failed zero and ignored 12 timing/census diagnostics across 13 harnesses.** [validation-summary.json](validation-summary.json) records the exact command and counts. It used `--locked --offline` and security/provenance/conversation/server/MCP features, library/server/MCP unit tests and selected recovery/memory/service integration tests. It is not an all-feature, all-platform, release or latest-remote-CI certification. [validation.log](validation.log) is the complete retained output. TypeScript strict API/type checks passed in [typecheck.log](typecheck.log); the two version-check unit tests passed in [version_checks.log](version_checks.log).
 
-[boundary_checks.py](boundary_checks.py) executes the actual pure mapper without importing the HTTP client dependency, reproduces both importer collisions and confirms unchecked 32-bit .NET allocation arithmetic. [boundary_checks.log](boundary_checks.log) records results; no unsafe native write is executed. All **six isolated Rust diagnostics reproduced the defect behavior**, as recorded in [reproductions.log](reproductions.log) and [reproduction-command.json](reproduction-command.json). [reproductions.rs](reproductions.rs) asserts that observed behavior for audit reproduction; these are **not passing correctness regressions**. Implemented fixes must invert the relevant acceptance conditions in production regression tests.
+[boundary_checks.py](https://github.com/writerslogic/warm/blob/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/technical-audit-20261029/boundary_checks.py) executes the actual pure mapper without importing the HTTP client dependency, reproduces both importer collisions and confirms unchecked 32-bit .NET allocation arithmetic. [boundary_checks.log](boundary_checks.log) records results; no unsafe native write is executed. All **six isolated Rust diagnostics reproduced the defect behavior**, as recorded in [reproductions.log](reproductions.log) and [reproduction-command.json](reproduction-command.json). [reproductions.rs](https://github.com/writerslogic/warm/blob/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/technical-audit-20261029/reproductions.rs) asserts that observed behavior for audit reproduction; these are **not passing correctness regressions**. Implemented fixes must invert the relevant acceptance conditions in production regression tests.
 
 | Fresh diagnostic | Observed result |
 |---|---|

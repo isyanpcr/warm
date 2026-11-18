@@ -11,7 +11,7 @@ PR [#334](https://github.com/writerslogic/holographic-memory/pull/334) merged to
 
 Constraints: no paid API/cloud credits, model downloads or live benchmarks; use local/free checks. Preserve unrelated work. Use signed, DCO-signed-off commits and the repository PR/check workflow. Do not claim speculative research or certification as delivered implementation.
 
-Baseline: `de4a2fd6` preserves the 14 pre-existing audited storage/service fixes. Its exact prior working tree passed 894 focused Rust tests, strict TypeScript checks and version checks. Root integration branch is `fix/technical-audit-20261029` in `/Volumes/A/holographic-memory`.
+Baseline: `de4a2fd6` preserves the 14 pre-existing audited storage/service fixes. Its exact prior working tree passed 894 focused Rust tests, strict TypeScript checks and version checks. Root integration branch is `fix/technical-audit-20261029` in `<workspace>/holographic-memory`.
 
 | Findings | Owner and isolated branch | State | Acceptance |
 |---|---|---|---|
@@ -1071,7 +1071,7 @@ Weaviate skip (54.86s); it uses local stores and fixture HTTP servers. The optio
 fast transport passes 31 cases on Python 3.14. Workflow lint, 214 pinned-action
 checks, and diff whitespace checks pass. Final PR gate remains pending.
 
-Evidence: [maintained-integrations-20261031/](maintained-integrations-20261031/)
+Evidence: [maintained-integrations-20261031/](https://github.com/writerslogic/warm/tree/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/technical-audit-20261029/maintained-integrations-20261031)
 contains the repeatable `scan_lock.py`, hash-bound complete OSV responses,
 GitHub alert snapshot, primary advisory records, lock/build logs, contract logs,
 and wheel check. `docs/SECURITY.md` corrects the older mem0ai 0.1.116 attribution:
@@ -1384,7 +1384,7 @@ memory-cache profile covers the verified WARM retrieval path, not arbitrary
 DiskCache or Chroma use. Matching advisory versions do not establish exploitability
 through these adapters; no-match snapshots do not prove absence of vulnerabilities.
 
-Evidence: [integration-profile-security-20261031/](integration-profile-security-20261031/)
+Evidence: [integration-profile-security-20261031/](https://github.com/writerslogic/warm/tree/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/technical-audit-20261029/integration-profile-security-20261031)
 contains all baseline profile locks, the explicitly synthetic deduplicated
 inventory, complete scan responses, the changed profile lock/scan, final per-extra
 coverage, upstream metadata, test logs, and wheel verification. These additions
@@ -1495,7 +1495,7 @@ chunk, forgetting, HTTP, error-mapping and strict Clippy gates subsequently pass
 Working branch: `fix/checked-document-reads`, based on PR #366 head
 `8448619e91939798bebd7d5c40fb234fa725bf32`; exact-head remote CI is still required.
 Evidence, commands, source hashes, and failed attempts are archived in
-[document-reads-20261031/](document-reads-20261031/). Other infallible metadata,
+[document-reads-20261031/](https://github.com/writerslogic/warm/tree/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/technical-audit-20261029/document-reads-20261031). Other infallible metadata,
 count and memory-view accessors are not generally qualified by these tests.
 
 Final review reproduced an additional listing panic with a CRC-valid checkpoint
@@ -1561,7 +1561,7 @@ Final local validation also passes 41 MCP, six allocation, ten checkpoint and
 twenty HTTP API tests, strict all-feature/all-target Clippy, scoped formatting
 and diff checks. Assertions and deadlines are unchanged. Exact-head remote CI
 and merge remain required. Reproduction inputs and
-baseline evidence: [metadata-reads-20261031/](metadata-reads-20261031/).
+baseline evidence: [metadata-reads-20261031/](https://github.com/writerslogic/warm/tree/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/technical-audit-20261029/metadata-reads-20261031).
 
 PR #370 merged as `740e93e2a91900d7c0e0aa4163f593c458d96987` after all 72
 exact-head checks succeeded or were skipped, including required `check` from
@@ -1587,7 +1587,7 @@ lookahead without fetching an extra record's text. All 47 Rust MCP tests and
 20 official SDK tests pass, as do strict all-feature/all-target Clippy and scoped
 formatting. Exact-head remote CI and merge remain required. No performance gain or
 transactional cross-page snapshot is claimed. Reproduction and baseline
-evidence: [mcp-list-bounds-20261031/](mcp-list-bounds-20261031/).
+evidence: [mcp-list-bounds-20261031/](https://github.com/writerslogic/warm/tree/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/technical-audit-20261029/mcp-list-bounds-20261031).
 
 PR #371 merged as `e4f653c817ab8864dac4c240b490d7b385fcba24` after all 82
 exact-head checks succeeded or were skipped, including required `check` from
@@ -1604,7 +1604,7 @@ and try_summaries, under CRC mismatch and truncation. Malformed checkpoint
 metadata reproduced another five panics, including presence lookup. Restoring
 the fixtures repaired reads; the old Memory path unnecessarily hydrated a valid
 checkpoint. Baseline evidence and commands are in
-[memory-reads-20261101/](memory-reads-20261101/).
+[memory-reads-20261101/](https://github.com/writerslogic/warm/tree/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/technical-audit-20261029/memory-reads-20261101).
 
 The candidate propagates checked read and index-rebuild errors through existing
 Result APIs. Metadata scans, preflight and presence checks avoid retained-text
@@ -1642,7 +1642,7 @@ all vector state. The candidate reads and trains from that overlay, removes the
 now-unused private infallible hydration helper, and preserves explicit fallible
 hydration for operations that need the complete lexical store. No public return
 type changes. Baseline and reproduction evidence:
-[checkpoint-vectors-20261101/](checkpoint-vectors-20261101/).
+[checkpoint-vectors-20261101/](https://github.com/writerslogic/warm/tree/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/technical-audit-20261029/checkpoint-vectors-20261101).
 
 Local validation passes all 26 integration tests, 37 library tests and 12
 compaction tests; one pre-existing external-index census remains ignored.
@@ -1659,15 +1659,15 @@ The rebase onto #372 main preserved every recorded tested source hash.
 The user authorized parallel completion, validation and merge of the unfinished
 storage/binding, retained-text, restore/retry, audit-verification and retrieval
 work, including the failed documentation performance check. The integration
-branch is `fix/readiness-completion` in `/Volumes/A/holographic-memory`, based on
+branch is `fix/readiness-completion` in `<workspace>/holographic-memory`, based on
 verified main `75ffaa5736e34171e45612e8675791f7b71fc2d6` (PR #373). Existing
 historical benchmark limitations and broader research backlog remain distinct
 from these concrete candidates. No paid services or model downloads are used.
 
 The retained-text and restore candidate is validated in
-`/Volumes/A/warm-operational-readiness`; audit verification and documentation
-loading in `/Volumes/A/warm-security-readiness`; retrieval correctness and the
-frozen historical comparison in `/Volumes/A/warm-retrieval-tail-validation`.
+`<workspace>/warm-operational-readiness`; audit verification and documentation
+loading in `<workspace>/warm-security-readiness`; retrieval correctness and the
+frozen historical comparison in `<workspace>/warm-retrieval-tail-validation`.
 Each build has an explicit private Cargo target directory. The coordinator owns
 storage/binding hardening, combined-source checks and the final PR gate.
 
@@ -1714,7 +1714,7 @@ with the experiment rather than generalized into a production performance claim.
 Rare-query peak requested memory remains 83,864 bytes above the historical
 baseline and matches the prior revision. The coordinator regenerated the summary
 from hashed raw reports without a diff. See the
-[historical comparison](retrieval-tail-20261101/INVESTIGATION.md).
+[historical comparison](https://github.com/writerslogic/warm/blob/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/technical-audit-20261029/retrieval-tail-20261101/INVESTIGATION.md).
 
 Audit entries can be verified with a retained trusted public key after the
 original signing key is removed; this does not add automatic key rotation or
@@ -1771,10 +1771,10 @@ stale exact-vector lock contention, and lexical/hybrid scratch-memory cost. The
 baseline is PR #374 main above; workflow policy and release conditions are outside
 this scope. No paid services or models are used.
 
-Ownership is disjoint: durable HTTP receipts in `/Volumes/A/warm-durable-http-retries`,
-vector capture/scoring in `/Volumes/A/warm-vector-contention`, query membership
-storage in `/Volumes/A/warm-query-memory`, and core publication/cleanup plus final
-integration in `/Volumes/A/holographic-memory` on `fix/recovery-query-improvements`.
+Ownership is disjoint: durable HTTP receipts in `<workspace>/warm-durable-http-retries`,
+vector capture/scoring in `<workspace>/warm-vector-contention`, query membership
+storage in `<workspace>/warm-query-memory`, and core publication/cleanup plus final
+integration in `<workspace>/holographic-memory` on `fix/recovery-query-improvements`.
 Builds use explicit private Cargo targets. Timed comparisons require a coordinated
 quiet window and immutable baseline/candidate evidence; correctness and memory
 limits take precedence over measured speed.
@@ -1818,7 +1818,7 @@ shows roughly 52% lower rare-query requested allocation peaks and identical orde
 results across 7,680 oracle checks. Updated-rare empirical p99 increased 10.37%;
 the preregistered sustained-regression trigger did not fire, and concurrent host
 activity prevents a latency noninferiority or speedup claim. See
-[query memory evidence](query-memory-20261101/README.md).
+[query memory evidence](https://github.com/writerslogic/warm/blob/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/technical-audit-20261029/query-memory-20261101/README.md).
 
 Stale exact-vector capture releases the store lock before scoring, but its first
 frozen comparison failed the fresh 16-dimensional p99 threshold. A separately
@@ -1990,9 +1990,9 @@ vector-only items, original-vector retrieval and mixed transactions. Fabricated 
 must not disguise unsupported vector-only records. Vector snapshots need their own
 bounded mutation ledger; the existing dense tracker has an independent lifetime.
 
-Reusable cached data lives under `/Volumes/A/.hms-bench-cache` (the old
+Reusable cached data lives under `<bench-cache>` (the old
 `~/.cache/hms-bench` resolves there), with additional BGE arrays under
-`/Volumes/A/.hms-embed-work/select-cache`. SciFact (5,183 documents/300 test queries)
+`<workspace>/.hms-embed-work/select-cache`. SciFact (5,183 documents/300 test queries)
 and NFCorpus (3,633/323) have cached MiniLM embeddings and judgments. The prepared
 GloVe 100D subset supplies 100,000 vectors/1,000 queries and exact-neighbor truth;
 1K/10K prefixes need recomputed truth. BGE has 44,305 LME turn rows, not a ready
@@ -2472,8 +2472,8 @@ before merging. Bincode removal must not be described as already on main.
 
 Comparison preparation is saved separately from #378. The hybrid harness and its
 11 passing synthetic checks are committed at `afb049022e78f04577f56460e788aa9e504dea49`
-in `/Volumes/A/warm-evaluation-followups` (`docs/evaluation-followups`). The vector
-harness is in `/Volumes/A/warm-vectra-vector-harness`
+in `<workspace>/warm-evaluation-followups` (`docs/evaluation-followups`). The vector
+harness is in `<workspace>/warm-vectra-vector-harness`
 (`test/vectra-vector-harness`), clean at signed/DCO commit
 `1b8fc1002030c5180c6226e8afd8380dcefd6e25`, with eight passing synthetic groups and
 no skips. Its receipt and compressed log are committed under the same research
@@ -2488,7 +2488,7 @@ static/lifecycle queries, and graph result order is not checked. These are bench
 harness defects, not demonstrated production retrieval defects. Passing development
 checks do not qualify this harness for a study.
 
-Resume from `/Volumes/A/warm-vectra-comparison`, branch
+Resume from `<workspace>/warm-vectra-comparison`, branch
 `research/vectra-comparison`, which preserves this checkpoint without changing
 #378. First finish #378's complete hosted checks/workflows, inspect review/security
 findings, and merge normally only when qualified; verify merge signature, parent
@@ -2535,7 +2535,7 @@ external metadata, paged revisions and separate-process reopen.
 The fully integrated release addon was built with Rust 1.99 and two jobs; its
 loader and binary hash were checked. The [synthetic validation receipt](vectra-comparison-20261102/combined-development.json)
 records 17 vector and 16 hybrid passing tests, no skips, source hashes, local addon
-and logs. This is not a study result. The [accounting review](vectra-comparison-20261102/ACCOUNTING.md)
+and logs. This is not a study result. The [accounting review](https://github.com/writerslogic/warm/blob/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/technical-audit-20261029/vectra-comparison-20261102/ACCOUNTING.md)
 records the required workload arithmetic and limits: combined freeze and execution
 remain pending final verification and feasibility review. No input scoring, study
 timing, model download, paid operation, pruning, publication or ToIP work ran.
@@ -2550,12 +2550,12 @@ inputs themselves have not yet been frozen or scored, and workload feasibility
 within the fixed phase ceilings remains unestablished.
 
 The combined input freeze was created at
-`/Volumes/A/.hms-bench-cache/vectra-comparison-20261102-frozen` with freeze hash
+`<bench-cache>/vectra-comparison-20261102-frozen` with freeze hash
 `bdc3c2b02e1b93b48895280da89d434a3fd9570bb09770f96a5b67ceea37d4b6`.
 The [frozen receipt](vectra-comparison-20261102/frozen-inputs-receipt.json) and
 compressed full manifests preserve source, addon, runtime, dependencies, inputs,
 schedules and ceilings. The pinned clean source is the detached worktree
-`/Volumes/A/warm-vectra-frozen-source` at `cdc6603a`; its addon hash is
+`<workspace>/warm-vectra-frozen-source` at `cdc6603a`; its addon hash is
 `a0f52138b80c1c2a75c152305d95385a34ea36894fc7c1cb9a3cc40d38688475`.
 The freeze itself scored no study queries. Full post-freeze verification passed;
 neither study phase has been started. An unrelated Cargo test is active on the
@@ -2730,9 +2730,9 @@ cover both added engines, save/reopen, cosine scores, query
 identities, rounding at quality boundaries, duplicate oracle rejection and monitored
 workers. The final release addon passed 27 Node tests (three optional local-embedding
 tests skipped), including the high-recall profile across reopen. Untimed graph development
-diagnostics are documented in [DEVELOPMENT.md](vectra-comparison-followup-20261102/DEVELOPMENT.md).
+diagnostics are documented in [DEVELOPMENT.md](https://github.com/writerslogic/warm/blob/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/technical-audit-20261029/vectra-comparison-followup-20261102/DEVELOPMENT.md).
 The first standalone competitor freeze at
-`/Volumes/A/.hms-bench-cache/warm-competitors-20261102-v1` was never started and
+`<bench-cache>/warm-competitors-20261102-v1` was never started and
 is invalidated by subsequent harness changes; retain it as a preparatory artifact
 and create a new freeze after final validation. The follow-up protocol is in
 [vectra-comparison-followup-20261102/PLAN.md](vectra-comparison-followup-20261102/PLAN.md).
@@ -2746,7 +2746,7 @@ recall was 0.9859/0.60, still below the 0.99/0.90 requirements. No latency was
 measured. This supports rejecting the wider default shortlist for these exposed
 inputs, not a claim about other inputs or a proof of traversal root cause; the
 temporary policy has been reverted. Raw query IDs, hashes and cloned fixture
-receipts remain in `/Volumes/A/.hms-bench-cache/warm-graph-development-20261102-v1`.
+receipts remain in `<bench-cache>/warm-graph-development-20261102-v1`.
 
 The [reservoir development receipt](vectra-comparison-followup-20261102/reservoir-development.json)
 records the existing independent reservoir at capacity `ef`, with the original
@@ -2755,7 +2755,7 @@ again found zero changes in all 5,000 comparable ordered rankings; the 1,000
 100,000-row ef=512 rankings also matched the wider-shortlist diagnostic. These
 are development observations on exposed data, not timing results or a general
 claim. The reservoir default has been reverted. The raw results and the exact
-addon are retained under `/Volumes/A/.hms-bench-cache/warm-graph-development-20261102-v2`.
+addon are retained under `<bench-cache>/warm-graph-development-20261102-v2`.
 
 The [higher-ef development receipt](vectra-comparison-followup-20261102/high-ef-development.json)
 records mean/worst recall on the same exposed 100,000-row GloVe queries as
@@ -2764,7 +2764,7 @@ Only the last two pass the stated quality gates on this data. These are untimed
 development results, not held-out proof or a speed recommendation. The follow-up
 comparison predeclares an ef 2048 arm selected from this development evidence and
 reports it alongside all original arms. Raw results and the exact addon are retained
-under `/Volumes/A/.hms-bench-cache/warm-graph-high-ef-20261102-v1`.
+under `<bench-cache>/warm-graph-high-ef-20261102-v1`.
 
 The [graph topology development receipt](vectra-comparison-followup-20261102/topology-development.json)
 reconstructed the default graph and matched all 3,000 saved ordered rankings before
@@ -2773,7 +2773,7 @@ degree 32/build-ef 128 achieved mean/worst recall 0.9859/0.60; degree 48/build-e
 achieved 0.9969/0.80; degree 64/build-ef 500 achieved 0.9985/0.90. Only the final
 configuration passed both quality gates in this local diagnostic. Graph hashes,
 all query IDs, source patch, binary and resource observations are retained under
-`/Volumes/A/.hms-bench-cache/warm-vector-topology-development-20261102-v1`; the
+`<bench-cache>/warm-vector-topology-development-20261102-v1`; the
 [diagnostic instructions](../../../benchmarks/research/vector_topology/README.md)
 describe reproduction. This
 measures recall only on previously exposed input; it does not establish public-API
@@ -2782,7 +2782,7 @@ latency, total memory, update cost, held-out quality or a competitor advantage.
 ### Follow-up study outcome and Node binding repair
 
 The new combined attempt at
-`/Volumes/A/.hms-bench-cache/vectra-comparison-followup-20261102-v1` completed
+`<bench-cache>/vectra-comparison-followup-20261102-v1` completed
 the GloVe quality jobs but stopped during SciFact WARM fixture validation: a page
 of 1,000 1,024-dimensional vectors exceeded napi-rs's 1,000,000-node limit on
 converting one `serde_json::Value`. Preparation is incomplete, measurement never
@@ -2799,7 +2799,7 @@ The final addon passed 28 Node tests (three optional embedding tests skipped),
 warnings denied.
 
 The separately frozen competitor study at
-`/Volumes/A/.hms-bench-cache/warm-competitors-20261102-v2` completed all 16
+`<bench-cache>/warm-competitors-20261102-v2` completed all 16
 quality jobs. At 100,000 rows, both hnswlib and USearch passed the original
 mean/worst recall gates only at ef 2048; ef 128, 256 and 512 failed at least
 the worst-query gate. The measurement phase failed its first quiet-host preflight
@@ -2811,9 +2811,9 @@ are exclusive and no-retry; neither supports a latency or performance-advantage 
 ### User-authorized repaired exploratory attempt
 
 The user authorized the separately frozen attempts described in
-[REPAIRED-ATTEMPT.md](vectra-comparison-followup-20261102/REPAIRED-ATTEMPT.md).
+[REPAIRED-ATTEMPT.md](https://github.com/writerslogic/warm/blob/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/technical-audit-20261029/vectra-comparison-followup-20261102/REPAIRED-ATTEMPT.md).
 The combined run at
-`/Volumes/A/.hms-bench-cache/vectra-comparison-repaired-20261102-v1` stopped
+`<bench-cache>/vectra-comparison-repaired-20261102-v1` stopped
 during the 100,000-row Vectra import after its worker exceeded the fixed 8 GiB
 per-process RSS ceiling for two consecutive samples. The triggering sample was
 8,700,575,744 bytes; the retained process-tree peak was 8,701,362,176 bytes.
@@ -2825,7 +2825,7 @@ copies its item array at each update and serializes the full index for each
 been measured. The partial summary records incomplete preparation, no
 measurement and no permitted performance claim.
 
-The companion run at `/Volumes/A/.hms-bench-cache/warm-competitors-20261102-v3`
+The companion run at `<bench-cache>/warm-competitors-20261102-v3`
 completed all 16 quality jobs; eight passed their mean and worst-query recall
 gates. At 100,000 rows, each engine passed only at ef 2048. Its measurement
 preflight failed because the first five-second interval included an external CPU
@@ -2859,12 +2859,12 @@ no threshold polling, retries or termination of unrelated processes. It requires
 a fresh committed and frozen source and explicit user authorization before any
 new attempt. No timing result or performance advantage follows from the diagnostics.
 Final vector, hybrid and competitor harness validation passed 41 tests; the log
-is `/Volumes/A/.hms-bench-cache/vectra-import-harness-validation-20261102-v1/tests.log`
+is `<bench-cache>/vectra-import-harness-validation-20261102-v1/tests.log`
 (SHA-256 `7e5c6ae12de20b80daace41d69ed42032a9da7761b5744b00b9cb0377427065e`).
 
 ### Graph traversal investigation
 
-The [local graph trace](vectra-comparison-followup-20261102/GRAPH-TRACE.md)
+The [local graph trace](https://github.com/writerslogic/warm/blob/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/technical-audit-20261029/vectra-comparison-followup-20261102/GRAPH-TRACE.md)
 reproduced all 3,000 saved ordered rankings for three configurations on the
 exposed 100,000-row GloVe data. Every oracle neighbor missing from the final
 top ten was absent from the evaluated set: 141 at default ef 512, seven at
@@ -2877,13 +2877,13 @@ and graph-build observations are retained but do not establish public-API latenc
 or a competitive advantage.
 
 The first separate update diagnostic at
-`/Volumes/A/.hms-bench-cache/warm-graph-updates-20261102-v1` stopped before
+`<bench-cache>/warm-graph-updates-20261102-v1` stopped before
 cloning or mutating fixtures because the default profile omits the optional
 `highRecall` field. The diagnostic was corrected to interpret omission as false;
 its synthetic graph mutation and separate-process reopen test passes. This was
 not a frozen study phase, and its failure remains preserved.
 
-The completed [update and union diagnostics](vectra-comparison-followup-20261102/GRAPH-UPDATES.md)
+The completed [update and union diagnostics](https://github.com/writerslogic/warm/blob/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/technical-audit-20261029/vectra-comparison-followup-20261102/GRAPH-UPDATES.md)
 preserved the source fixtures and validated 100 upserts per profile through
 flush and separate-process reopen. Three graph/exact probes matched at every
 recorded post-update boundary. On the shared host, one observed post-update
@@ -2894,7 +2894,7 @@ mean/worst recall on the already exposed queries; it requires two graphs and
 has no implemented or timed merged query. No held-out or product advantage is
 established.
 
-The [adjacency encoding diagnostic](vectra-comparison-followup-20261102/ADJACENCY.md)
+The [adjacency encoding diagnostic](https://github.com/writerslogic/warm/blob/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/technical-audit-20261029/vectra-comparison-followup-20261102/ADJACENCY.md)
 found identical candidate order and saved/reopened behavior on all 1,000 exposed
 queries when the same high-recall graph used three-byte rather than four-byte
 neighbor IDs. Its logical graph index shrank from 49,234,176 to 42,834,176 bytes.
@@ -2902,7 +2902,7 @@ The host exceeded the fixed load threshold during 23 of 84 observations, so its
 timing is unqualified and no production encoding was changed. The representation
 has a 2^24−1-row sentinel boundary; retained vectors and metadata were not pruned.
 
-The [selective-fallback analysis](vectra-comparison-followup-20261102/ADAPTIVE.md)
+The [selective-fallback analysis](https://github.com/writerslogic/warm/blob/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/technical-audit-20261029/vectra-comparison-followup-20261102/ADAPTIVE.md)
 selected a low-top-score rule on the first 500 exposed queries: 50 fallback
 calls recovered five of nine missing neighbors. Its fixed threshold triggered
 49 fallbacks on the other 500 queries and recovered none of six misses. This
@@ -2912,7 +2912,7 @@ graph queries or timings were collected.
 
 ### Filter cache follow-on
 
-The [filter-cache implementation and evidence](vectra-comparison-followup-20261102/FILTER-CACHE.md)
+The [filter-cache implementation and evidence](https://github.com/writerslogic/warm/blob/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/technical-audit-20261029/vectra-comparison-followup-20261102/FILTER-CACHE.md)
 retain up to eight complete filters for one checked revision, bounded to
 100,000 IDs per entry and 2 MiB of UTF-8 keys and ID bytes in aggregate. A
 conflict clears the cache; explicit ID subsets bypass it. On ten alternating
@@ -2924,11 +2924,11 @@ advantage is claimed. A separate clone-based check verified admission at
 Final validation passed 32 Node tests (three optional embedding tests skipped),
 41 comparison-harness checks, and strict TypeScript using the lock-matched
 local compiler. Logs are retained under
-`/Volumes/A/.hms-bench-cache/warm-filter-cache-dev-20261102-v1`.
+`<bench-cache>/warm-filter-cache-dev-20261102-v1`.
 
 ### Native equality filtering
 
-The [native-filter implementation](vectra-comparison-followup-20261102/NATIVE-FILTER.md)
+The [native-filter implementation](https://github.com/writerslogic/warm/blob/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/technical-audit-20261029/vectra-comparison-followup-20261102/NATIVE-FILTER.md)
 routes supported scalar equality conjunctions through revision-consistent native
 metadata postings, updated with document mutations and reconstructed on reopen.
 Unsupported selectors preserve the existing JavaScript selector and cache.
@@ -2939,7 +2939,7 @@ complete payloads are unchanged. Synthetic checks and the predeclared local
 On ten alternating queries the preceding cache adapter read 200 metadata pages
 and native equality routing read zero, with all twenty independent exact audits
 and all cross-arm payload hashes passing. The source fixture hashes were unchanged;
-the receipt is `/Volumes/A/.hms-bench-cache/warm-native-filter-compare-20261102-v1`
+the receipt is `<bench-cache>/warm-native-filter-compare-20261102-v1`
 (`finished.json` SHA-256
 `8096acab02bda39567e4b71f191ff0b1567de0b139b51b5838d0112ff9a406fa`).
 Both arms used the same new addon and lacked quiet-host admission, so this is
@@ -2948,7 +2948,7 @@ Validation passed 36 Node tests (three optional embedding skips), 41 harness
 checks, strict TypeScript, scoped Node/security Clippy, and 169 focused Rust
 tests (one existing latency microbenchmark ignored). The exact commands, logs
 and source inventory are retained at
-`/Volumes/A/.hms-bench-cache/warm-native-filter-dev-20261102-v1`.
+`<bench-cache>/warm-native-filter-dev-20261102-v1`.
 
 ### Proposed milestones for competitive and release qualification
 

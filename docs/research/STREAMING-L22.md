@@ -2,7 +2,7 @@
 
 Date 2026-11-07. Design only: nothing in this note was run on writerslogic-03, no code was written, no spend.
 Tags: [M] measured (file:line or ledger entry), [P] published, [I] inferred, [C] conjecture.
-Code paths are in /Volumes/A/.hms-wt-levers (4016fdf0) unless stated. Harness paths are under /Volumes/A/.hms-lb/bigann. Board and runbook facts are in STREAMING-L10-DESIGN.md Part 1 and are not repeated.
+Code paths are in <worktree:levers> (4016fdf0) unless stated. Harness paths are under <workspace>/.lb/bigann. Board and runbook facts are in STREAMING-L10-DESIGN.md Part 1 and are not repeated.
 
 ## 0. Why L22 now (the L10 verdict)
 
