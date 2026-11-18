@@ -50,7 +50,7 @@ For Python, create and activate a virtual environment first: `uv venv`, then
     vectors you supply:
 
     ```sh
-    uv pip install warm-sdk
+    uv venv && uv pip install warm-sdk   # run Python as .venv/bin/python
     ```
 
     Build and install the server (needs Rust 1.89 or newer), then start it:
@@ -64,10 +64,9 @@ For Python, create and activate a virtual environment first: `uv venv`, then
     binary. Prebuilt, checksum-verified binaries (`scripts/install-warm-server.sh`, Linux glibc and
     macOS, no Alpine) start with the first `server-v<version>` GitHub release; none is published yet.
 
-    The `warm-python` wheel runs native code in-process, imported as `writerslogic_warm`. The
-    0.6.8 wheel provides the vector indexes and phase vectors only. The in-process `Warm` class
-    (document search, `remember`, `recall`, `forget`, `explain`) is on `main` and ships with
-    the release after 0.6.8.
+    The `warm-python` wheel runs native code in-process, imported as `writerslogic_warm`. From
+    0.7.0 it includes the in-process `Warm` class (document search, `remember`, `recall`,
+    `forget`, `explain`); the earlier 0.6.8 wheel provides the vector indexes and phase vectors only.
 
     ```sh
     uv pip install warm-python
@@ -75,10 +74,10 @@ For Python, create and activate a virtual environment first: `uv venv`, then
 
 === "JavaScript client"
 
-    `warm-sdk` 0.2.1 has no runtime dependencies or native binaries. For a published release:
+    `warm-sdk` 0.2.2 has no runtime dependencies or native binaries. For a published release:
 
     ```sh
-    npm install warm-sdk@0.2.1
+    npm install warm-sdk@0.2.2
     ```
 
     Check the [available npm versions](https://www.npmjs.com/package/warm-sdk?activeTab=versions).
@@ -101,7 +100,7 @@ For Python, create and activate a virtual environment first: `uv venv`, then
     your OS, CPU and libc. For a published engine release, keep optional dependencies enabled:
 
     ```sh
-    npm install writerslogic-warm@0.6.8
+    npm install writerslogic-warm@0.7.0
     ```
 
     Check the [available npm versions](https://www.npmjs.com/package/writerslogic-warm?activeTab=versions).

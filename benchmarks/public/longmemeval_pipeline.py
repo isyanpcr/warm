@@ -19,6 +19,10 @@ CPU-only logic shared by the local dev sweeps and the Modal job (longmemeval_mod
 
 Targets follow the official flat index (src/retrieval/run_retrieval.py): turn ids `<sid>_<n>` for
 user turns, session ids for sessions, `answer` rewritten to `noans` where no user turn has the answer.
+A session that opens with an assistant turn gets one extra unit, `<sid>_1`, for that turn: no official
+round anchors it (rounds are [user turn, next turn]), so without a unit of its own it can never be
+retrieved. Its key is its own content; session text and fact extraction stay user-only, so their cache
+keys are unchanged. The QA prompt builder renders `<sid>_1` as [opening turn, first user turn].
 """
 
 from __future__ import annotations
@@ -89,14 +93,25 @@ class Session:
     date: date | None
     date_text: str
     turns: list[tuple[str, str, str]]  # (official turn id, user text, following assistant text)
+    opening_tid: str | None = None  # the `<sid>_1` unit of a session-opening assistant turn (user text "")
+
+    @property
+    def user_turns(self) -> list[tuple[str, str, str]]:
+        """The user-anchored turns, in order; the opening-assistant unit is not one of them."""
+        return [t for t in self.turns if t[0] != self.opening_tid]
+
+    def key_text(self, tid: str, user: str, reply: str) -> str:
+        """The text a turn-level key embeds: the user message, or the opening assistant turn's own content."""
+        return reply if tid == self.opening_tid else user
 
     @property
     def user_text(self) -> str:
-        return " ".join(t for _, t, _ in self.turns)
+        return " ".join(t for _, t, _ in self.user_turns)
 
     def fact_input(self) -> str:
         # Pasted documents make some user turns very long; the extractor sees each turn's start.
-        return "\n".join(f"[{i + 1}] {t[:1500]}" for i, (_, t, _) in enumerate(self.turns))[:24000]
+        # Numbered over user turns only, so a session's extraction key does not depend on the opening unit.
+        return "\n".join(f"[{i + 1}] {t[:1500]}" for i, (_, t, _) in enumerate(self.user_turns))[:24000]
 
 
 @dataclass
@@ -120,13 +135,18 @@ def load(path: str | Path, ids: set[str] | None = None) -> list[Question]:
             continue
         q = Question(e["question_id"], e["question_type"], e["question"], e["question_date"], parse_date(e["question_date"]))
         for sid, d, sess in zip(e["haystack_session_ids"], e["haystack_dates"], e["haystack_sessions"]):
-            turns = []
+            turns, opening = [], None
             for i, t in enumerate(sess):
-                if t["role"] != "user":
+                is_opening = i == 0 and t["role"] == "assistant" and bool(t["content"].strip())
+                if t["role"] != "user" and not is_opening:
                     continue
                 tid = f"{sid}_{i + 1}"
                 if "answer" in sid and not t.get("has_answer"):
                     tid = tid.replace("answer", "noans")
+                if is_opening:
+                    turns.append((tid, "", t["content"]))
+                    opening = tid
+                    continue
                 reply = sess[i + 1]["content"] if i + 1 < len(sess) and sess[i + 1]["role"] == "assistant" else ""
                 turns.append((tid, t["content"], reply))
             if not turns:
@@ -134,7 +154,7 @@ def load(path: str | Path, ids: set[str] | None = None) -> list[Question]:
             osid = sid
             if "answer" in sid and not any("answer" in tid for tid, _, _ in turns):
                 osid = sid.replace("answer", "noans")
-            q.sessions.append(Session(osid, parse_date(d), d, turns))
+            q.sessions.append(Session(osid, parse_date(d), d, turns, opening))
         out.append(q)
     return out
 
@@ -157,14 +177,18 @@ def query_key(q: Question, llm: str) -> str:
 
 
 def session_facts(s: Session, facts: dict, llm: str) -> list[tuple[int, str]]:
-    """(turn index, fact) pairs; facts with an out-of-range turn are attributed to the session only (-1)."""
+    """(turn index, fact) pairs; facts with an out-of-range turn are attributed to the session only (-1).
+
+    The extractor numbers user turns (fact_input), so number n maps to the n-th user turn's index in `turns`.
+    """
     out = []
+    user_idx = [i for i, (tid, _, _) in enumerate(s.turns) if tid != s.opening_tid]
     for f in (facts.get(fact_key(s, llm)) or {}).get("facts", []):
         if not isinstance(f, dict) or not isinstance(f.get("fact"), str) or not f["fact"].strip():
             continue
         t = f.get("turn")
         i = int(t) - 1 if isinstance(t, int) or (isinstance(t, str) and t.isdigit()) else -1
-        out.append((i if 0 <= i < len(s.turns) else -1, f["fact"].strip()))
+        out.append((user_idx[i] if 0 <= i < len(user_idx) else -1, f["fact"].strip()))
     return out
 
 
@@ -174,16 +198,19 @@ def build_keys(q: Question, kinds, facts: dict | None = None, llm: str = "") -> 
     for s in q.sessions:
         sf = session_facts(s, facts or {}, llm) if facts is not None else []
         for i, (tid, user, reply) in enumerate(s.turns):
+            text = s.key_text(tid, user, reply)
             if "turn" in kinds:
-                keys.append(("turn", user, tid, s.sid))
+                keys.append(("turn", text, tid, s.sid))
             if "round" in kinds:
-                keys.append(("round", f"user: {user}\nassistant: {reply}"[:ROUND_CHARS], tid, s.sid))
+                round_ = f"assistant: {reply}" if tid == s.opening_tid else f"user: {user}\nassistant: {reply}"
+                keys.append(("round", round_[:ROUND_CHARS], tid, s.sid))
             if "turn_exp" in kinds:
                 mine = [f for j, f in sf if j == i]
-                keys.append(("turn_exp", " ".join(mine + [user]), tid, s.sid))
-        if "session" in kinds:
+                keys.append(("turn_exp", " ".join(mine + [text]), tid, s.sid))
+        # A session with no user turn (opening unit only) has no official session value, so no session key.
+        if "session" in kinds and s.user_turns:
             keys.append(("session", s.user_text, None, s.sid))
-        if "session_exp" in kinds:
+        if "session_exp" in kinds and s.user_turns:
             keys.append(("session_exp", " ".join([f for _, f in sf] + [s.user_text]), None, s.sid))
         if "fact" in kinds:
             for j, f in sf:
@@ -438,7 +465,8 @@ def blind_question(q: Question) -> tuple[Question, dict[str, str], dict[str, str
             fwd[tid] = neutral_id(tid)
             turns.append((fwd[tid], "", ""))
         fwd[s.sid] = neutral_id(s.sid)
-        sessions.append(Session(fwd[s.sid], s.date, s.date_text, sorted(turns)))
+        sessions.append(Session(fwd[s.sid], s.date, s.date_text, sorted(turns),
+                                fwd[s.opening_tid] if s.opening_tid else None))
     back = {n: o for o, n in fwd.items()}
     if len(back) != len(fwd):
         raise ValueError(f"neutral id collision in {q.qid}")
