@@ -22,7 +22,7 @@ not promoted. The serving comparison therefore retains the calibrated bounded-
 traversal binary `b61f4e70bcddb3673ef551ea921903124d364b6fb34dc48bb01af8642bd58709`.
 
 The 33-file execution/audit bundle is now frozen at
-`/Volumes/A/.hms-bench-cache/warm-serving-qualification-20261103-v1`;
+`<bench-cache>/warm-serving-qualification-20261103-v1`;
 archive SHA256 `edb4ce972277910a242ee0d3a5903c79b3e561567676ebbf3df7cf0dc3b8b867`,
 freeze SHA256 `25db4682c68d88c949649c123c9b8c363375277174cb1456995a639be154e004`.
 It includes the already-tested engine-specific sealer and calibration-auditor
@@ -49,7 +49,7 @@ restart was mistakenly issued during the first backup; that copy was interrupted
 marked invalid and retained, the guest was stopped, and a new sequential backup/
 verify/resize/start operation completed. No disk resize or held-out search
 occurred in that failed preparation. Evidence lives under
-`/Volumes/A/.hms-bench-cache/warm-serving-host-20261103-v1`.
+`<bench-cache>/warm-serving-host-20261103-v1`.
 The successful backup completed at 18:01Z, with both full 48 GiB hashes equal to
 `513460f981f325de1b896f521222e56cf84ad5adabded79689e6020461a66ed8`.
 Lima restarted successfully at 18:14Z. Filesystem admission passed with
@@ -108,7 +108,7 @@ also produced CPU bursts. There were no swap-outs or recorded thermal warnings.
 `isolationPassed` remains false. Raw audit success does not certify isolation.
 
 The verified export contains 7,537 files (490,816,800 uncompressed bytes):
-`/Volumes/A/.hms-bench-cache/warm-serving-qualification-20261103-v1/audit-export-v1/serving-evidence-v1.tar.gz`,
+`<bench-cache>/warm-serving-qualification-20261103-v1/audit-export-v1/serving-evidence-v1.tar.gz`,
 SHA256 `564007b5db46c9ca549b00f5bf7ebf84175935bc5464f6636308a4fc720efc30`.
 Receipts are `serving-v1-finished.json`, `serving-v1-raw-audits-finished.json`,
 `serving-v1-audit-export-finished.json`, and
@@ -211,7 +211,7 @@ versions. Installation logs and executable digests are in `linux-comparators/`.
 ## Input and adapter evidence
 
 The held-out input seal is
-`/Volumes/A/.hms-bench-cache/warm-performance-inputs-20261103-v1` with freeze SHA256
+`<bench-cache>/warm-performance-inputs-20261103-v1` with freeze SHA256
 `2f787fb0cb48ecf7b4d21925d9709e186a460c5a3a8de25622195e942f02c3b7`.
 Both selected 1,000-query cohorts passed finite/nonzero eligibility without
 replacement. Training and calibration inputs match the accuracy-run digests.
@@ -386,7 +386,7 @@ clients connect before readiness. No error allowances were added.
 The previous measurement-only development queue (PID 25856) was stopped before
 integration began; its frozen source is preserved and the replacement reason is
 in `measurement-v1-queue-replaced.json`. The consolidated full-lifecycle source is
-`/Volumes/A/.hms-bench-cache/warm-matched-qualification-driver-20261103-v1`, with
+`<bench-cache>/warm-matched-qualification-driver-20261103-v1`, with
 29 source/configuration files and archive SHA256
 `17b2bebc232ca1a153e909425826e52c0b63930a02f8865262db4c4a306de29c`.
 See `qualification-driver-source.json` and `linux-qualification-check-v1.sh`.
@@ -418,7 +418,7 @@ tests pass, including all filters, churn, the three score scales, typed payload
 tampering and the tolerance boundary. Log: `calibration-audit-tests.log`.
 
 Frozen source is at
-`/Volumes/A/.hms-bench-cache/warm-calibration-audit-driver-20261103-v1`, archive SHA256
+`<bench-cache>/warm-calibration-audit-driver-20261103-v1`, archive SHA256
 `41bd076ef847c9849b64cdf3f9b981b08898da311288187197c5adf3b9f90096`.
 Guest launcher `linux-calibration-audit-v1.sh`, PID 27018, waits for the synthetic
 qualification checks to finish, then audits all six completed calibrations. It
@@ -461,7 +461,7 @@ evidence files. See `serving-job-audit-tests.log`. No serving implementation or
 acceptance threshold changed.
 
 Frozen source:
-`/Volumes/A/.hms-bench-cache/warm-serving-job-audit-driver-20261103-v1`;
+`<bench-cache>/warm-serving-job-audit-driver-20261103-v1`;
 33-file archive SHA256
 `748cb56e5a983d0fc90ddee9d0641013dd1daf2789131f35de1752894f7214a6`.
 Guest launcher PID 27564 was verified waiting for the existing synthetic

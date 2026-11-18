@@ -16,7 +16,7 @@ results remain historical and do not determine this study's configuration.
 
 ## Inputs and model
 
-- Source directory: `/Volumes/A/.hms-bench-cache/downloads/scifact`.
+- Source directory: `<bench-cache>/downloads/scifact`.
 - BEIR source archive URL:
   <https://public.ukp.informatik.tu-darmstadt.de/thakur/BEIR/datasets/scifact.zip>.
   The unpacked source hashes below, rather than an unverified archive claim,
@@ -31,7 +31,7 @@ results remain historical and do not determine this study's configuration.
   `title + "\n" + text`; the longest has 1,541 whitespace words. Preserve query
   file order restricted to IDs in test qrels; every judged document must exist.
   Preserve all test qrels and explicitly validate uniqueness and coverage.
-- Local model: `/Volumes/A/hms-models/Qwen3-Embedding-0.6B`, revision
+- Local model: `<workspace>/hms-models/Qwen3-Embedding-0.6B`, revision
   `97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3`.
 - Actual `config.json` SHA256:
   `b5bf1f51fc45be473a54718cef92448d90a1be001bf9b9a44b8c7f10a19feaa9`.
@@ -61,7 +61,7 @@ there are no automatic retries or device/batch changes. The process ceiling is
 two hours. Generation and model loading are separate from search processes and
 query timings. The two complete arrays contain 22,458,368 f32 bytes in total.
 
-Host: Apple M4, 10 CPUs, 32 GiB RAM; `/Volumes/A` has approximately 3.9 TiB free
+Host: Apple M4, 10 CPUs, 32 GiB RAM; the workspace volume has approximately 3.9 TiB free
 at preparation. Rust 1.99.0, `CARGO_BUILD_JOBS=2`, separate worktree target;
 offline Cargo only. Python 3.13.9 and NumPy 2.5.4 from the existing competitive
 stdlib environment, invoked with uv 0.12.10 in offline mode. No package install.

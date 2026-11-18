@@ -62,7 +62,7 @@ low-dimensional pruning controls. All nonempty filtered corpus cells must improv
 their median by at least 10%; remaining controls may not regress more than 15%.
 Every analytic query must complete the bounded tree with fewer dots than a scan.
 
-Root: `/Volumes/A/.hms-bench-cache/warm-monotone-bound-20261103-v1`;
+Root: `<bench-cache>/warm-monotone-bound-20261103-v1`;
 freeze `d7c3e01084550269eba4f4dfecaf5394f947ea64bd4f060a2407a082092ec4f0`;
 461 source files, the pinned Rust `Sum` source, original compiler failures and
 four exposed input hashes are retained. Launcher PID 47928 started at 16:13:13Z.

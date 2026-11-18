@@ -3,7 +3,7 @@
 
 # Holographic Memory technical and strategic audit
 
-29 October 2026 · Analysis only · `/Volumes/A/holographic-memory` · `main` at `a736d982558c79e961c5b4f816fe554af76b6222`, including 14 pre-existing modified tracked files recorded in [source-manifest.json](source-manifest.json).
+29 October 2026 · Analysis only · `<workspace>/holographic-memory` · `main` at `a736d982558c79e961c5b4f816fe554af76b6222`, including 14 pre-existing modified tracked files recorded in [source-manifest.json](source-manifest.json).
 
 > Historical assessment of the audited baseline, preserved as commit `de4a2fd6`. Findings and scores below describe that snapshot. Subsequent fixes and verification are tracked in [REMEDIATION.md](REMEDIATION.md). No post-fix score is implied.
 

@@ -1,7 +1,7 @@
 # Supported-platform qualification inventory
 
 The initial Android follow-up was frozen at
-`/Volumes/A/.hms-bench-cache/warm-android-qualification-20261103-v1`, PID 48199,
+`<bench-cache>/warm-android-qualification-20261103-v1`, PID 48199,
 after the owner-membership performance screen completed. Plan:
 `benchmarks/public/mobile_qualification/ANDROID-PLAN.json`; runner:
 `mac-android.py`; 508-file freeze SHA256:
@@ -76,7 +76,7 @@ memory experiments and one external-index memory census; none is recorded as
 passing. The v1 bundle omitted the vector-format golden directory and retained
 892 passes/one missing-file failure. V2 adds all thirteen tracked fixture files,
 verified byte-for-byte against HEAD, without regenerating them or changing code.
-Raw root: `/Volumes/A/.hms-bench-cache/warm-core-qualification-20261103-v2`;
+Raw root: `<bench-cache>/warm-core-qualification-20261103-v2`;
 522-file freeze SHA256:
 `cbf253a0d0d01b6875373246e24ddcc51deabf5ba0d96f8f6a16973ed3856bf8`.
 Receipts: `core-v2-finished.json` and `core-v2-ignored-review.json`.
@@ -86,7 +86,7 @@ Current `local-models` source and all three existing Qwen weight sets are now
 hash-verified and frozen (`local-models-v1-freeze.json`). The release server/reader
 build and all 32 model-unit tests pass; the two conversation-model cases are
 still running, explicitly including the weight-dependent test. Raw root:
-`/Volumes/A/.hms-bench-cache/warm-local-models-qualification-20261103-v1`.
+`<bench-cache>/warm-local-models-qualification-20261103-v1`.
 This establishes no HTTP model lifecycle, generator/reranker workflow or QA advantage.
 
 Six optional HTTP SDK adapters passed frozen installed-wheel qualification:
@@ -102,7 +102,7 @@ skips/failures/errors. Both DSPy adapters now also pass the scoped checks below;
 the remaining separate integration modules remain open.
 
 A DSPy follow-up passed at
-`/Volumes/A/.hms-bench-cache/warm-dspy-qualification-20261103-v2` at 18:21Z.
+`<bench-cache>/warm-dspy-qualification-20261103-v2` at 18:21Z.
 It packages both current Python adapters as fresh wheels and declares nine HTTP
 SDK cases plus the separate integrations package's eleven existing DSPy cases.
 The new SDK cases exercise native predictions, batched queries, requested-limit
@@ -142,9 +142,9 @@ strict no-skip gate remains false. Ordinary-user consumers used loopback-only
 networking and local/scripted models; no paid services were used. V1 failures
 remain preserved. Receipts: `integrations-v1-finished.json`,
 `integrations-v2-finished.json` and `integrations-v2-reviewed.json`. Raw v2 root:
-`/Volumes/A/.hms-bench-cache/warm-integrations-qualification-20261103-v2`.
+`<bench-cache>/warm-integrations-qualification-20261103-v2`.
 
-Source: `/Volumes/A/.hms-bench-cache/warm-sdk-frameworks-20261103-v1`; guest
+Source: `<bench-cache>/warm-sdk-frameworks-20261103-v1`; guest
 `sdk-frameworks-v1`; launcher PID 28758. The 12-file archive SHA256 is
 `4cf7d14b39426da594328d7922cbcf8a58948db5677b6de11babf22a0cf3e42b`.
 Receipts are `sdk-frameworks-source.json`, `sdk-frameworks-launcher.pid` and
@@ -186,7 +186,7 @@ Official archive checksums were verified, and tools are isolated under the run
 directory. No global toolchain was replaced. Existing tests must run without
 skips; explicit process-death/migration coverage and other target OSes remain open.
 
-Run: `/Volumes/A/.hms-bench-cache/warm-c-family-qualification-20261103-v1`;
+Run: `<bench-cache>/warm-c-family-qualification-20261103-v1`;
 launcher PID 20356. Its 492-file source freeze SHA256 is
 `e00b3af33801f62edfe51e2107173b28ec4b0e9b628d0d98f61570b554e10951`.
 Runner: `mac-c-family.py`; receipts: `c-family-freeze.json` and
@@ -205,7 +205,7 @@ All frozen source and package digests were reverified. Terminal receipt:
 `c-family-v3-finished.json`.
 
 Native process-death checks are separately frozen under
-`/Volumes/A/.hms-bench-cache/warm-native-binding-recovery-20261103-v1`, launcher
+`<bench-cache>/warm-native-binding-recovery-20261103-v1`, launcher
 PID 27181. Each C/Go/Java/.NET writer flushes a 32-document insert, 16 replacements
 and eight deletions, then is killed with SIGKILL or SIGTERM after the parent's
 acknowledgement ledger is fsynced. All four bindings must read each recovered
@@ -234,7 +234,7 @@ or compiling anything in the guest. It also requires the guest framework termina
 receipt. Guest target will be
 `/home/davidcondrey.guest/warm-milestones-20261103/c-family-v1`; no guest run exists yet.
 Local prepared run:
-`/Volumes/A/.hms-bench-cache/warm-linux-c-family-qualification-20261103-v1`.
+`<bench-cache>/warm-linux-c-family-qualification-20261103-v1`.
 Source freeze SHA256:
 `190abc53131ac83ab0854e94ab1f42ee43a263e657d14f9fc13983a97e601700`.
 The 441,743,360-byte transfer archive SHA256 is
@@ -334,7 +334,7 @@ crash location. Separate existing tests cover cancelled/atomic transactions and
 Vectra import/reopen behavior.
 
 Raw artifact, package source, installed consumer, exact commands and results:
-`/Volumes/A/.hms-bench-cache/warm-node-qualification-20261103-v1`.
+`<bench-cache>/warm-node-qualification-20261103-v1`.
 Repository copies are `node-freeze.json`, `node-finished.json`, and the
 `node-*.log` files here. The receipt distinguishes the local packed binding from
 the untested per-platform optional dependency selection mechanism. Milestone 7
@@ -346,13 +346,13 @@ A new Lima 2.2.0 guest `warm-arm64` runs Ubuntu 24.04.5 on the Mac, with four
 virtual CPUs, 8 GiB RAM, no swap and a 48 GiB disk. It is a platform environment
 on the existing Apple M4, not another physical hardware configuration. No other
 Lima guest was changed. Its private state and disk are under
-`/Volumes/A/.hms-lima`; invoke it with `LIMA_HOME=/Volumes/A/.hms-lima`.
+`<workspace>/.hms-lima`; invoke it with `LIMA_HOME=<workspace>/.hms-lima`.
 No host directories are mounted, and agent/public-key forwarding is disabled.
 The [configuration](https://github.com/writerslogic/warm/blob/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/milestones-20261102/linux-arm64-lima.yaml) pins the Ubuntu image SHA256.
 
 Lima ignores XDG_CACHE_HOME on macOS and initially downloaded/converts the image
 under `~/Library/Caches/lima`. The specific newly used image cache was preserved
-at `/Volumes/A/.hms-bench-cache/lima-cache/noble-20261103` with a symlink at its
+at `<bench-cache>/lima-cache/noble-20261103` with a symlink at its
 original per-URL cache path, restoring the original host free space. The cache
 path is `download/by-url-sha256/7c8e4507222e57734b580a24bf30b7828afaae43c2f040f6e0977f45669ce961`.
 Other cache entries are unchanged. [Lima documents this hard-coded macOS cache](https://lima-vm.io/docs/dev/internals/).
@@ -360,7 +360,7 @@ Other cache entries are unchanged. [Lima documents this hard-coded macOS cache](
 The source archive is baseline `ab978afd` plus the durable-receipt fix and Node
 recovery probe. It excludes unrelated CI edits. Source, overlay description,
 initial bootstrap, and the Cargo target supplement are frozen under
-`/Volumes/A/.hms-bench-cache/warm-linux-arm64-source-20261103-v1`.
+`<bench-cache>/warm-linux-arm64-source-20261103-v1`.
 Source tar SHA256 is `ddfc3d5fa66afb4317b66742e6724691c489ed9c2f0071ca9e2194d398cc350a`;
 the supplemental Cargo example/bench archive is
 `8194367e5c1775bc7710a870cda04027f36b33bf3150485fd7457a94aef8fdb6`.
@@ -396,14 +396,14 @@ test's direct file lookup was pointed to that same installed package by a symlin
 Both interpreters passed 54 tests and 46 subtests with zero failures or skips.
 
 Artifact, consumer uv locks, installed-file receipts and frozen source are under
-`/Volumes/A/.hms-bench-cache/warm-python-sdk-qualification-20261103-v1`.
+`<bench-cache>/warm-python-sdk-qualification-20261103-v1`.
 Repository receipts are `python-sdk-{freeze,finished}.json` and `python-sdk-*.log`.
 This covers the base HTTP SDK contract with local mocks/files. It does not qualify
 native `warm-python`, live-server lifecycle, optional framework adapters or every
 importer. Those remain separate platform-matrix obligations.
 
 Native Python source is prepared separately at
-`/Volumes/A/.hms-bench-cache/warm-python-native-qualification-20261103-v1`.
+`<bench-cache>/warm-python-native-qualification-20261103-v1`.
 Its 442-file freeze uses the verified Linux source archives plus the repository's
 Python metadata/tests and required Cargo include files; the tiny embedding fixture
 matches its published repository digest. Maturin is pinned to 1.16.0 and Rust to
@@ -421,7 +421,7 @@ in the artifact root preserve this distinction; the source and driver are unchan
 ## Queued installed-SDK live qualification
 
 The existing pure-Python wheel is frozen into
-`/Volumes/A/.hms-bench-cache/warm-python-sdk-live-20261103-v1`, with separate locked
+`<bench-cache>/warm-python-sdk-live-20261103-v1`, with separate locked
 Python 3.11.14 and 3.14.7 consumers. Thirteen source/artifact files are hashed;
 the portable archive SHA256 is
 `cd5a215af34fac89562a634bb3f372dcb85031f1e3b5d5e9a3e41f4d0e8e624f`.
@@ -463,7 +463,7 @@ replacement are retained. The replacement builds the ios-sim XCFramework and
 runs all seven existing XCTest cases from a separately extracted package on a
 dedicated simulator, then shuts down that simulator.
 
-Run: `/Volumes/A/.hms-bench-cache/warm-ios-simulator-qualification-20261103-v2`;
+Run: `<bench-cache>/warm-ios-simulator-qualification-20261103-v2`;
 PID 44602; freeze `954ba9bc459319d7098aff8699577ea9f28b2397aa18edabbff7d2043daadf2e`.
 Receipts: `ios-simulator-v{1,2}-{freeze,launched}.json` and v1 failure evidence.
 V2 builds both native simulator slices successfully, then stops before tests
@@ -485,7 +485,7 @@ is shut down. This covers simulator lifecycle, filtering, deletion/reopen,
 encryption, snapshot restore/tamper detection, errors, async concurrency and
 chunking. It does not qualify a physical device, migration or process death.
 
-Final run: `/Volumes/A/.hms-bench-cache/warm-ios-simulator-qualification-20261103-v4`;
+Final run: `<bench-cache>/warm-ios-simulator-qualification-20261103-v4`;
 freeze `4e01e83d9c01930d43ec0157174340f43580be7c7dc343eb6da2bcc008e1dea0`;
 40,185,768-byte package SHA256
 `cb2a922e7dab902394eca94833f43f06c5039c4d5b615bd94be6333551835ef6`.
@@ -500,7 +500,7 @@ root engine's dependency list; no package/version/checksum changes. The tracked
 lock is corrected, with the original and failure log retained. Bindgen's lock
 is unchanged.
 
-Run root: `/Volumes/A/.hms-bench-cache/warm-mobile-host-qualification-20261103-v1`.
+Run root: `<bench-cache>/warm-mobile-host-qualification-20261103-v1`.
 505-file freeze SHA256:
 `216ef9174a01fbb84ce7ac8b7e59741662dfd568b8a8f76a92742b19848f2c29`.
 Launcher PID 39259; runner `mac-mobile-host.py`; plan
@@ -520,7 +520,7 @@ Swift and both Kotlin generated interfaces match the committed sources after
 trailing-whitespace normalization. All source, reused evidence, archive members,
 installed Swift files and logs were verified. V2 freeze SHA256:
 `2eb5ecf373ba8563333e6e1b9f9d33151a3325336e8e08a45d4cc6ffc9f25aee`.
-Raw root: `/Volumes/A/.hms-bench-cache/warm-mobile-host-qualification-20261103-v2`;
+Raw root: `<bench-cache>/warm-mobile-host-qualification-20261103-v2`;
 runner `mac-mobile-host-v2.py`; terminal `mobile-host-v2-finished.json`.
 JVM archive SHA256:
 `35264da331b3bf6502af46e7649268207cd512fb1b3735e085abe394b23ba24c`.

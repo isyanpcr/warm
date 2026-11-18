@@ -14,7 +14,7 @@ Use the public Node APIs in one pinned Node runtime for both engines. The locall
 installed runtime is Node 26.8.1; it satisfies Vectra's >=22 requirement, while WARM
 CI uses Node 22. Record the chosen executable/hash at freeze and do not mix runtimes.
 Vectra is 0.15.0, retained at
-`/Volumes/A/toip-warm-backend/toip-mcp-server/node_modules/vectra`; its inspected
+`<workspace>/toip-warm-backend/toip-mcp-server/node_modules/vectra`; its inspected
 source matches commit `dec2dadc3bb158b06ac72fa9097bee729429a271` after line-ending
 normalization. Hash the actual imported package and lock all dependencies. The
 [source](https://github.com/Stevenic/vectra/tree/dec2dadc3bb158b06ac72fa9097bee729429a271)
