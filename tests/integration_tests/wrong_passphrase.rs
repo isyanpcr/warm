@@ -1,7 +1,6 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
 //! Reopening an encrypted store with the wrong passphrase names the passphrase.
-#![cfg(feature = "security")]
 
 use serde_json::json;
 use writerslogic_warm::{core::WarmConfig, DocumentInput, WarmCore};

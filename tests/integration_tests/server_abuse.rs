@@ -4,9 +4,7 @@
 //! Abuse and fuzz tests against the real binary: hostile bodies, paths and headers must produce
 //! clean 4xx problem responses, never a 5xx, a hang, a crash, data loss or unbounded memory.
 
-#![cfg(feature = "server")]
-
-mod server_support;
+use crate::server_support;
 
 use std::io::{Read, Write};
 use std::time::Duration;

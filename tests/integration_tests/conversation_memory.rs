@@ -1,8 +1,6 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-#![cfg(feature = "conversation-memory")]
-
 use std::path::Path;
 use std::sync::{Arc, Barrier};
 

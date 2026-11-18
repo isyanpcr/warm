@@ -7,6 +7,7 @@
 
 use std::collections::BTreeSet;
 
+use crate::support::open;
 use serde_json::json;
 use writerslogic_warm::core::documents::{EncodeMode, IngestOptions};
 use writerslogic_warm::core::encoding::TextEncoder;
@@ -133,10 +134,6 @@ fn document(i: usize, text: &str) -> DocumentInput {
         "metadata": {"group": i % 3}
     }))
     .expect("document input")
-}
-
-fn open(dir: &tempfile::TempDir) -> anyhow::Result<WarmCore> {
-    WarmCore::new(1024, Some(dir.path().display().to_string()), None)
 }
 
 /// Every chunk the vector index returns for `text`, as a set: slot order differs between a

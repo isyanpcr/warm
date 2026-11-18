@@ -1,7 +1,7 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-mod format_common;
+use crate::format_common;
 use format_common::goldens;
 use writerslogic_warm::core::format::{upgrade_store, verify_path, Verdict, VerifyOptions};
 

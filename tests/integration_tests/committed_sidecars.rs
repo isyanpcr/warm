@@ -1,8 +1,6 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-#![cfg(all(feature = "security", unix))]
-
 use anyhow::Result;
 use writerslogic_warm::core::WarmConfig;
 use writerslogic_warm::{CommittedMutationError, EntangledHVec, WarmCore};

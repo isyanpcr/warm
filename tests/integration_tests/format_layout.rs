@@ -5,7 +5,7 @@
 //! none of the crate's readers. If the spec were incomplete or wrong it could not decode them.
 //! Also pins what an open may change and how future versions are refused.
 
-mod format_common;
+use crate::format_common;
 
 use std::collections::BTreeMap;
 

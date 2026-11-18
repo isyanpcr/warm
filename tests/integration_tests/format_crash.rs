@@ -3,7 +3,7 @@
 //! Crash-consistency claims of `docs/file-format/CRASH-CONSISTENCY.md`, tested on committed
 //! golden stores.
 
-mod format_common;
+use crate::format_common;
 
 use std::path::Path;
 
