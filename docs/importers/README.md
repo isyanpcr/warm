@@ -18,28 +18,14 @@ warm-import chroma --path ./chroma-db --warm-url http://127.0.0.1:8080 --tenant 
 3. Builds the document index (`/api/v1/index/maintain`) unless `--no-maintain-index`.
 4. Runs the fidelity check on a sample of queries and writes the report.
 
-Re-running the same source is idempotent. Each mapped part carries a source ownership identity;
-the server atomically rejects a different owner or an unowned destination with the same id.
-The importer requires a server whose OpenAPI contract exposes `import_identity` and
-`import_adopt_legacy`; older servers fail before the first write. A completed checkpoint is
-not resumed, so a later run imports the source from the start.
+Re-running the same source is idempotent: each mapped part carries a source ownership identity, and the server atomically rejects a different owner or an unowned destination with the same id. The importer requires a server whose OpenAPI contract exposes `import_identity` and `import_adopt_legacy`; older servers fail before the first write. A completed checkpoint is not resumed, so a later run imports the source from the start.
 
-`--id-mapping v1` remains the default and preserves existing destination ids. Ambiguous
-namespace/part spellings fail as identity conflicts instead of overwriting data. For a new
-destination, use `--id-mapping v2`: bounded `h2:<sha256>` ids encode the typed source,
-namespace, original id and part identity. Original identities remain in metadata. Switching
-an existing import to v2 is an explicit layout migration, described below.
-
-Old imports without ownership stamps require `--adopt-legacy`. Adoption requires an exact
-match of original source, namespace, source id and part metadata; sharing an id is insufficient.
-Adopt the existing layout before changing its id mapping or splitting options.
-
-Changed part counts or mapped ids are rejected by default. `--split-policy replace` writes
-the complete new layout in one atomic batch, then deletes obsolete parts conditionally on
-their ownership identity. A record may have at most 1000 parts and a replacement must fit the
-server's batch/body budgets. Checkpoints advance only after cleanup completes. If cleanup is
-interrupted, rerun with the same options to finish; already absent parts are harmless.
-`stale_parts_deleted_this_run` counts deletions in that process, including in partial error reports.
+| Situation | Option and behavior |
+|---|---|
+| Default ids | `--id-mapping v1` preserves existing destination ids. Ambiguous namespace/part spellings fail as identity conflicts instead of overwriting data. |
+| New destination | `--id-mapping v2`: bounded `h2:<sha256>` ids encode the typed source, namespace, original id and part identity; original identities stay in metadata. Switching an existing import to v2 is an explicit layout migration. |
+| Old imports without ownership stamps | `--adopt-legacy`: needs an exact match of original source, namespace, source id and part metadata (sharing an id is insufficient). Adopt the existing layout before changing its id mapping or splitting options. |
+| Changed part counts or mapped ids | Rejected by default. `--split-policy replace` writes the complete new layout in one atomic batch, then deletes obsolete parts conditionally on ownership identity. At most 1000 parts per record; the replacement must fit the server's batch/body budgets. Checkpoints advance only after cleanup completes; if cleanup is interrupted, rerun with the same options (already absent parts are harmless). `stale_parts_deleted_this_run` counts deletions in that process, including in partial error reports. |
 
 ## Vectors: carry, project or re-encode
 

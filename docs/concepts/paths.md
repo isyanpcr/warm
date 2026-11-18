@@ -2,7 +2,7 @@
 
 **Hybrid search, graph indexing, and vector-symbolic memory.**
 
-WARM combines several retrieval and memory paths in one local Rust engine. The paths have different roles; the vector-symbolic layer does not rank ordinary document-search results.
+WARM combines several retrieval and memory paths in one local Rust engine, with different roles; the vector-symbolic layer does not rank ordinary document-search results.
 
 | Need | WARM path | Useful comparison |
 |------|----------|-------------------|
@@ -11,8 +11,6 @@ WARM combines several retrieval and memory paths in one local Rust engine. The p
 | Search a large vector collection | Graph index with quantized traversal and exact reranking | Approximate nearest-neighbor libraries |
 | Store and query structured facts | Vector-symbolic bind, bundle and associative recall, plus a triple store | Symbolic and graph memory systems |
 
-The document search path needs supplied embeddings for semantic matching. Its index can contain source text; enable the encrypted store when confidentiality is required. Hypervector sketches and term counts are not encryption.
-
-The vector-symbolic layer supports composition and associative recall for facts. It is not a substitute for a strong language embedding model when the task is nuanced semantic search over prose. The older sparse-vector path is experimental and trails established ANN libraries; use the graph index for vector search.
-
-For measured wins and losses, see [public benchmarks](../PUBLIC-BENCHMARKS.md). For the boundary between document retrieval and holographic memory, see [what “holographic” means](holographic.md) and the [architecture map](../ARCHITECTURE.md).
+- Semantic matching in document search needs embeddings you supply. Its index can contain source text; enable the encrypted store when confidentiality matters ([privacy limits](privacy-limits.md)).
+- The vector-symbolic layer supports composition and associative recall for facts; it does not replace a strong language embedding model for nuanced semantic search over prose. The older sparse-vector path is experimental and trails established ANN libraries: use the graph index for vector search.
+- Measured wins and losses: [public benchmarks](../PUBLIC-BENCHMARKS.md). Boundary between document retrieval and holographic memory: [holographic](holographic.md), [architecture map](../ARCHITECTURE.md).

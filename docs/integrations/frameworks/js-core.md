@@ -2,10 +2,17 @@
 
 Shared record API used by the JS adapters. It runs the optional native engine in process (`writerslogic-warm`) and adds `remember`, `recall`, `get`, `list` and `forget` with explicit collection metadata. It mirrors the Python framework core (`writerslogic_warm_integrations.core`); the native temporal memory API carries its own fact and policy contracts. These adapters are separate from the portable `warm-sdk` HTTP client.
 
+## Install
+
+```sh
+npm install @writerslogic/warm-core writerslogic-warm
+```
+
+The framework packages are released together by the `js-adapters-vX.Y.Z` tag, separately from the engine and the `warm-sdk` client ([RELEASING](../../RELEASING.md#framework-adapter-releases)).
+
 ## Source setup
 
-The framework packages are available from the source workspace; they are not published by the
-engine or SDK release. From the repository root, build the native engine and adapters:
+To work on the adapters, build the native engine and adapters from the repository root:
 
 ```sh
 npm ci --omit=optional
@@ -19,7 +26,7 @@ Run the adapter examples from that workspace so its local packages resolve.
 ```ts
 import { WarmStore } from '@writerslogic/warm-core'
 
-const store = new WarmStore({ path: './memory' })          // omit path for in-memory
+const store = new WarmStore({ path: './memory' })          // always set path: omitted, the engine uses the current directory
 await store.remember([{ id: 'a', text: 'Ada wrote the first program', metadata: { topic: 'history' } }])
 const hits = await store.recall('first program', { k: 3, filter: { topic: 'history' } })
 const [rec] = await store.get(['a'])                      // undefined when absent
@@ -37,7 +44,7 @@ The build produces ESM and CJS. `writerslogic-warm` is a peer dependency (`>=0.6
 | Option | Default | Meaning |
 |---|---|---|
 | `memory` | created | An existing native `WarmMemorySystem`; its embedding space must match `embedder` |
-| `path` | in-memory | Storage directory for a store this class creates |
+| `path` | current directory (engine default) | Storage directory for a store this class creates |
 | `dimensions` | 4096 | Hypervector dimensions of a created store |
 | `embedder` | `HashingEmbedder(384)` | The encoder. Same shape as `writerslogic-warm/semantic`'s `Embedder`, so `createLocalEmbedder(...)` works directly |
 | `rerank` | none | `(query, passages) => Promise<number[]>`, applied to candidates |

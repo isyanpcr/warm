@@ -2,12 +2,13 @@
 
 A `Session` and a set of memory tools for the OpenAI Agents SDK for JavaScript/TypeScript (`@openai/agents`), running the native engine in process through [`@writerslogic/warm-core`](js-core.md). ESM and CJS, typed.
 
-Use the [source workspace setup](js-core.md#source-setup). This adapter depends on the
+Install: `npm install @writerslogic/warm-openai-agents @openai/agents zod` (see [JS core](js-core.md#install)). This adapter depends on the
 embedded `writerslogic-warm` engine, `@openai/agents` and `zod`; it is separate from the
-portable `warm-sdk` HTTP client and is not published by the SDK release.
+portable `warm-sdk` HTTP client.
 
 ## Quickstart
 
+<!-- quickstart-check: skip: requires API key (offline: examples/quickstart.mjs) -->
 ```ts
 import { Agent, run } from '@openai/agents'
 import { WarmSession, WarmStore, createMemoryTools } from '@writerslogic/warm-openai-agents'
@@ -61,4 +62,4 @@ Pass any `WarmStoreOptions` of the core to `new WarmStore(...)`:
 
 ## Tested against
 
-`@openai/agents` 0.20.0 (`@openai/agents-core` 0.20.0), `zod` 4.6.7, `writerslogic-warm` 0.6.0 (native build from this repository), Node 26.8, TypeScript 5.9. `npm test --workspace packages/openai-agents` in `integrations/js` builds and runs 11 tests against the real native addon, one temp directory per test.
+`@openai/agents` 0.20.0 (`@openai/agents-core` 0.20.0), `zod` 4.6.7, `writerslogic-warm` 0.6.0 (native build from this repository), Node 26.8, TypeScript 5.9. `npm test --workspace packages/openai-agents` in `integrations/js` builds and runs 15 tests against the real native addon, one temp directory per test.

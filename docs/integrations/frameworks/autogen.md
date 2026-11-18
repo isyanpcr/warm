@@ -21,14 +21,27 @@ The two extras conflict (different frameworks); install one per environment.
 
 ## AutoGen quickstart
 
+<!-- quickstart-check: python autogen -->
 ```python
+import asyncio
+from autogen_agentchat.agents import AssistantAgent
+from autogen_core.memory import MemoryContent, MemoryMimeType
+from autogen_ext.models.replay import ReplayChatCompletionClient   # offline stand-in; pass a real model_client
 from writerslogic_warm_integrations.autogen import WarmMemory
-from writerslogic_warm_integrations.core import WarmConfig
+from writerslogic_warm_integrations.core import HashingEmbedder, WarmConfig
 
-memory = WarmMemory("assistant_notes", warm=WarmConfig(url="http://127.0.0.1:8080", tenant_id="agents", input_dim=384), k=5)
-agent = AssistantAgent("helper", model_client=client, memory=[memory])
-await memory.add(MemoryContent(content="Prefers dark roast", mime_type=MemoryMimeType.TEXT, metadata={"topic": "food"}))
+async def main():
+    warm = WarmConfig(url="http://127.0.0.1:8080", tenant_id="agents", embedder=HashingEmbedder(384))
+    memory = WarmMemory("assistant_notes", warm=warm, k=5)
+    await memory.add(MemoryContent(content="Prefers dark roast", mime_type=MemoryMimeType.TEXT, metadata={"topic": "food"}))
+    agent = AssistantAgent("helper", model_client=ReplayChatCompletionClient(["Dark roast."]), memory=[memory])
+    print((await agent.run(task="What coffee do I like?")).messages[-1].content)
+    await memory.close()
+
+asyncio.run(main())
 ```
+
+Runs offline as written against `warm-server --no-auth --input-dim 384`; checked by `scripts/check-readme-snippets.py docs`.
 
 `update_context` queries with the latest message and adds a system message in the same format as `ListMemory`. `query(q, k=, score_threshold=, filter=)` takes a MongoDB-style filter over the `MemoryContent.metadata` you stored. Results carry `metadata["id"]` and `metadata["score"]` (cosine). `name` is the collection, so several agents can share one tenant. `clear()` deletes the collection's records.
 
@@ -38,11 +51,23 @@ Serialization: `dump_component()` / `load_component()` work (`provider = writers
 
 ## AG2 quickstart
 
+<!-- quickstart-check: python ag2 -->
 ```python
+import asyncio, json
 from ag2 import Agent
+from ag2.events import ToolCallEvent
+from ag2.testing import TestConfig                       # scripted offline model; pass a real `config=`
 from writerslogic_warm_integrations.ag2 import WarmMemoryToolkit
+from writerslogic_warm_integrations.core import HashingEmbedder, WarmConfig
 
-agent = Agent("assistant", config=cfg, tools=[WarmMemoryToolkit(warm_config, k=5)])
+async def main():
+    memory = WarmMemoryToolkit(WarmConfig(url="http://127.0.0.1:8080", tenant_id="agents", embedder=HashingEmbedder(384)), k=5)
+    script = TestConfig(ToolCallEvent(name="remember", arguments=json.dumps({"text": "Deploys happen on Fridays"})), "Noted.")
+    reply = await Agent("assistant", config=script, tools=[memory]).ask("Note that deploys happen on Fridays.")
+    print(await reply.content(), [r.text for r in (await memory.backend.list()).records])
+    await memory.aclose()
+
+asyncio.run(main())
 ```
 
 Tools: `remember(text, metadata?) -> id`, `recall(query, k?, filter?) -> [{id, text, metadata, score}]`, `forget(id) -> bool` (omit with `allow_forget=False`). The toolkit's `.backend` is the `AsyncWarmBackend` for direct use.

@@ -1,6 +1,6 @@
 # Vercel AI SDK
 
-Package: `@writerslogic/warm-vercel-ai` (peer: `ai` >=7 <8, `zod`). Built on `@writerslogic/warm-core` (see [js-core.md](js-core.md)).
+Package: `@writerslogic/warm-vercel-ai` (peer: `ai` >=7 <8, `zod`). Built on `@writerslogic/warm-core` (see [js-core.md](js-core.md)). Install: `npm install @writerslogic/warm-vercel-ai ai zod`.
 
 The AI SDK has no vector-store or memory abstraction of its own: its memory guide lists provider-defined tools, hosted memory providers and custom tools. This package is the custom-tool path plus the SDK's documented RAG middleware pattern, so it works with any model provider.
 

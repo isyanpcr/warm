@@ -11,7 +11,7 @@ the checkout from which it is invoked, so running it directly from a newer
 `main` builds a different native engine. Verify the native `src/`, `Cargo.toml`,
 and `Cargo.lock` against that commit before reproducing the deployment. The
 query repair's reviewed source hashes, test log, and live deployment record are
-in `/Volumes/A/warm-coordination/reports/aml/` on the development host.
+held by the maintainers and are not part of this repository.
 
 Run the focused local contract checks with:
 

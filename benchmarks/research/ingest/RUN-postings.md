@@ -80,7 +80,7 @@ Nothing in `src/core/documents/search.rs` changed.
 ## Commands
 
 ```sh
-cd /Volumes/A/writerslogic-warm            # or the worktree holding this branch
+cd <workspace>/writerslogic-warm            # or the worktree holding this branch
 cargo fmt --all
 cargo clippy --all-targets -- -D warnings
 cargo clippy --all-targets --all-features -- -D warnings

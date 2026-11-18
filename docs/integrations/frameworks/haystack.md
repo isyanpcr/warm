@@ -10,6 +10,7 @@
 
 ## Quickstart
 
+<!-- quickstart-check: python haystack -->
 ```python
 from haystack import Document, Pipeline
 from writerslogic_warm_integrations.haystack import WarmDocumentStore, WarmTextRetriever
@@ -19,9 +20,12 @@ store.write_documents([Document(content="WARM runs locally.", meta={"source": "d
 
 pipe = Pipeline()
 pipe.add_component("retriever", WarmTextRetriever(store, top_k=3))
-pipe.run({"retriever": {"query": "where does it run?",
-                        "filters": {"field": "meta.source", "operator": "==", "value": "docs"}}})
+result = pipe.run({"retriever": {"query": "where does it run?",
+                                 "filters": {"field": "meta.source", "operator": "==", "value": "docs"}}})
+print(result["retriever"]["documents"])
 ```
+
+Runs offline as written against `warm-server --no-auth --input-dim 384`; checked by `scripts/check-readme-snippets.py docs`.
 
 Runnable version: `integrations/python/examples/haystack_rag.py`.
 

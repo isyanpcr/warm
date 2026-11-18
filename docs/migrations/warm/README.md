@@ -100,6 +100,6 @@ The separate GitHub Code Quality API initially reported 35 notes: 31 legacy Pyth
 alias exports, two unused imports, one client context-manager suggestion and one
 historical probe catching `BaseException`. The import/context-manager corrections
 pass 10 SDK memory tests and three renamer tests. Finding 151 is intentional:
-`docs/research/technical-audit-20261030/python_reproduction.py` must catch PyO3
+`https://github.com/writerslogic/warm/blob/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/technical-audit-20261030/python_reproduction.py` must catch PyO3
 `PanicException` to record the original native assertion failures (shown in the
 adjacent `python-reproduction.log`). Its historical evidence remains unchanged.

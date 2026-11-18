@@ -67,11 +67,11 @@ They made no query timings, used no benchmark corpus, and are not the study:
   None of these measurements establishes the real input's peak or duration.
 
 Raw diagnostics, code snapshots, results and resource observations are retained
-under `/Volumes/A/.hms-bench-cache/vectra-import-diagnostic-20261102-v1`,
-`/Volumes/A/.hms-bench-cache/vectra-import-diagnostic-20261102-v2`,
-`/Volumes/A/.hms-bench-cache/vectra-import-profile-20261102-v1`,
-`/Volumes/A/.hms-bench-cache/vectra-import-vmmap-20261102-v1`, and
-`/Volumes/A/.hms-bench-cache/vectra-import-worker-validation-20261102-v1`.
+under `<bench-cache>/vectra-import-diagnostic-20261102-v1`,
+`<bench-cache>/vectra-import-diagnostic-20261102-v2`,
+`<bench-cache>/vectra-import-profile-20261102-v1`,
+`<bench-cache>/vectra-import-vmmap-20261102-v1`, and
+`<bench-cache>/vectra-import-worker-validation-20261102-v1`.
 The first attempted external `vmmap` snapshot missed the exited process; its
 error is retained in the profile directory. The successful snapshot is
 `vmmap-vmmap.txt` in the subsequent directory.

@@ -24,14 +24,21 @@ WARM_API_KEY=... warm-server --input-dim 1536 --data-dir ./hms-data   # input-di
 
 ## Quickstart
 
+<!-- quickstart-check: python llamaindex -->
 ```python
-from llama_index.core import StorageContext, VectorStoreIndex
+from llama_index.core import Document, StorageContext, VectorStoreIndex
+from llama_index.core.embeddings import MockEmbedding        # offline; use a real embed_model and its dimension
 from writerslogic_warm_integrations.llamaindex import WarmVectorStore
 
-store = WarmVectorStore(url="http://127.0.0.1:8080", api_key="...", tenant_id="acme", input_dim=1536)
-index = VectorStoreIndex.from_documents(docs, storage_context=StorageContext.from_defaults(vector_store=store))
-index = VectorStoreIndex.from_vector_store(store)          # reopen later
+embed = MockEmbedding(embed_dim=384)
+store = WarmVectorStore(url="http://127.0.0.1:8080", tenant_id="acme", input_dim=384)
+docs = [Document(text="WARM runs locally.", metadata={"team": "red"})]
+index = VectorStoreIndex.from_documents(docs, storage_context=StorageContext.from_defaults(vector_store=store), embed_model=embed)
+index = VectorStoreIndex.from_vector_store(store, embed_model=embed)          # reopen later
+print(index.as_retriever(similarity_top_k=1).retrieve("where does it run?"))
 ```
+
+Runs offline as written against `warm-server --no-auth --input-dim 384`; checked by `scripts/check-readme-snippets.py docs`.
 
 Runnable end to end (index, filters, reload from storage, memory block): `integrations/python/examples/llamaindex_quickstart.py`.
 

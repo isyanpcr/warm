@@ -1,6 +1,6 @@
 # Mastra
 
-Package: `@writerslogic/warm-mastra` (peer: `@mastra/core` >=1.78 <2). Built on `@writerslogic/warm-core` (see [js-core.md](js-core.md)).
+Package: `@writerslogic/warm-mastra` (peer: `@mastra/core` >=1.78 <2). Built on `@writerslogic/warm-core` (see [js-core.md](js-core.md)). Install: `npm install @writerslogic/warm-mastra @mastra/core`.
 
 `WarmVector` implements `MastraVector` (`createIndex`, `listIndexes`, `describeIndex`, `deleteIndex`, `upsert`, `query`, `updateVector`, `deleteVector`, `deleteVectors`) over the in-process native engine, so it plugs into Mastra Memory semantic recall, `MastraVector` RAG tools and anything else that takes a vector store.
 
@@ -24,7 +24,7 @@ const agent = new Agent({
 
 ## Options
 
-`id`, `dimension` (vector length of every index; default 1536; fixed for the life of the store), `path` (storage directory; omit for in-memory), `hypervectorDimensions` (engine hypervector size, default 4096), `maxFetch`, `overfetch`, `warmConfig` (native config, e.g. encryption: `{ encryptionEnabled: true, encryptionPassphraseEnv: 'WARM_PASSPHRASE' }`), `memory` (an existing native store created with embedding model `mastra-supplied`).
+`id`, `dimension` (vector length of every index; default 1536; fixed for the life of the store), `path` (storage directory; omitted, the engine uses the current directory, so always set it), `hypervectorDimensions` (engine hypervector size, default 4096), `maxFetch`, `overfetch`, `warmConfig` (native config, e.g. encryption: `{ encryptionEnabled: true, encryptionPassphraseEnv: 'WARM_PASSPHRASE' }`), `memory` (an existing native store created with embedding model `mastra-supplied`).
 
 ## Mapping
 

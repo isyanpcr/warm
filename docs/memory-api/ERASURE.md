@@ -20,7 +20,7 @@ reports how many purges wait. Callers that need the text gone before the call re
 tool is always synchronous (one compaction per call, however many ids it removes).
 
 Why deferred is the default: a scrubbing compaction rewrites the store, so a synchronous forget
-costs time that grows with the store (see "Cost" below).
+costs time that grows with the store (see [Cost](#cost)).
 
 ## The ticket ledger
 
@@ -32,13 +32,24 @@ never removes the ticket of another purge whose delete has not committed
 synchronous purges share compactions: a purge whose ticket another thread's compaction already
 cleared returns without compacting again.
 
+## What each step erases
+
+| Step | When | Effect |
+|---|---|---|
+| Text segment scrub | Always, before `forget` returns | The deleted chunks' records in `documents.text` are overwritten with zeros and synced. Postings and the memory-API index live in memory and are rebuilt from the journal; no file stores terms. |
+| Journal frame | Before `forget` returns | The frame that records the delete is durable. |
+| Update | On replace | The old text records in `documents.text` are zeroed the same way (synced by the next `forget`, purge or compaction); the journal keeps the old frame until a purge. |
+| Scrubbing compaction | `synchronous: true` before return, otherwise deferred | The journal is rewritten without the text; the replaced generation and any unreferenced generation left by an interrupted compaction are overwritten with zeros through the file API, synced and unlinked. The `purge.pending` ticket ([ledger](#the-ticket-ledger)) makes a crash in between finish at the next open. |
+
+A bare `WarmCore::delete_document` zeroes the records too but leaves their fsync to the next `forget`, purge or compaction: a design that synced the text segment in every delete measured about 4 ms instead of 60 us on macOS (`benchmarks/results/purge_v1.json`, recorded before journal commits used `F_FULLFSYNC`). `DELETE /api/v1/documents/{id}` purges by default (deferred; `?synchronous=true` scrubs before the response); `?purge=false` opts out.
+
 ## What remains with `purge: false`
 
-A logical forget scrubs the text segment (`documents.text`) and removes the facts from every
-query, and leaves the deleted frames in the append-only journal segments
-(`vectors_data.bin/gen-*/seg_*.bin`). `tests/erase.rs::a_logical_forget_leaves_the_text_only_in_the_journal_segments`
-asserts that these are the only files that hold the text, and that a later purge removes it.
-Historical views ([TIME-TRAVEL.md](TIME-TRAVEL.md)) read these frames.
+A logical forget scrubs the text segment (`documents.text`) and removes the facts from every query, and leaves the deleted frames in the append-only journal segments (`vectors_data.bin/gen-*/seg_*.bin`, and nothing else) until a compaction. `tests/erase.rs::a_logical_forget_leaves_the_text_only_in_the_journal_segments` asserts that these are the only files that hold the text, and that a later purge removes it. This is the one bounded exception; leave `purge` on when the text must be gone.
+
+Historical views ([TIME-TRAVEL.md](TIME-TRAVEL.md)) read these frames: at a position before the delete they return the fact. After a purge no position returns it.
+
+Derived data (hashed n-gram vectors in the ANN index files, fact ids) is rewritten without the deleted entries by the purge but is not text.
 
 ## What the default `forget` is tested to do
 
@@ -48,14 +59,28 @@ Historical views ([TIME-TRAVEL.md](TIME-TRAVEL.md)) read these frames.
 | Same for a superseded chain and for replaced text | `tests/erase.rs`, `tests/purge.rs` |
 | A crash at every durability point of the purge, then a reopen: a document the store no longer holds is in no file; an acknowledged forget removed everything; `purge.pending` is gone | `tests/erase.rs::crash` (`failpoints`; Linux, macOS, Windows in CI) |
 | A purge waiting at a full disk does not block open, is reported pending, and is finished by a later open | `tests/purge_disk_full.rs` |
-| A deferred forget leaves the text in the journal until `compact`, reopen or the 64th waiting purge, which erase it | `tests/erase.rs::a_deferred_purge_is_durable_and_erased_by_compaction_open_or_batch` | |
+| A deferred forget leaves the text in the journal until `compact`, reopen or the 64th waiting purge, which erase it | `tests/erase.rs::a_deferred_purge_is_durable_and_erased_by_compaction_open_or_batch` |
 | The bytes of an ext4 image (file data and the filesystem journal) hold no marker after a purge and after a purge cut by a crash and finished at reopen; records that were not forgotten are found in the image, so the scan can see live text (a control forgotten with `purge: false` is reported but not required: the first CI run found no remnant of it in the image, which is not explained yet) | `scripts/ci/raw-image-erase.sh` with `tests/raw_image.rs` (Linux CI only) |
 
-The scan of the raw image covers filesystem-level remanence on that filesystem: freed blocks,
-the ext4 journal and slack. It does not cover a solid-state drive's flash translation layer,
-which remaps writes, so an overwritten page can survive in an unmapped cell until the drive
-erases it; copy-on-write and snapshotting filesystems (APFS clones and snapshots, btrfs, ZFS);
-swap and hibernation images; backups; or bytes a caller already holds.
+The scan of the raw image covers filesystem-level remanence on that filesystem: freed blocks, the ext4 journal and slack. The tests say nothing about flash translation layers.
+
+Not controlled by any file API: a solid-state drive's flash translation layer (wear levelling, over-provisioning and remapped writes can leave an overwritten page in an unmapped cell until the drive erases it); copy-on-write and snapshotting filesystems (APFS clones and snapshots, btrfs, ZFS); filesystem journals; OS swap or hibernation images; backups; and bytes the caller already returned from `recall`. Use full-disk encryption (or `security` encryption, which makes the files ciphertext) when those matter.
+
+## Equivalence after a purge
+
+After a purge the store is indistinguishable from one that never held the forgotten facts and was purged at the same point: the same results, ranks and score bits in lexical, hybrid and embedding search (exact and graph), the same listings and index status, and byte-identical files except the generation directory's name, which carries the compaction time.
+
+- Lexical statistics (document frequencies, chunk and word counts) are integers and match after any delete.
+- The purge rebuilds what a delete leaves shaped by history: the text segment and the slots (in id order, as a reopen lays them out), a published vector snapshot and its graph (same graph choice, so a purge costs one graph build when the snapshot has one), and the dense document index. Compaction writes vectors in id order.
+- `WarmCore::revision` and the vector index status `generation` advance by one per mutation from a random value per open, so a reading does not reveal how many inserts and deletes came before it.
+
+Checked by `tests/forget_equivalence.rs` and the paired-store experiment `forget-experiment` (feature `experimental`; results in `benchmarks/results/forget_equivalence_*.json`). Not covered:
+
+- a delete without `purge`: until the purge the journal holds the frames, the text segment holds zeroed records, and a vector snapshot keeps the deleted vertex in its graph, so graph-mode results near the deleted vector can differ;
+- decisions taken while the fact was stored: a `max-facts` eviction it caused, a consolidation or supersession that used it, or a chain forget that re-linked survivors;
+- file timestamps, inode numbers and the generation name; encrypted bytes (same lengths, fresh nonces); `audit.bin` and the provenance log under `security`, which record the delete;
+- retrieval over raw hypervectors (`query`, `query_vector`) and the shard IVF/NSG indexes: a delete drops trained shard indexes and leaves a registry slot that later inserts reuse;
+- relations, atoms, composites, triples and rules, which compaction writes in their containers' order (not checked).
 
 ## A pending purge at open
 

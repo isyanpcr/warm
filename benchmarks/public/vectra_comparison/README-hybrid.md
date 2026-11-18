@@ -15,15 +15,15 @@ Use already installed modules and native artifacts; these commands do not instal
 Node packages, build Rust, download weights or call an embedding model:
 
 ```sh
-VECTRA_MODULE=/Volumes/A/toip-warm-backend/toip-mcp-server/node_modules/vectra \
-WARM_MODULE=/Volumes/A/warm-vectra-node-qualification \
+VECTRA_MODULE=<workspace>/toip-warm-backend/toip-mcp-server/node_modules/vectra \
+WARM_MODULE=<workspace>/warm-vectra-node-qualification \
 node --test benchmarks/public/vectra_comparison/test_hybrid.mjs
 ```
 
 `UV_PATH` optionally selects the existing uv executable. The tokenizer bridge uses
 `uv run --offline --no-project --with tokenizers==0.23.3`; absent cached wheels are
 an error. Tests require the already cached Qwen tokenizer at
-`/Volumes/A/hms-models/Qwen3-Embedding-0.6B/tokenizer.json`, hash
+`<workspace>/hms-models/Qwen3-Embedding-0.6B/tokenizer.json`, hash
 `def76fb086971c7867b829c23a26261e38d9d74e02139253b38aeb9df8b4b50a`.
 Only synthetic strings are tokenized. A tiny WordLevel fixture independently tests
 4095/4096/4097-token and 19/20/21-document boundaries. The cached older Node tokenizer

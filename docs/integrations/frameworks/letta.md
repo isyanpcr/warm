@@ -5,13 +5,18 @@
 1. **`ArchivalMemory` / `AsyncArchivalMemory`**: the same `create`, `list`, `delete`, `search` as letta-client's `client.agents.passages`, returning letta-client's own `Passage` and `PassageSearchResponse`. Use it directly from your application or as a drop-in for that resource.
 2. **Custom tools** for agents on a Letta server: `register_tools(client)` uploads `warm_archival_insert` and `warm_archival_search` with `client.tools.upsert`; create the agent with `secrets=agent_secrets(url, api_key=..., input_dim=...)`.
 
+<!-- quickstart-check: python letta -->
 ```python
 from writerslogic_warm_integrations.core import WarmConfig
 from writerslogic_warm_integrations.letta import ArchivalMemory
+
+agent_id = "agent-11111111-1111-4111-8111-111111111111"          # your Letta agent id
 with ArchivalMemory(WarmConfig(url="http://127.0.0.1:8080", input_dim=384)) as passages:
     passages.create(agent_id, text="Meeting: focus on performance", tags=["meetings"])
-    passages.search(agent_id, query="performance", tags=["meetings"], top_k=3).results
+    print(passages.search(agent_id, query="performance", tags=["meetings"], top_k=3).results)
 ```
+
+Runs offline as written against `warm-server --no-auth --input-dim 384`; checked by `scripts/check-readme-snippets.py docs`.
 
 Install: `pip install "writerslogic-warm-integrations[letta]"` (adds `letta-client`).
 

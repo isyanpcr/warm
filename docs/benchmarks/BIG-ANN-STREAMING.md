@@ -62,7 +62,7 @@ stays flat across deletes and consolidations (at ef 1024 the 33 official checkpo
 * The remaining distance to the DiskANN baseline (R64, Ls 100: 0.924) is the degree: R64 L128
   gains another 12 points at ef 64 and 10 at ef 128 on the prefix, at 2x the build time per
   consolidation and about 128 more bytes per live row; R32 peaked at 7.47 GiB
-  (sampled summed RSS, Modal, ef 1024) and at 4.85 GiB (GNU time, writerslogic-02, ef 64 and 128), and
+  (sampled summed RSS, Modal, ef 1024) and at 4.85 GiB (GNU time, <vm>, ef 64 and 128), and
   the official R64 L64 run at ef 256 peaked at 5.57 GiB on Modal (see the official runs table).
 * Candidate retention (`reservoir`) changes nothing at any ef (0.7161 at 0, 256 and 512), so
   neither quantized estimates nor pool eviction is a loss mechanism here; the queries are
@@ -88,8 +88,8 @@ Per search step of the official runbook (harness ground truth, same wheel, R32 L
 | ff70f3e | R32 L64 alpha 1.2 | 64 | 0.6814 | about 18 min per ef | 7.78 GB (both) | Modal 8 vCPU |
 | ff70f3e | R32 L64 alpha 1.2 | 128 | 0.7755 | | | Modal 8 vCPU |
 | cc5dede | R32 L64 alpha 1.2 | 1024 | 0.9301 | 36.0 min | 7.47 GiB | Modal 8 vCPU |
-| 791749b, alpha 1.0 passed explicitly | R32 L64 alpha 1.0 | 64 | 0.7623 | 59:40 for both replays, nice 19 | 4.85 GiB (GNU time, both) | writerslogic-02, cores 0-7 |
-| 791749b, alpha 1.0 passed explicitly | R32 L64 alpha 1.0 | 128 | 0.8401 | | | writerslogic-02, cores 0-7 |
+| 791749b, alpha 1.0 passed explicitly | R32 L64 alpha 1.0 | 64 | 0.7623 | 59:40 for both replays, nice 19 | 4.85 GiB (GNU time, both) | <vm>, cores 0-7 |
+| 791749b, alpha 1.0 passed explicitly | R32 L64 alpha 1.0 | 128 | 0.8401 | | | <vm>, cores 0-7 |
 | c80aa52 (main) | R32 L64 alpha 1.0 | 64 | 0.7623 | 14:24 (runbook steps 864 s) | 4.98 GiB | Modal cpu 8.0 |
 | 082766e | R32 L64 alpha 1.0 | 64 | 0.7623 | 13:32 (runbook steps 811 s) | 4.85 GiB | Modal cpu 8.0 |
 | 082766e | R32 L64 alpha 1.0 | 128 | 0.8401 | 18:53 (1,132 s) | 4.84 GiB | Modal cpu 8.0 |
@@ -98,7 +98,7 @@ Per search step of the official runbook (harness ground truth, same wheel, R32 L
 | 082766e | R64 L64 alpha 1.0 | 256 | 0.9353 | 15:09 (908 s) | 5.57 GiB | Modal cpu 8.0 |
 
 The baseline the track README quotes is DiskANN at R64 L50 Ls100: 0.924 in about 23 minutes
-on the competition VM (Azure D8lds v5). The writerslogic-02 runs are recall runs at `nice 19`
+on the competition VM (Azure D8lds v5). The <vm> runs are recall runs at `nice 19`
 on a shared host (Core Ultra 9 185H, 8 of 22 threads, 8 GiB cgroup cap); their wall time is
 an upper bound, not a timing claim.
 
@@ -422,7 +422,7 @@ ratios (the three per-pair ratios ranged 0.67-1.11):
 Against the kill bar (recall@10 drop above 0.0025 at equal ef, or under 10% faster): no recall
 change was measured; the speedup is under 10% at the adapter's `rerank = ef`, so the change
 does not pay at that setting, and reaches 9-17% at `rerank = ef / 2` and `ef / 4`. The
-Linux paired run under the timing lock on writerslogic-02 was not made (host offline), and the
+Linux paired run under the timing lock on <vm> was not made (host offline), and the
 M4 spread between pairs is wide. Raw values, loads and commands are in
 [`streaming_rescore_budget_v1.json`](../../benchmarks/results/streaming_rescore_budget_v1.json).
 
@@ -432,7 +432,7 @@ M4 spread between pairs is wide. Raw values, loads and commands are in
 two-stage mode (`WARM_CONSOLIDATION_STAGE=build` writes the base, deletions and delta to
 `WARM_CONSOLIDATION_INDEX`; `=measure` opens a copy and consolidates it), and prints cgroup
 `memory.current` and `memory.peak` at every phase, resetting `memory.peak` before the
-consolidation. No R32 or R64 peak at about 8.4M live rows was recorded: writerslogic-02 went
+consolidation. No R32 or R64 peak at about 8.4M live rows was recorded: <vm> went
 offline during the index builds. No consolidation code was changed. The commands to run
 when it is back, per degree D in 32 and 64 (build on cores 8-21, no lock needed):
 

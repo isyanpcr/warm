@@ -16,6 +16,8 @@ on `main`, or publication from the Python release workflows. MCP manual runs do 
 | `sdk-vX.Y.Z` | `.github/workflows/warm-sdk-release.yml` and `.github/workflows/warm-js-sdk-release.yml` | portable `warm-sdk` clients: Python wheel/sdist on PyPI and JavaScript/TypeScript package on npm |
 | `server-vX.Y.Z` | `.github/workflows/warm-server-release.yml` | five `warm-server` binaries and a `SHA256SUMS` table on a GitHub release; X.Y.Z is the crate version. `scripts/install-warm-server.sh` installs from it. Pull requests touching the workflow run a build-and-smoke dry run |
 | `mcp-vX.Y.Z` | `.github/workflows/warm-mcp-release.yml` | five `warm-mcp` binaries, checksum tables embedded in npm and PyPI launchers, a GitHub release, then the launcher packages and official MCP Registry entry |
+| `js-adapters-vX.Y.Z` | `.github/workflows/adapters-js-release.yml` | the six `@writerslogic/warm-*` JS adapters and `writerslogic-warm-claude-tool` on npm |
+| `py-adapters-vX.Y.Z` | `.github/workflows/adapters-py-release.yml` | `writerslogic-warm-integrations` (15 framework extras) and `writerslogic-warm-claude-tool` on PyPI |
 
 Publish a new model pack before a native wheel that requires that new version through `[embed]`.
 The existing `warm-models==0.1.0` pin does not require another model release for engine 0.7.0.
@@ -27,9 +29,8 @@ The JavaScript and Python HTTP clients share SDK version 0.2.2 and the `sdk-v0.2
 their manifests are `bindings/js/warm-sdk/package.json` and
 `bindings/python/warm-sdk/pyproject.toml`. The engine version script does not bump the SDKs
 or MCP launchers. The MCP launchers use version 0.1.8 and the `mcp-v0.1.8` tag.
-Framework adapters in `integrations/js`
-and `integrations/python`, and the two Claude memory-tool packages, have no publication workflow
-in this release pipeline. Their first publication is separate from the 0.7.0 release.
+The framework adapters have their own tags and versions; see
+[Framework adapter releases](#framework-adapter-releases).
 
 ## Portable HTTP SDK release
 
@@ -49,6 +50,36 @@ registry signature verification and the published-consumer check in the release 
 Publish one signed `sdk-vX.Y.Z` tag matching both clients. It triggers their separate registry
 workflows. Do not reuse an existing version, substitute the engine version, or mark the shared
 SDK release available until both registry installs have been verified.
+
+## Framework adapter releases
+
+| Package set | Tag | Workflow | Version files | Registry |
+| --- | --- | --- | --- | --- |
+| `@writerslogic/warm-core`, `-langchain`, `-llamaindex`, `-mastra`, `-openai-agents`, `-vercel-ai`, `writerslogic-warm-claude-tool` | `js-adapters-vX.Y.Z` | `adapters-js-release.yml` | `package.json` of `integrations/js/packages/*` and `integrations/claude-memory-tool/typescript` | npm |
+| `writerslogic-warm-integrations`, `writerslogic-warm-claude-tool` | `py-adapters-vX.Y.Z` | `adapters-py-release.yml` | `pyproject.toml` and `__version__` of `integrations/python` and `integrations/claude-memory-tool/python` | PyPI |
+
+Each set moves in lockstep: every package in it carries the tag's version, and each JS adapter
+depends on `@writerslogic/warm-core` at `^X.Y.Z`. `python3 scripts/ci/check-adapter-versions.py {js,py} --tag <tag>`
+enforces this, plus an Apache-2.0 manifest and a copy of the root `LICENSE` in every package
+directory. Bump the versions and the `warm-core` ranges together, then refresh
+`integrations/js/package-lock.json`.
+
+Both workflows build, test (the Claude memory tool against a real `warm-mcp`), pack, check the
+artefact contents (`scripts/ci/verify-adapter-artifacts.py`: no tests, sources or secrets; README,
+LICENSE, `types` and every `exports` target present), then install each package into an empty
+project from the packed artefact and import it. JS smoke tests install peers from the registry and
+round-trip a record through the native engine; Python smoke tests install each of the 15 extras
+from the wheel. Pull requests touching the adapters run all of this without publishing, as does
+`workflow_dispatch` with `publish=false`.
+
+Publishing runs only for the tag, or for a dispatch from `main` with `publish=true`, and waits on
+the `npm` or `pypi` environment approval. npm publishes `warm-core` first, with `--provenance`,
+and attests the tarballs; a rerun skips a version that is already published and refuses one
+whose contents differ. PyPI uses Trusted Publishing with `skip-existing`. A final job installs the
+published versions from the registry (npm also verifies signatures).
+
+The JS adapters peer-depend on the native `writerslogic-warm` (`>=0.6.5`); publish an engine
+release first when an adapter needs newer engine behaviour.
 
 ## MCP launcher release
 
@@ -166,7 +197,12 @@ These cannot be committed; the publish jobs wait on them.
    `warm-models-release.yml`, `warm-python` uses `warm-py-release.yml`, and
    `warm-sdk` uses `warm-sdk-release.yml`. The MCP launcher uses
    `warm-mcp-release.yml` with the same owner, repository and environment. PyPI permits three pending
-   projects at a time; publish one before registering the fourth.
+   projects at a time; publish one before registering the fourth. The adapters add two more:
+   `writerslogic-warm-integrations` and `writerslogic-warm-claude-tool`, both using
+   `adapters-py-release.yml`.
+5. npm adapters: the `@writerslogic` scope must be owned by the publishing account or organisation,
+   and `NPM_TOKEN` must be able to create the six scoped packages and `writerslogic-warm-claude-tool`.
+   Packages are public (`publishConfig.access`).
 
 ## Cut a release
 
@@ -250,7 +286,7 @@ portable `WarmClient` requires an HTTP server and an explicit API migration; it 
 of `WarmMemorySystem`. There is no `warm-sdk/embedded` export.
 
 The framework adapters in `integrations/js` remain explicit native integrations with a
-`writerslogic-warm >=0.6.5` peer. Their separate publication is not part of the SDK or engine
+`writerslogic-warm >=0.6.5` peer. They are published by the separate adapter workflows, not by the SDK or engine
 release. MCP, embedding-model packages, WebAssembly and Rust keep their existing identities.
 
 ## Verify an artefact

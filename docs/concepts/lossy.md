@@ -1,7 +1,6 @@
 # What is lossy
 
-Some parts of WARM keep exactly what you gave them; others keep a lossy sketch. Knowing which is
-which decides whether you can rebuild the original and what a leaked store would reveal.
+Some parts of WARM keep exactly what you gave them; others keep a lossy sketch. Which is which decides whether you can rebuild the original and what a leaked store would reveal.
 
 ## Kept exactly
 
@@ -32,13 +31,12 @@ which decides whether you can rebuild the original and what a leaked store would
 
 ## Lossy by storage
 
-- **Compression.** Arena frames are LZ4-compressed; that is lossless.
-- **Deletion.** `delete_document` removes the logical record. Old bytes can remain in obsolete
-  segments, snapshots and backups until compaction rewrites the store, and compaction is not
-  secure erasure.
+- **Compression.** Arena frames are LZ4-compressed, which is lossless.
+- **Deletion.** `delete_document` removes the logical record; old bytes can remain in obsolete segments, snapshots and backups until compaction rewrites the store, and compaction is not secure erasure ([erasure](../memory-api/ERASURE.md)).
 
 ## Decision guide
 
-If you need the original text back, keep it in the store (the default) or keep it elsewhere and
-store only a source URI. If you need to search without retaining text, `storeText: false` keeps
-term counts and embeddings, which still reveal a lot; it is not a privacy control.
+| Need | Do |
+|---|---|
+| Original text back | Keep it in the store (the default), or keep it elsewhere and store only a source URI |
+| Search without retaining text | `storeText: false` keeps term counts and embeddings, which still reveal a lot; it is not a privacy control |
