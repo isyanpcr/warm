@@ -80,4 +80,4 @@ Messages are an ordered log inside the store (record `chat:<session>#<n>`), foun
 
 ## Tested against
 
-`@langchain/core` 1.2.19, `writerslogic-warm` 0.6.0 (native build from this repository), Node 26.8, TypeScript 5.9. `npm test --workspace packages/langchain` in `integrations/js` builds and runs 23 tests against the real native addon, one temp directory per test.
+`@langchain/core` 1.2.19, `writerslogic-warm` 0.6.0 (native build from this repository), Node 26.8, TypeScript 5.9. `npm test --workspace packages/langchain` in `integrations/js` builds and runs 27 tests against the real native addon, one temp directory per test.

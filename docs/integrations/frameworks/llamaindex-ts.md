@@ -90,4 +90,4 @@ JS-evaluated filters run on `overfetch * similarityTopK` candidates (at most `ma
 
 ## Tested against
 
-`llamaindex` 0.12.1, `@llamaindex/core` 0.6.22 (the exact version `llamaindex` 0.12.1 depends on; two copies break its constructor checks, so keep one), `writerslogic-warm` 0.6.0 (native build from this repository), Node 26.8, TypeScript 5.9. `npm test --workspace packages/llamaindex` in `integrations/js` builds and runs 18 tests against the real native addon, one temp directory per test.
+`llamaindex` 0.12.1, `@llamaindex/core` 0.6.22 (the exact version `llamaindex` 0.12.1 depends on; two copies break its constructor checks, so keep one), `writerslogic-warm` 0.6.0 (native build from this repository), Node 26.8, TypeScript 5.9. `npm test --workspace packages/llamaindex` in `integrations/js` builds and runs 20 tests against the real native addon, one temp directory per test.

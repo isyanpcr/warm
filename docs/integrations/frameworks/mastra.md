@@ -24,7 +24,7 @@ const agent = new Agent({
 
 ## Options
 
-`id`, `dimension` (vector length of every index; default 1536; fixed for the life of the store), `path` (storage directory; omit for in-memory), `hypervectorDimensions` (engine hypervector size, default 4096), `maxFetch`, `overfetch`, `warmConfig` (native config, e.g. encryption: `{ encryptionEnabled: true, encryptionPassphraseEnv: 'WARM_PASSPHRASE' }`), `memory` (an existing native store created with embedding model `mastra-supplied`).
+`id`, `dimension` (vector length of every index; default 1536; fixed for the life of the store), `path` (storage directory; omitted, the engine uses the current directory, so always set it), `hypervectorDimensions` (engine hypervector size, default 4096), `maxFetch`, `overfetch`, `warmConfig` (native config, e.g. encryption: `{ encryptionEnabled: true, encryptionPassphraseEnv: 'WARM_PASSPHRASE' }`), `memory` (an existing native store created with embedding model `mastra-supplied`).
 
 ## Mapping
 

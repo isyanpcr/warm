@@ -12,13 +12,17 @@ warm-server --input-dim 384        # the vector length your embeddings produce
 ## Quickstart
 
 ```python
-from writerslogic_warm_integrations.langchain import WarmVectorStore, WarmRetriever
+from langchain_core.documents import Document
+from writerslogic_warm_integrations.core import HashingEmbedder
+from writerslogic_warm_integrations.langchain import EmbedderAsLangChain, WarmVectorStore
 
-store = WarmVectorStore(my_embeddings, url="http://127.0.0.1:8080", tenant_id="acme", collection="docs")
-store.add_documents(docs, ids=[...])
-store.similarity_search("question", k=4, filter={"region": "eu"})
+store = WarmVectorStore(EmbedderAsLangChain(HashingEmbedder(384)), url="http://127.0.0.1:8080", tenant_id="acme", collection="docs")
+store.add_documents([Document(page_content="Revenue grew in Europe", metadata={"region": "eu"})], ids=["a"])
+print(store.similarity_search("Europe revenue", k=4, filter={"region": "eu"}))
 retriever = store.as_retriever(search_kwargs={"k": 4})          # or WarmRetriever(vectorstore=store, ...)
 ```
+
+Needs `warm-server --no-auth --input-dim 384`; `HashingEmbedder` is lexical, so use real embeddings for semantic search.
 
 Runnable example: `integrations/python/examples/langchain_rag.py`.
 
