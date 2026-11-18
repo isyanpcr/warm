@@ -19,7 +19,7 @@ Run the adapter examples from that workspace so its local packages resolve.
 ```ts
 import { WarmStore } from '@writerslogic/warm-core'
 
-const store = new WarmStore({ path: './memory' })          // omit path for in-memory
+const store = new WarmStore({ path: './memory' })          // always set path: omitted, the engine uses the current directory
 await store.remember([{ id: 'a', text: 'Ada wrote the first program', metadata: { topic: 'history' } }])
 const hits = await store.recall('first program', { k: 3, filter: { topic: 'history' } })
 const [rec] = await store.get(['a'])                      // undefined when absent
@@ -37,7 +37,7 @@ The build produces ESM and CJS. `writerslogic-warm` is a peer dependency (`>=0.6
 | Option | Default | Meaning |
 |---|---|---|
 | `memory` | created | An existing native `WarmMemorySystem`; its embedding space must match `embedder` |
-| `path` | in-memory | Storage directory for a store this class creates |
+| `path` | current directory (engine default) | Storage directory for a store this class creates |
 | `dimensions` | 4096 | Hypervector dimensions of a created store |
 | `embedder` | `HashingEmbedder(384)` | The encoder. Same shape as `writerslogic-warm/semantic`'s `Embedder`, so `createLocalEmbedder(...)` works directly |
 | `rerank` | none | `(query, passages) => Promise<number[]>`, applied to candidates |

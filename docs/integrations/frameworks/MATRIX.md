@@ -4,23 +4,25 @@ Every adapter was run against a real `warm-server` (Python) or the native Node a
 
 ## Python (`pip install "writerslogic-warm-integrations[<extra>]"`)
 
-| Extra | Adapter docs | Tested version | Verification |
-|---|---|---|---|
-| `langchain` | [langchain](langchain.md) | langchain-core 1.6.12 | `langchain-tests` VectorStore (sync+async) and Retriever suites |
-| `langgraph` | [langgraph](langgraph.md) | langgraph 1.2.16, langgraph-checkpoint 4.3.0 | `langgraph-checkpoint-conformance` 0.0.2, level FULL (81 passed); store checked against `InMemoryStore` |
-| `llamaindex` | [llamaindex](llamaindex.md) | llama-index-core 0.14.25 | 21 filter cases against `SimpleVectorStore`; index, retriever, storage-context, memory round trips |
-| `haystack` | [haystack](haystack.md) | haystack-ai 3.4.0 | `haystack.testing.document_store` mixins (81 passed, 2 upstream-only skips) |
-| `dspy` | [dspy](dspy.md) | dspy 3.4.1 | real `ChainOfThought` and `ReAct` programs on `DummyLM` |
-| `openai-agents` | [openai-agents](openai-agents.md) | openai-agents 0.24.0 | real `Runner` with a scripted model |
-| `pydantic-ai` | [pydantic-ai](pydantic-ai.md) | pydantic-ai-slim 2.58.0 | `Agent.run` with `FunctionModel` / `TestModel` |
-| `smolagents` | [smolagents](smolagents.md) | smolagents 1.26.0 | `CodeAgent` and `ToolCallingAgent` with a scripted model |
-| `litellm` | [litellm](litellm.md) | litellm 1.103.10, Filelock 4.2.6 | LiteLLM `mock_response` / `mock_tool_calls` loops |
-| `crewai` | [crewai](crewai.md) | crewai 1.15.28 | real `Crew.kickoff()` with a scripted LLM |
-| `autogen` | [autogen](autogen.md) | autogen-agentchat / core / ext 0.7.5 | real `AssistantAgent` with a replay client |
-| `ag2` | [autogen](autogen.md) | ag2 1.1.2 | tool toolkit (AG2 1.x has no memory interface WARM can back) |
-| `semantic-kernel` | [semantic-kernel](semantic-kernel.md) | semantic-kernel 1.45.0 / 1.46.0; Werkzeug >=3.1.9 | real `Kernel.invoke` of a search function |
-| `mem0` | [mem0](mem0.md) | mem0ai 2.2.1 | one scenario through real mem0 and the shim; result shapes compared |
-| `letta` | [letta](letta.md) | letta-client 1.12.1 | `PassagesResource` signatures; tool source executed against the real server |
+Host versions and install lines are on the [integrations overview](../index.md). Each row is the verification behind its adapter page.
+
+| Extra | Verification |
+|---|---|
+| `langchain` ([page](langchain.md)) | `langchain-tests` VectorStore (sync+async) and Retriever suites |
+| `langgraph` ([page](langgraph.md)) | `langgraph-checkpoint-conformance` 0.0.2, level FULL (81 passed); store checked against `InMemoryStore` |
+| `llamaindex` ([page](llamaindex.md)) | 21 filter cases against `SimpleVectorStore`; index, retriever, storage-context, memory round trips |
+| `haystack` ([page](haystack.md)) | `haystack.testing.document_store` mixins (81 passed, 2 upstream-only skips) |
+| `dspy` ([page](dspy.md)) | real `ChainOfThought` and `ReAct` programs on `DummyLM` |
+| `openai-agents` ([page](openai-agents.md)) | real `Runner` with a scripted model |
+| `pydantic-ai` ([page](pydantic-ai.md)) | `Agent.run` with `FunctionModel` / `TestModel` |
+| `smolagents` ([page](smolagents.md)) | `CodeAgent` and `ToolCallingAgent` with a scripted model |
+| `litellm` ([page](litellm.md)) | LiteLLM `mock_response` / `mock_tool_calls` loops |
+| `crewai` ([page](crewai.md)) | real `Crew.kickoff()` with a scripted LLM |
+| `autogen` ([page](autogen.md)) | real `AssistantAgent` with a replay client |
+| `ag2` ([page](autogen.md)) | tool toolkit (AG2 1.x has no memory interface WARM can back) |
+| `semantic-kernel` ([page](semantic-kernel.md)) | real `Kernel.invoke` of a search function |
+| `mem0` ([page](mem0.md)) | one scenario through real mem0 and the shim; result shapes compared |
+| `letta` ([page](letta.md)) | `PassagesResource` signatures; tool source executed against the real server |
 
 Not verified anywhere: `text_queries=True` (the service embeds text itself) needs a server built with `--features local-models` and model directories; it is covered at the wire level with a mock transport only. A running Letta server was not used.
 
@@ -37,13 +39,13 @@ They come from `warm-server` (see `docs/SERVER.md`), and each adapter's page lis
 
 ## JavaScript / TypeScript (`integrations/js`, npm workspace; Node 26.8, TypeScript 5.9)
 
-All packages run against the real native addon (`warm-sdk`), no mocks of WARM.
+All packages run against the real native addon (`writerslogic-warm`), no mocks of WARM. Host versions: [overview](../index.md).
 
-| Package | Adapter docs | Tested version | Verification |
-|---|---|---|---|
-| `@writerslogic/warm-core` | [js-core](js-core.md) | n/a | 19 tests |
-| `@writerslogic/warm-vercel-ai` | [vercel-ai](vercel-ai.md) | ai 7.0.146, zod 4.1 | SDK mock models, real tool loop, `streamText` |
-| `@writerslogic/warm-mastra` | [mastra](mastra.md) | @mastra/core 1.78.0, @mastra/memory 1.38.0 | 15 contract tests plus a real `Agent` with semantic recall (Mastra publishes no vector-store test suite) |
-| `@writerslogic/warm-langchain` | [langchainjs](langchainjs.md) | @langchain/core 1.2.19 | 23 tests mirroring the standard VectorStore behaviors (`@langchain/standard-tests` is not published on npm) and a real `RunnableWithMessageHistory` run |
-| `@writerslogic/warm-llamaindex` | [llamaindex-ts](llamaindex-ts.md) | llamaindex 0.12.1, @llamaindex/core 0.6.22 | 18 tests: `VectorStoreIndex`, all 13 `FilterOperator`s, KV store vs `SimpleKVStore` |
-| `@writerslogic/warm-openai-agents` | [openai-agents-js](openai-agents-js.md) | @openai/agents 0.20.0, zod 4.6.7 | 11 tests: `WarmSession` vs `MemorySession`, real `Runner`; ordering at 99/100/101/200+ items |
+| Package | Verification |
+|---|---|
+| `@writerslogic/warm-core` | 62 tests |
+| `@writerslogic/warm-vercel-ai` | 5 tests: SDK mock models, real tool loop, `streamText` |
+| `@writerslogic/warm-mastra` | 15 contract tests plus a real `Agent` with semantic recall (Mastra publishes no vector-store test suite) |
+| `@writerslogic/warm-langchain` | 27 tests mirroring the standard VectorStore behaviors (`@langchain/standard-tests` is not published on npm) and a real `RunnableWithMessageHistory` run |
+| `@writerslogic/warm-llamaindex` | 20 tests: `VectorStoreIndex`, all 13 `FilterOperator`s, KV store vs `SimpleKVStore` |
+| `@writerslogic/warm-openai-agents` | 15 tests: `WarmSession` vs `MemorySession`, real `Runner`; ordering at 99/100/101/200+ items |

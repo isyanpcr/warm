@@ -89,27 +89,94 @@ most `--limit` documents (10,000 by default). They list the store through
 `npm run build`. A prune is only as complete as the files it is given. The Rust
 example forgets one document at a time.
 
-The CLI is lexical by default. From CommonJS in the checkout, import the adapter
-with `require('./integrations/organizational-knowledge/index.cjs')`; it is not
-part of the released npm package's exports. Programmatic use can supply a local embedder and
-reranker through `DocumentMemory`; the embedder must match the store's embedding
-space. The Rust and JavaScript examples use the same identity tuple, dimensions,
-and default store configuration, so they can open one store sequentially.
-JavaScript validates the entire input set before writing, reports committed IDs
-on a partial failure, and supports file or directory input. The entire import is
-not one transaction. The JavaScript library checks the engine's chunk limits on
-the open store before its first write; its CLI checks them on a throwaway store
-first, so rejected input does not create yours. Its file reader accepts up to 16 MiB of
-JSON per file and 512 MiB in total; the Rust file reader accepts 8 MiB per file.
-Both enforce the engine's content and chunk limits. JavaScript also rejects
-`__proto__` metadata keys and represents numbers as IEEE doubles; large integer
-metadata may differ from the Rust reader.
+The CLI is lexical by default; programmatic use can pass a local embedder and reranker through `DocumentMemory` (the embedder must match the store's embedding space). The adapter is imported with `require('./integrations/organizational-knowledge/index.cjs')`; it is not part of the released npm package's exports. Metadata filters use exact top-level equality, so filtering on `organizational_unit` must match the whole array. This differs from the prototype's working-group substring filter and needs an explicit translation in a prototype-side adapter.
 
-Metadata filters use exact top-level equality. In particular, filtering on
-`organizational_unit` must match the complete array. This differs from the
-prototype's working-group substring filter and needs an explicit translation in
-a prototype-side adapter. Namespace scoping remains a query convention; the host
-must enforce authorization independently.
+## JavaScript adapter reference
+
+Mapping is the table above, except the document ID is `JSON.stringify([namespace, source_system, id])` (at most 1024 bytes) and the namespace is also stored as reserved metadata `hms_namespace`.
+
+The stable identity uses the curated `id`, not `source_identifier`: one Zoom recording
+yields a Transcript, Chat, ClosedCaptioning, and AI Summary that share `source_identifier`.
+The identity does not depend on the SAID, so a revised document replaces the earlier one
+instead of accumulating. Hit offsets are UTF-8 byte offsets into the exact curated `content`.
+
+### Behavior
+
+- **Validation before writes.** Every document is checked, and duplicate identities in one
+  import are rejected (naming both sources), before the first write. Rejected: missing or
+  blank `id`, `source_system`, `identifier`; non-string `content`; whitespace-only content;
+  `organizational_unit` that is not an array of strings; non-string optional fields;
+  control characters in identity parts; lone surrogates anywhere (the engine would silently
+  rewrite them); a `__proto__` key anywhere (the binding returns it as a prototype, not data);
+  `source_url` that is not an absolute http(s) URL without credentials, whitespace, or control
+  characters; `hms_namespace` in the input; metadata over 64 KiB; the nested model; and the
+  engine's chunking limits (4096 chunks, 64 KiB per chunk, and with an `embedder` 1,048,576
+  embedding values per document). The CLI validates everything, including the engine's chunking
+  limits on a throwaway store in the system temp directory, before it opens STORE, so rejected
+  input does not create it. A library caller's `importDocuments` checks the same limits on its
+  own open store before the first write.
+- **Bounded input.** At most 10,000 documents per import; files are at most 16 MiB each and
+  512 MiB in total. Split larger syncs; identities are independent, so this is safe.
+- **Overlapping calls.** Writes (`importDocuments`, `forget`) on one instance run one after
+  another in call order, so the last call for an identity wins.
+- **Replacement.** Importing the same namespace, `source_system`, and `id` replaces the
+  document in one atomic commit. Order is the caller's: the last import wins.
+- **Not one transaction.** Each document commits atomically, but an import is not atomic
+  across documents. A write failure throws `partial_failure` listing `committed` IDs;
+  re-running the import is idempotent.
+- **Forget.** Explicit `{ sourceSystem, id }` targets inside the namespace; no wildcard.
+  Without `apply: true` it only reports IDs. Repeating is safe (`absent` lists missing ones).
+- **Forget by scope.** `forgetScope({ sourceSystem | all: true, keep? }, { apply, limit })` removes
+  a source system's documents, or the namespace's, except an optional nonempty `keep` list of
+  `{ sourceSystem, id }` (a prune: pass the identities the upstream still holds). It lists the store
+  through `listDocuments`, matches only documents whose identity and `hms_namespace` both belong to
+  this namespace, previews unless `apply: true`, and handles at most `limit` documents per call;
+  `truncated: true` means more match, so apply and repeat (a preview shows the same first `limit`
+  each time). Options other than `apply` and `limit` are rejected: `keep` belongs in the scope. It throws `unsupported_binding` when the loaded
+  binding has no `listDocuments`. A prune is only as complete as the `keep` list: documents missing
+  from it are removed, so a partial export of the upstream removes the rest.
+- **Reimport restores.** Importing a forgotten document again makes it searchable again.
+  Forgetting is not durable against a later sync from an upstream that still holds it.
+
+### Limitations
+
+- Namespace filtering is a query filter, not authorization. Anyone who can open the store or
+  call the engine API can read every namespace. Use separate stores or encryption for isolation.
+- Forget removes the document from WARM retrieval. It does not claim physical erasure of
+  journals, page cache, backups, snapshots, or model inferences, and it does not remove
+  anything upstream. Upstream deletion is not detected or propagated.
+- Namespace-wide forget and prune need the binding's `listDocuments`, added alongside this adapter
+  in `src/bindings/node`; a binding built before that has none, and `forgetScope` then fails with
+  `unsupported_binding`. Rebuild with `npm run build`. Upstream deletions are still not detected:
+  pruning needs a complete list of what the upstream holds.
+- `identifier` is stored, not verified: SAIDs are not checked and are not authentication.
+- Speaker identities and recording timestamps are not inferred; offsets refer to curated text.
+- A `filter` is an exact match on a top-level metadata value: `organizational_unit` must
+  equal the whole array.
+- One writer per store directory.
+- JSON numbers are IEEE doubles: integers above 2^53 in extra metadata fields are not
+  preserved exactly. The curated schema has no numeric fields.
+- No retrieval-quality, speed, or benchmark claim is made.
+
+### Interoperability with the Rust example
+
+The Rust example reads and deletes what this adapter wrote, and the reverse, one writer at a
+time. Differences checked against the Rust example binary: this adapter rejects non-string
+optional fields (`title: 12`, `title: null`) and a `javascript:` `source_url`, which the Rust
+example imports; it reads files up to 16 MiB where the Rust example reads 8 MiB; and it stores
+integers above 2^53 in extra metadata fields as rounded doubles where the Rust example keeps
+them exactly. Both reject control characters in `id`, a reserved `hms_namespace` key, and
+lone surrogates.
+
+```sh
+node integrations/organizational-knowledge/example/cli.cjs import ./toip-js-store toip integrations/organizational-knowledge/example/fixtures
+cargo run --locked --example organizational_knowledge -- search ./toip-js-store toip quartzmarker
+cargo run --locked --example organizational_knowledge -- forget ./toip-js-store toip Zoom zoom-example-project-chat-GMT20260101-100000 --apply
+node integrations/organizational-knowledge/example/cli.cjs search ./toip-js-store toip "reporting profile"
+```
+
+This sequence was run against a debug build and the synthetic fixtures. The automated
+tests do not call cargo; `tests/organizational_knowledge_cli.test.cjs` covers the cross-tool path.
 
 ## Optional backend boundary
 
@@ -172,7 +239,7 @@ Local verification on 2026-10-28 used macOS arm64, Rust 1.96, and Node 26.8.1:
 | Rust example tests, default and all features | 4 passed in each configuration |
 | Example Clippy, default and all features | Passed with `-D warnings` |
 | Rust 1.89, no default features | Example check passed |
-| JavaScript adapter tests | 31 passed |
+| JavaScript adapter tests | 41 tests, 40 passed, 1 skipped (re-run 2026-11-18, Node 26.8.1) |
 | Rust and JavaScript CLI interoperability | 2 passed |
 | Strict TypeScript file-reader/import composition | Passed |
 | Strict MkDocs build | Passed; Rust API reference generation excluded |

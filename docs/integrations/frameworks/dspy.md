@@ -5,7 +5,7 @@
 
 `writerslogic_warm_integrations.dspy` provides a retriever for DSPy programs.
 
-- Tested against `dspy==3.4.1`, Python 3.12, `warm-server` built from this repository.
+- Tested against `dspy` 3.4.1 and 3.5.0 (3.5 asks a non-reasoning LM for a `plan`, not `reasoning`, and ReAct calls tools natively; the tests and example adapt), Python 3.12, `warm-server` built from this repository.
 - Tested dependency profile:
 
   ```sh
@@ -94,7 +94,7 @@ DSPy has no filter concept; `filter=` is an WARM extension. A mapping of keys to
 
 ## Verification
 
-`integrations/python/tests/dspy/test_dspy_retriever.py` against a live `warm-server`, one tenant per test, 10 passed with dspy 3.4.1: a real `dspy.ChainOfThought` RAG program with `DummyLM` (asserts the retrieved passage reached the prompt), a real `dspy.ReAct` run using `as_tool()`, `Module.deepcopy()`, legacy `dspy.Retrieve` with `WarmRM`, a `dspy.Embedder`-shaped callable, filters, thresholds, id replacement/deletion and the async paths. DSPy has no retriever conformance suite, so these are tests of ours against DSPy's documented calling conventions. Run:
+`integrations/python/tests/dspy/test_dspy_retriever.py` against a live `warm-server`, one tenant per test, 12 passed with dspy 3.4.1 and with 3.5.0: a real `dspy.ChainOfThought` RAG program with `DummyLM` (asserts the retrieved passage reached the prompt), a real `dspy.ReAct` run using `as_tool()`, `Module.deepcopy()`, legacy `dspy.Retrieve` with `WarmRM`, a `dspy.Embedder`-shaped callable, filters, thresholds, id replacement/deletion and the async paths. DSPy has no retriever conformance suite, so these are tests of ours against DSPy's documented calling conventions. Run:
 
 ```sh
 WARM_SERVER_BIN=target/release/warm-server uv run --extra dspy pytest tests/dspy
@@ -104,6 +104,6 @@ WARM_SERVER_BIN=target/release/warm-server uv run --extra dspy pytest tests/dspy
 that rejects every DiskCache import, then exercises a cache miss and an in-memory
 write/read. This catches lazy default-cache creation even though `DummyLM` alone
 does not use that cache. The default configuration fails the guard; the documented
-memory-only setup passes. Eleven tests pass with DSPy 3.4.1, LiteLLM 1.103.10,
+memory-only setup passes. The cache tests pass with DSPy 3.4.1 and 3.5.0, LiteLLM 1.103.10,
 Filelock 4.2.6, and Python 3.12. This is a scoped mitigation, not a clean dependency
 scan or a guarantee about other DSPy features.
