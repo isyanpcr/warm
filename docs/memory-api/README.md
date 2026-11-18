@@ -7,111 +7,106 @@
 semantics agents need: facts that hold over time, newer facts that replace older ones without
 destroying them, queries "as of" a moment, and an answer to "why did this come back".
 
-The design rule is minimal opinion. Every policy has a documented default that changes
-nothing, every policy has a knob, and the low-level primitives stay reachable: a fact is an
-ordinary document, so `search_documents`, `delete_document`, vectors and the raw index keep
-working on a store the memory API wrote. Nothing is persisted that an older build cannot
-open (see [PERSISTED-FORMAT.md](PERSISTED-FORMAT.md)).
+Minimal opinion: every policy has a documented default that changes nothing and a knob. A fact
+is an ordinary document, so `search_documents`, `delete_document`, vectors and the raw index keep
+working on a store the memory API wrote, and nothing is persisted that an older build cannot
+open ([PERSISTED-FORMAT.md](PERSISTED-FORMAT.md)).
 
 ## Quick start
 
-Portable JavaScript/TypeScript (`warm-sdk`, against a separately running `warm-server`):
+=== "JavaScript (HTTP)"
 
-```js
-import { WarmClient } from 'warm-sdk'
+    ```js
+    import { WarmClient } from 'warm-sdk'
 
-const memory = new WarmClient({
-  url: 'http://127.0.0.1:8080', apiKey: 'change-me', tenantId: 'demo',
-}).memory
-await memory.remember('Alice lives in Paris', {
-  id: 'home-1', subject: 'alice/city', validFrom: 1577836800000,
-})
-await memory.remember('Alice lives in Berlin', {
-  id: 'home-2', subject: 'alice/city', validFrom: 1735689600000, supersedes: ['home-1'],
-})
-const current = await memory.recall('where does Alice live')
-const previous = await memory.recall('where does Alice live', { asOf: 1622505600000 })
-```
+    const memory = new WarmClient({
+      url: 'http://127.0.0.1:8080', apiKey: 'change-me', tenantId: 'demo',
+    }).memory
+    await memory.remember('Alice lives in Paris', {
+      id: 'home-1', subject: 'alice/city', validFrom: 1577836800000,
+    })
+    await memory.remember('Alice lives in Berlin', {
+      id: 'home-2', subject: 'alice/city', validFrom: 1735689600000, supersedes: ['home-1'],
+    })
+    const current = await memory.recall('where does Alice live')
+    const previous = await memory.recall('where does Alice live', { asOf: 1622505600000 })
+    ```
 
-For a published release, install with `npm install warm-sdk@0.2.2`; check the
-[available npm versions](https://www.npmjs.com/package/warm-sdk?activeTab=versions), or use the
-[source installation](../get-started/install.md).
-Lexical memory needs no model. The client accepts safe integer Unix milliseconds for times;
-policies are configured on the server. It does not open a local store or load native bindings.
+    Install: `npm install warm-sdk@0.2.2` ([versions](https://www.npmjs.com/package/warm-sdk?activeTab=versions); [source install](../get-started/install.md)). Lexical memory needs no model. Times are safe integer Unix milliseconds; policies are configured on the server. The client opens no local store and loads no native bindings.
 
-Rust:
+=== "Rust"
 
-```rust
-use std::sync::Arc;
-use writerslogic_warm::core::memory_api::*;
-use writerslogic_warm::WarmCore;
+    ```rust
+    use std::sync::Arc;
+    use writerslogic_warm::core::memory_api::*;
+    use writerslogic_warm::WarmCore;
 
-let core = Arc::new(WarmCore::new(4096, Some("./store".into()), None)?);
-let memory = Memory::new(core);
+    let core = Arc::new(WarmCore::new(4096, Some("./store".into()), None)?);
+    let memory = Memory::new(core);
 
-memory.remember(RememberInput {
-    id: Some("home-1".into()),
-    text: "Alice lives in Paris".into(),
-    subject: Some("alice/city".into()),
-    valid_from: Some(1_577_836_800_000),
-    ..Default::default()
-})?;
-memory.remember(RememberInput {
-    id: Some("home-2".into()),
-    text: "Alice lives in Berlin".into(),
-    valid_from: Some(1_735_689_600_000),
-    supersedes: Some(vec!["home-1".into()]),   // explicit; or use a policy, below
-    ..Default::default()
-})?;
+    memory.remember(RememberInput {
+        id: Some("home-1".into()),
+        text: "Alice lives in Paris".into(),
+        subject: Some("alice/city".into()),
+        valid_from: Some(1_577_836_800_000),
+        ..Default::default()
+    })?;
+    memory.remember(RememberInput {
+        id: Some("home-2".into()),
+        text: "Alice lives in Berlin".into(),
+        valid_from: Some(1_735_689_600_000),
+        supersedes: Some(vec!["home-1".into()]),   // explicit; or use a policy, below
+        ..Default::default()
+    })?;
 
-let now = memory.recall("where does Alice live", &RecallOptions::default())?;   // Berlin only
-let then = memory.recall("where does Alice live", &RecallOptions {
-    as_of: Some(1_600_000_000_000), ..Default::default()
-})?;                                                                           // Paris
-let why = memory.explain("where does Alice live", "home-1", &RecallOptions::default())?;
-memory.forget(&ForgetScope::Subject { subject: "alice/city".into() }, &ForgetOptions::default())?;
-```
+    let now = memory.recall("where does Alice live", &RecallOptions::default())?;   // Berlin only
+    let then = memory.recall("where does Alice live", &RecallOptions {
+        as_of: Some(1_600_000_000_000), ..Default::default()
+    })?;                                                                           // Paris
+    let why = memory.explain("where does Alice live", "home-1", &RecallOptions::default())?;
+    memory.forget(&ForgetScope::Subject { subject: "alice/city".into() }, &ForgetOptions::default())?;
+    ```
 
-Optional embedded Node (`writerslogic-warm/memory`):
+=== "Node (embedded)"
 
-```js
-const { WarmMemorySystem } = require('writerslogic-warm')
-const { Memory } = require('writerslogic-warm/memory')
+    ```js
+    const { WarmMemorySystem } = require('writerslogic-warm')
+    const { Memory } = require('writerslogic-warm/memory')
 
-const memory = new Memory(new WarmMemorySystem(4096, './store'), { supersession: 'latest-by-subject' })
-await memory.remember('Alice lives in Paris', { id: 'home-1', subject: 'alice/city', validFrom: new Date('2020-01-01') })
-await memory.remember('Alice lives in Berlin', { id: 'home-2', subject: 'alice/city', validFrom: new Date('2025-01-01') })
-await memory.recall('where does Alice live')                       // Berlin
-await memory.recall('where does Alice live', { asOf: new Date('2021-06-01') })   // Paris
-```
+    const memory = new Memory(new WarmMemorySystem(4096, './store'), { supersession: 'latest-by-subject' })
+    await memory.remember('Alice lives in Paris', { id: 'home-1', subject: 'alice/city', validFrom: new Date('2020-01-01') })
+    await memory.remember('Alice lives in Berlin', { id: 'home-2', subject: 'alice/city', validFrom: new Date('2025-01-01') })
+    await memory.recall('where does Alice live')                       // Berlin
+    await memory.recall('where does Alice live', { asOf: new Date('2021-06-01') })   // Paris
+    ```
 
-The runnable [Node temporal workflow](../../examples/temporal-memory.cjs) uses distinct stable
-IDs, a shared subject and explicit validity dates. From the repository root, after
-`npm run build`, use a new directory and run each step as a separate process:
+    Runnable [Node temporal workflow](../../examples/temporal-memory.cjs): from the repository root,
+    after `npm run build`, use a new directory and run each step as a separate process:
 
-```sh
-node examples/temporal-memory.cjs remember ./temporal-demo
-node examples/temporal-memory.cjs replace ./temporal-demo
-node examples/temporal-memory.cjs forget ./temporal-demo
-node examples/temporal-memory.cjs verify ./temporal-demo
-```
+    ```sh
+    node examples/temporal-memory.cjs remember ./temporal-demo
+    node examples/temporal-memory.cjs replace ./temporal-demo
+    node examples/temporal-memory.cjs forget ./temporal-demo
+    node examples/temporal-memory.cjs verify ./temporal-demo
+    ```
 
-`replace` returns Berlin for current recall, Paris for `asOf: 2021-06-01`, and an explanation
-linking the replacement to its predecessor. The example reapplies `latest-by-subject` on
-every open: policies are runtime configuration, while facts and supersession links persist.
-`forget` targets the latest ID with `{ includeChain: true, purge: true, synchronous: true, dryRun: false }`, then
-flushes. The final process reports empty current, historical and document results and `null`
-for both IDs. This workflow uses lexical retrieval and needs no embedding model or service.
+    `replace` returns Berlin for current recall, Paris for `asOf: 2021-06-01`, and an explanation
+    linking the replacement to its predecessor. The example reapplies `latest-by-subject` on
+    every open: policies are runtime configuration, while facts and supersession links persist.
+    `forget` targets the latest ID with `{ includeChain: true, purge: true, synchronous: true, dryRun: false }`, then
+    flushes. The final process reports empty current, historical and document results and `null`
+    for both IDs. This workflow uses lexical retrieval and needs no embedding model or service.
 
-Python (`warm-sdk`, against `warm-server`):
+=== "Python (HTTP)"
 
-```python
-from writerslogic_warm_sdk import WarmClient
+    ```python
+    import datetime as dt
+    from writerslogic_warm_sdk import WarmClient
 
-memory = WarmClient("http://localhost:8080").memory
-memory.remember("Alice lives in Paris", subject="alice/city", valid_from=dt.datetime(2020, 1, 1))
-memory.recall("where does Alice live", as_of=dt.datetime(2021, 6, 1), explain=True)
-```
+    memory = WarmClient("http://localhost:8080").memory
+    memory.remember("Alice lives in Paris", subject="alice/city", valid_from=dt.datetime(2020, 1, 1))
+    memory.recall("where does Alice live", as_of=dt.datetime(2021, 6, 1), explain=True)
+    ```
 
 ## Concepts
 
@@ -357,8 +352,8 @@ recency or as-of, and no tuned value is claimed.
 
 ## HTTP, Node and Python
 
-All three carry one JSON contract implemented once in `Memory::call` (`json.rs`): the camelCase
-serde form of the Rust types, unknown fields rejected.
+HTTP, Node and Python carry one JSON contract implemented once in `Memory::call` (`json.rs`): the
+camelCase serde form of the Rust types, unknown fields rejected. Method names are the same in every runtime.
 
 | op | request | response |
 |---|---|---|

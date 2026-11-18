@@ -14,16 +14,14 @@ next_steps:
 
 # Install
 
-WARM is a Rust engine. The primary JavaScript package, `warm-sdk`, is a portable HTTP client,
-as is the Python SDK. Embed the engine with the separate `writerslogic-warm` Node package or
-Rust crate, or connect an editor through MCP. [Choose an integration](choose.md) before installing.
-Package installation needs network access; the engine can run offline after installation.
+WARM is a Rust engine; the other runtimes are surfaces over it. [Choose an integration](choose.md) first. Package installation needs network access; the engine can run offline after installation.
 
 ## Requirements
 
 | You need | For |
 |---|---|
 | Rust 1.89 or newer (the MSRV) | the Rust crate, the HTTP server and embedded Node source builds |
+| Rust 1.94 or newer | the `local-models` feature and `--all-features` |
 | Node 18 or newer, or standard Fetch and Web Streams APIs | the portable JavaScript client |
 | Node 18 or newer | the embedded Node bindings (verified on 18.19); Node 24 for the native quickstart, which uses `node:sqlite` |
 | Node 20.19 or newer | building the portable JavaScript client from a checkout (`tsup`) |
@@ -46,8 +44,7 @@ For Python, create and activate a virtual environment first: `uv venv`, then
 
 === "Python"
 
-    The Python SDK is an HTTP client for `warm-server`, which holds the engine and stores the
-    vectors you supply:
+    `warm-sdk` is an HTTP client for `warm-server`, which holds the engine and stores the vectors you supply:
 
     ```sh
     uv venv && uv pip install warm-sdk   # run Python as .venv/bin/python
@@ -91,8 +88,9 @@ For Python, create and activate a virtual environment first: `uv venv`, then
     ```
 
     Run `warm-server` separately using the Python tab's server commands; the same service
-    supports both clients. Installing the client does not start the server or download models. See
-    [package availability](../RELEASING.md#javascript-package-availability).
+    supports both clients. Installing the client does not start the server or download models.
+    Browser deployments must permit the application's origin at the HTTP service boundary.
+    See [package availability](../RELEASING.md#javascript-package-availability).
 
 === "Embedded Node"
 
@@ -111,7 +109,6 @@ For Python, create and activate a virtual environment first: `uv venv`, then
     npm run build
     ```
 
-    The portable client has no embedded subpath. `writerslogic-warm-mcp` is a separate MCP launcher.
 
 ## Check that it works
 
@@ -139,11 +136,8 @@ For Python, create and activate a virtual environment first: `uv venv`, then
     node -e "const { WarmMemorySystem } = require('writerslogic-warm'); console.log(typeof WarmMemorySystem)"
     ```
 
-The [quickstart](../quickstart/index.md) runs a full ingest and search against the same checkout.
-
-The client checks verify imports without contacting the server. The
-[JavaScript memory example](../memory-api/README.md#quick-start) and Python tab in the
-[quickstart](../quickstart/index.md) perform server round trips.
+These checks verify imports without contacting the server. The [quickstart](../quickstart/index.md)
+runs a full ingest and search, with server round trips for the client runtimes.
 
 ## Connect an editor
 
@@ -159,10 +153,6 @@ To build `warm-mcp` from this checkout instead and configure your editor to laun
 cargo build --release --features mcp,security --bin warm-mcp
 ```
 
-Follow the [editor setup guide](../integrations/editors/README.md) for your host. The
-[MCP reference](../integrations/mcp/README.md) covers tools, storage and shared HTTP access.
+Host setup: [editor guide](../integrations/editors/README.md). Tools, storage and shared HTTP access: [MCP reference](../integrations/mcp/README.md).
 
-## If setup fails
-
-See [troubleshooting](troubleshooting.md) for import errors, missing native binaries,
-server authentication, vector dimensions and locked stores.
+Setup failures (imports, native binaries, authentication, vector dimensions, locked stores): [troubleshooting](troubleshooting.md).

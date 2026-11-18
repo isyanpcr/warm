@@ -1,10 +1,14 @@
 # Quickstart
 
-Five minutes, one small public corpus: **ingest** documents, **search** them,
-**compare** with SQLite FTS5, **encrypt** the store, and **remember** facts that change. Pick Rust, Python or embedded Node.
+Five minutes, one small public corpus: **ingest**, **search**, **compare** with SQLite FTS5,
+**encrypt**, and **remember** facts that change.
 
-The portable JavaScript quickstart below uses `warm-sdk` over HTTP. The corpus comparison
-uses Rust, Python or the optional embedded `writerslogic-warm` Node engine.
+| Path | Runtime | Needs |
+|---|---|---|
+| [Portable client](#portable-javascript-client) | JavaScript over HTTP (`warm-sdk`) | A running `warm-server` |
+| [Corpus comparison](#corpus-comparison-with-the-engine) | Rust, Python (HTTP) or embedded Node | Rust toolchain; Node 24 for embedded Node |
+
+Not installed yet: [install](../get-started/install.md). Unsure which runtime: [choose](../get-started/choose.md).
 
 ## Portable JavaScript client
 
@@ -18,19 +22,17 @@ cargo install --locked --path . --features server --bin warm-server
 WARM_API_KEY=quickstart warm-server --input-dim 384
 ```
 
-In an application, skip the build: `npm install warm-sdk`.
-
-Leave the server running. In another terminal, from the same checkout:
+Leave the server running (in an application, `npm install warm-sdk` skips the client build). In another terminal, from the same checkout:
 
 ```sh
 WARM_URL=http://127.0.0.1:8080 WARM_API_KEY=quickstart \
   node examples/quickstart/js-client/quickstart.mjs
 ```
 
-The example needs Node 18 or newer and uses the built client directly. It creates a fresh
-tenant by default; `WARM_TENANT_ID` can select an authorized tenant instead. Unique record IDs
-and an exact metadata filter isolate each run. It remembers one fact, checks recall and get,
-then purges only that fact and checks its absence. It needs no native addon or embedding model.
+The example needs Node 18 or newer, the built client, no native addon and no embedding model. It
+creates a fresh tenant by default (`WARM_TENANT_ID` selects an authorized one); unique record IDs
+and an exact metadata filter isolate each run. It remembers one fact, checks recall and get, then
+purges that fact and checks its absence.
 
 ```js
 --8<-- "examples/quickstart/js-client/quickstart.mjs:ingest"
@@ -39,9 +41,8 @@ then purges only that fact and checks its absence. It needs no native addon or e
 ```
 
 Expected final line: `JavaScript client quickstart passed: remember, recall, get, forget`.
-In an application that installed the package, import `WarmClient` from `warm-sdk` instead of
-the checkout's relative path. See the [exact client API](https://github.com/writerslogic/warm/blob/main/bindings/js/warm-sdk/README.md)
-and [source installation](../get-started/install.md).
+In an application, import `WarmClient` from `warm-sdk` instead of the relative path. Client API:
+[README](https://github.com/writerslogic/warm/blob/main/bindings/js/warm-sdk/README.md).
 
 ## Corpus comparison with the engine
 
@@ -50,9 +51,8 @@ document in the public domain (`examples/quickstart/corpus.jsonl`). The queries 
 questions in `examples/quickstart/queries.json`, each with the article that answers it.
 
 !!! info "This page cannot rot"
-    Every code block below is included from `examples/quickstart/`, and CI runs those files on
-    every pull request and checks their output against the tables shown here. If a snippet stops
-    working, the build fails before the page does.
+    Every code block below is included from `examples/quickstart/`. CI runs those files on every
+    pull request and checks their output against the tables shown here.
 
 ## Set up
 
@@ -64,9 +64,8 @@ questions in `examples/quickstart/queries.json`, each with the article that answ
     cargo run --release --manifest-path examples/quickstart/rust/Cargo.toml
     ```
 
-    The example crate depends on the library by path, with the `security` feature, plus
-    `rusqlite` (bundled SQLite) for the comparison. In your own project:
-    `cargo add warm-rust --features security`.
+    The example crate depends on the library by path with the `security` feature, plus `rusqlite`
+    (bundled SQLite). In your own project: `cargo add warm-rust --features security`.
 
 === "Python"
 
@@ -96,14 +95,13 @@ questions in `examples/quickstart/queries.json`, each with the article that answ
     node examples/quickstart/node/quickstart.mjs
     ```
 
-    The `writerslogic-warm` native module is built from source (Rust toolchain required). The script uses
-    `node:sqlite`, so it needs Node 24 or newer.
+    The native module is built from source (Rust toolchain required). The script uses `node:sqlite`: Node 24 or newer.
 
 ## 1. Ingest
 
-A store is a directory; it persists there and reopens with the same arguments. Each document has
-an ID, its text, a source URI, and optional metadata and embeddings. Text is split into chunks
-(256 words by default) and written in one atomic batch.
+A store is a directory and reopens with the same arguments. A document has an ID, text, a source
+URI, and optional metadata and embeddings. Text is split into chunks (256 words by default) and
+written in one atomic batch.
 
 === "Rust"
 
@@ -160,12 +158,11 @@ analysis are not the same thing:
 --8<-- "examples/quickstart/expected-search-python.txt"
 ```
 
-Read this honestly. Eight hand-written questions on 30 short passages show how the API behaves.
-They are not a benchmark and say nothing about relevance at scale. WARM's default text search is
-stemmed BM25, the same family as FTS5, so on keyword-style queries they largely agree. Supply embeddings (see below) and WARM fuses exact
-cosine with BM25, which is where it can beat a lexical engine on paraphrases. Measured retrieval
-results on public datasets are on the [benchmarks](../PUBLIC-BENCHMARKS.md) page, including where
-WARM loses.
+Eight hand-written questions on 30 short passages show how the API behaves; they are not a
+benchmark and say nothing about relevance at scale. Default text search is stemmed BM25, the same
+family as FTS5, so keyword-style queries largely agree. With embeddings supplied, WARM fuses exact
+cosine with BM25, which is where it can beat a lexical engine on paraphrases. Public-dataset
+results, including where WARM loses: [benchmarks](../PUBLIC-BENCHMARKS.md).
 
 Each hit also carries the passage text, its byte range in the source and the score, so you can
 show a snippet and link back to the source:
@@ -208,30 +205,21 @@ show a snippet and link back to the source:
     --8<-- "examples/quickstart/node/quickstart.mjs:encrypt"
     ```
 
-Rust and Node enable AES-256-GCM with an Argon2id-derived key (the `security` feature, which
-the npm build includes). The script then proves two things: a wrong passphrase cannot open the
-store, and the right one can. Prefer `encryptionPassphraseEnv` (Node) or
-`encryption_passphrase_env` (Rust) over a literal passphrase in real code.
+Rust and Node enable AES-256-GCM with an Argon2id-derived key (the `security` feature, which the
+npm build includes). The script checks that a wrong passphrase cannot open the store and the right
+one can, and scans every file in the store, text segment included, for a known passage. Use
+`encryptionPassphraseEnv` (Node) or `encryption_passphrase_env` (Rust) rather than a literal
+passphrase. What encryption does not cover (file names, sizes, access patterns):
+[privacy limits](../concepts/privacy-limits.md).
 
-The script also scans every file in the encrypted store for a known passage and asserts none
-contains it, the text segment included. Read the [privacy limits](../concepts/privacy-limits.md)
-for what encryption does not cover (file names, sizes, access patterns).
-
-The Python client cannot encrypt, because `warm-server` has no encryption at rest. It offers
-client-side vector masking with `zero_trust_key`, which is obfuscation: the server still learns
-every pairwise similarity and stores text and metadata in plaintext
-([server limits](../SERVER.md)).
-
-## Where next
-
-- [Offline agent demo](offline-agent.md): a personal agent memory with no embeddings and no network.
-- [Concepts](../concepts/index.md): what is lossy, and the tested capacity range.
-- [Production readiness](../production-readiness.md): storage format, locking, migration, limits.
+The Python client cannot encrypt: `warm-server` has no encryption at rest. Client-side vector
+masking with `zero_trust_key` is obfuscation; the server still learns every pairwise similarity
+and stores text and metadata in plaintext ([server limits](../SERVER.md)).
 
 ## 4. Remember what changed
 
-Agents need facts that change. The memory API keeps old facts as history, lets a newer fact
-replace an older one, and answers "what was true as of" a date.
+The memory API keeps old facts as history, lets a newer fact replace an older one, and answers
+"what was true as of" a date.
 
 ```rust
 --8<-- "examples/quickstart/rust/src/bin/memory.rs:memory"
@@ -243,71 +231,17 @@ Output (CI diffs it):
 --8<-- "examples/quickstart/expected-memory.txt"
 ```
 
-`forget` and `explain` complete the set; see the [memory API](../memory-api/README.md).
+`forget` and `explain` complete the set: [memory API](../memory-api/README.md).
 
 ## 5. Use real embeddings
 
-The Python script above uses a toy hashed embedding. For semantic search on your machine with no
-API key and no service, build with the `local-embed` feature and set
-`text_encoder: TextEncoder::LocalEmbedV1`: chunks and queries are embedded by a bundled model and
-search fuses cosine with BM25. Options, model choice and offline packs are in
-[local embeddings](../embeddings/README.md).
+The Python script uses a toy hashed embedding. For semantic search with no API key and no
+service, build with the `local-embed` feature and set `text_encoder: TextEncoder::LocalEmbedV1`;
+search then fuses cosine with BM25. See [local embeddings](../embeddings/README.md). To rank with
+learned-sparse vectors, see [learned-sparse ranking](../guides/sparse-ranking.md).
 
-## 6. Learned-sparse ranking (opt-in)
+## Where next
 
-A learned sparse encoder (SPLADE style) maps a text to weights over a vocabulary of up to 65,536
-terms. WARM runs no encoder here: you encode documents and queries yourself and pass the vectors in.
-Nothing changes for a store that never receives one; no sparse file is written and lexical search is
-byte for byte what it was.
-
-The Python `Warm` class used here needs `warm-python` 0.7.0 or later.
-
-```python
-from writerslogic_warm import Warm
-
-w = Warm(path="store")
-# One (term ids, weights) pair per document, or None. Weights are finite and >= 0.
-w.memorize_documents_sparse(
-    [{"id": "d1", "text": "..."}, {"id": "d2", "text": "..."}],
-    [([101, 2045, 9120], [1.2, 0.4, 2.0]), None],
-)
-hits = w.search_documents_ranked(
-    "query text", {"k": 10}, ranking="fused", sparse_query=([2045, 9120], [0.9, 1.4])
-)
-```
-
-`ranking` is `"lexical"` (default, ignores the sparse query), `"sparse"` (inner product with the
-stored vectors, text unused) or `"fused"` (reciprocal rank fusion, k = 60, of the lexical and sparse
-document rankings over `candidateLimit` candidates, default 100). The Rust calls are
-`memorize_documents_sparse`, `memorize_document_sparse` and `search_documents_ranked`. A document
-ingested without a vector, or replaced without one, is absent from sparse ranking; deleting a
-document removes its vector. `filter` and `sourceUri` are rejected in sparse and fused modes;
-`documentIds` is honoured.
-
-Measured gain, Apple M4, one thread, with `opensearch-neural-sparse-encoding-v2-distill`
-(Apache-2.0) encodings ingested through this API, the benchmark harness's train/dev splits
-(nDCG@10 against WARM BM25 on the same corpus):
-
-| Dataset | BM25 | sparse | fused |
-|---|---|---|---|
-| BEIR corpus of 5,183 docs (train queries) | 0.7027 | 0.7252 | 0.7344 |
-| BEIR corpus of 3,633 docs (dev queries) | 0.2916 | 0.3384 | 0.3352 |
-
-A standalone `SparseIndex` run on FiQA (dev queries, 57,600 docs) gave 0.3664 against 0.2654 for
-BM25; it was not repeated through the document API. Fusion helped on the 5,183-document corpus and not on the 3,633-document one,
-so test both modes on your data.
-
-Costs. Encoding is yours to pay: 21 to 47 ms per document on an Apple GPU for that model, against
-0.1 to 0.4 ms per document for BM25 ingest. Storing the vectors adds 0.2 to 0.3 ms per document
-(noisy measurement) and about 1.5 KB per document at 250 terms (5,183 documents wrote a 7.9 MB
-file); rows are also held in memory at 6 bytes per entry. Search below 100,000 rows scans every
-row exactly (863 queries per second on the 5,183-document corpus and 518 on the 3,633-document one, against about 12,600 and
-24,800 for BM25 on the same machine). From 100,000 rows a pruned impact index is built from the
-stored rows on first search and rebuilt after changes touch a tenth of them; it is approximate
-and the recall of its default parameters is not measured through this API.
-
-Limits: term ids below 65,536; at most 4,096 entries per document and 1,024 per query; at most
-536,870,912 entries and 67,108,864 documents per store; `k` up to 10,000. Duplicate term ids in a
-document, negative or non-finite weights are errors. An encrypted store refuses sparse vectors
-because the file is plaintext. The file is `sparse-docs.wsp`
-([format](../file-format/ANCILLARY.md#sparse-docswsp-learned-sparse-document-vectors)).
+- [Offline agent demo](offline-agent.md): a personal agent memory with no embeddings and no network.
+- [Concepts](../concepts/index.md): what is lossy, and the tested capacity range.
+- [Production readiness](../production-readiness.md): storage format, locking, migration, limits.

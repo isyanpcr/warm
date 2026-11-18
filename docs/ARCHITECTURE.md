@@ -1,5 +1,53 @@
 # Architecture
 
+## System overview
+
+```mermaid
+flowchart TB
+  subgraph bindings["Bindings and servers"]
+    rust["Rust crate"]
+    node["Node: writerslogic-warm (napi)"]
+    ffi["C, WASM, UniFFI"]
+    clients["JavaScript and Python: warm-sdk"]
+    server["warm-server (HTTP)"]
+    mcp["warm-mcp (stdio, HTTP)"]
+  end
+  subgraph engine["Engine API"]
+    core["WarmCore: documents, vectors, facts, mutation gate"]
+    prov["Security and provenance: signed audit log, COSE/SCITT"]
+  end
+  subgraph indexes["Indexes and memory"]
+    text["Text index: blocked postings, BM25, Boolean and phrase"]
+    vector["Vector index (qgraph): vertex file, updatable delta, query-aware projection"]
+    memory["Memory API: remember, recall, forget, conversation memory"]
+    vsa["Vector-symbolic layer: bind, bundle, Hopfield cleanup"]
+  end
+  subgraph storage["Storage"]
+    journal["Journal and checkpoints"]
+    segments["Append-only segments (CRC32, LZ4)"]
+    mapped["Memory-mapped files"]
+    crypto["AES-256-GCM encryption (optional)"]
+  end
+  clients --> server
+  rust --> core
+  node --> core
+  ffi --> core
+  server --> core
+  mcp --> core
+  core --> text
+  core --> vector
+  core --> memory
+  core --> vsa
+  core --> prov
+  memory --> text
+  text --> journal
+  vector --> journal
+  memory --> journal
+  journal --> segments
+  segments --> mapped
+  segments --> crypto
+```
+
 ## Module Graph
 
 ```
@@ -211,6 +259,16 @@ triples; the ownership mapping survives compaction and recovery. Explicit triple
 removes the prior structural record before inserting the new one.
 
 ## Retrieval paths
+
+```mermaid
+flowchart LR
+  q["Document query"] --> f["Filter: metadata, source URI, document IDs"]
+  f --> b["BM25 over lexical terms"]
+  f --> c["Exact cosine over stored dense embeddings (optional)"]
+  b --> r["Weighted reciprocal rank fusion"]
+  c --> r
+  r --> h["Hits with byte offsets"]
+```
 
 Sparse vector queries use the adaptive router to select brute-force, inverted, NSG, or IVF
 retrieval. Replacements and deletions update postings incrementally, reuse slots, and invalidate

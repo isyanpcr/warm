@@ -84,6 +84,15 @@ months, whichever is longer, and is marked in docs and (where the language allow
 deprecation attribute or warning. A deprecated file-format feature is read for the whole major
 series.
 
+### Rust API change in 0.6.6
+
+`WarmCore::query`, `query_batch` and `analyze_components` return `Result` (0.6.5 returns these
+values directly). Handle the result with `?` or an explicit error branch; deferred-encoding
+failures no longer become successful partial query results. `get_document`, `list_documents`,
+`get_document_info` and `list_document_info` also return `Result`; retained-text and checkpoint
+decoding failures propagate instead of panicking, and reads no longer hydrate the entire
+checkpoint or hold store locks during text I/O.
+
 ## Explicitly unstable
 
 - the `experimental` feature and everything it gates: research modules, connection graph and
