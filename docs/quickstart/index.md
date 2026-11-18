@@ -85,7 +85,7 @@ questions in `examples/quickstart/queries.json`, each with the article that answ
     memory API, which ranks with the same stemmed lexical search as the Rust and Node examples, so it
     needs no embedding model. The masked-vector step uses `toy_embed`, a small hashed bag of words
     that is only a stand-in: use a real embedding model for semantic search. The in-process
-    `writerslogic_warm.Warm` class is not in the 0.6.8 wheel; it ships with the next release.
+    `writerslogic_warm.Warm` class needs `warm-python` 0.7.0 or later.
 
 === "Embedded Node"
 
@@ -260,8 +260,7 @@ terms. WARM runs no encoder here: you encode documents and queries yourself and 
 Nothing changes for a store that never receives one; no sparse file is written and lexical search is
 byte for byte what it was.
 
-The Python `Warm` class used here is not in the 0.6.8 wheel; it ships with the release after 0.6.8.
-Until then, build it from a checkout with `maturin develop --release`.
+The Python `Warm` class used here needs `warm-python` 0.7.0 or later.
 
 ```python
 from writerslogic_warm import Warm
