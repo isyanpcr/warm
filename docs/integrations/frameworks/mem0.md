@@ -2,12 +2,15 @@
 
 `writerslogic_warm_integrations.mem0` provides `Memory` and `AsyncMemory` with the mem0ai 2.x method signatures and return shapes, backed by WARM. It does not import mem0.
 
+<!-- quickstart-check: python mem0 -->
 ```python
 from writerslogic_warm_integrations.mem0 import Memory   # was: from mem0 import Memory
 m = Memory()                                        # warm-server on 127.0.0.1:8080, 384-dim hashing embedder
 m.add("I love hiking", user_id="alice", infer=False)
-m.search("hiking", filters={"user_id": "alice"})    # {"results": [...]}
+print(m.search("hiking", filters={"user_id": "alice"}))   # {"results": [...]}
 ```
+
+Runs offline as written against `warm-server --no-auth --input-dim 384`; checked by `scripts/check-readme-snippets.py docs`.
 
 Install: `pip install "writerslogic-warm-integrations[mem0]"` (the extra only adds mem0ai for the conformance test; the shim itself needs no extra).
 
@@ -21,13 +24,14 @@ Follows mem0 2.x validation: `search`/`get_all` take `filters={"user_id"|"agent_
 
 ## Configuration (WARM knobs)
 
-```python
-Memory(
-    warm=WarmConfig(url=..., api_key=..., tenant_id=..., collection=..., embedder=..., input_dim=...,
-                  text_queries=False, zero_trust_key="", max_fetch=100),
-    extractor=None, reranker=None, history_db_path=":memory:", buckets=32, strict_infer=False,
-)
-```
+| `Memory(...)` argument | Default | Meaning |
+|---|---|---|
+| `warm` | `WarmConfig()` | `url`, `api_key`, `tenant_id`, `collection`, `embedder`, `input_dim`, `text_queries` (False), `zero_trust_key` (""), `max_fetch` (100) |
+| `extractor` | None | Fact extractor for `infer=True` (see below) |
+| `reranker` | None | `reranker(query, items, top_k)` applied to search results |
+| `history_db_path` | `":memory:"` | SQLite file for `history()` |
+| `buckets` | 32 | Bucket count used to enumerate records past the server's list cap |
+| `strict_infer` | False | Raise instead of storing verbatim without an extractor |
 
 `Memory.from_config` accepts a mem0-style dict: `vector_store: {"provider": "warm", "config": {url, api_key, tenant_id, collection_name, embedding_model_dims, ...}}`, `embedder: {"provider": "hashing"|"custom", "config": {...}}`, `llm` (a chat callable), `history_db_path`, `custom_instructions`. Any other provider (qdrant, openai, ...) raises `ValueError` instead of being ignored. The encoder is yours: pass `embedder=` an object with `dim`, `embed_documents`, `embed_query`; the default hashing embedder is lexical, not semantic. With `text_queries=True` and a server built with `local-models`, the service embeds text itself (wire-level only; not exercised here).
 

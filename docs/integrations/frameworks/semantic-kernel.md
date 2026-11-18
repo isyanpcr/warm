@@ -10,7 +10,15 @@ pip install "writerslogic-warm-integrations[semantic-kernel]"
 
 ## Quickstart
 
+<!-- quickstart-check: python semantic-kernel -->
 ```python
+import asyncio
+from dataclasses import dataclass
+from typing import Annotated
+from semantic_kernel.data.vector import VectorStoreField, vectorstoremodel
+from writerslogic_warm_integrations.core import HashingEmbedder, WarmConfig
+from writerslogic_warm_integrations.semantic_kernel import WarmStore
+
 @vectorstoremodel
 @dataclass
 class Note:
@@ -19,12 +27,18 @@ class Note:
     team: Annotated[str, VectorStoreField("data", is_indexed=True)]
     embedding: Annotated[list[float] | str | None, VectorStoreField("vector", dimensions=384)] = None
 
-store = WarmStore(WarmConfig(url="http://127.0.0.1:8080", tenant_id="sk", input_dim=384), embedding_generator=my_sk_embedder)
-async with store.get_collection(Note, collection_name="notes") as notes:
-    await notes.upsert(Note(id="1", text="...", team="platform", embedding="..."))
-    hits = await notes.search(values="query", top=3, filter="lambda x: x.team == 'platform'")
-    fn = notes.create_search_function(function_name="search_notes", top=3)   # kernel.add_function(...)
+async def main():
+    config = WarmConfig(url="http://127.0.0.1:8080", tenant_id="sk", input_dim=384, embedder=HashingEmbedder(384))
+    async with WarmStore(config).get_collection(Note, collection_name="notes") as notes:
+        await notes.upsert(Note(id="1", text="Rollbacks need two approvers", team="platform"))
+        hits = await notes.search(values="rollback", top=3, filter="lambda x: x.team == 'platform'")
+        print([hit.record.id async for hit in hits.results])
+        fn = notes.create_search_function(function_name="search_notes", top=3)   # kernel.add_function(...)
+
+asyncio.run(main())
 ```
+
+Runs offline as written against `warm-server --no-auth --input-dim 384`; checked by `scripts/check-readme-snippets.py docs`.
 
 See `integrations/python/examples/semantic_kernel_store.py`. Semantic Kernel's vector store API is async only, so there is no sync path.
 
