@@ -9,7 +9,7 @@ The package is available as source in this repository; `@writerslogic/warm-wasm`
 
 Package documentation (entry points, usage, storage, encryption): `bindings/wasm/npm/README.md`.
 Encryption decision and measurements: [ENCRYPTION.md](ENCRYPTION.md).
-Browser demo: `examples/wasm` (see its README section below).
+Browser demo: [`examples/wasm`](../../../examples/wasm/README.md).
 
 ## What is and is not the engine
 
@@ -95,10 +95,7 @@ The Node, Deno and Bun runners execute one shared suite (`test/shared/suite.mjs`
 
 ## Demo
 
-`examples/wasm` is a static page: add notes or text files, search with BM25 knobs, persist to OPFS or
-IndexedDB with an optional passphrase, download or restore a snapshot. A service worker caches the app so
-it reloads with the server stopped. `node examples/wasm/serve.mjs` serves it on localhost (a secure
-context, which OPFS and service workers need) with the built package at `/pkg/`.
+`node examples/wasm/serve.mjs` serves the browser demo; see its [README](../../../examples/wasm/README.md).
 
 ## Benchmarks
 

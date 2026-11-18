@@ -20,14 +20,13 @@ go mod edit -require=github.com/writerslogic/warm/bindings/go@v0.0.0 \
 ```
 
 ```go
-import warm "github.com/writerslogic/warm/bindings/go"
-
-store, _ := warm.Open("/data/store", 2048, warm.WithEncryptionKey(key))
-defer store.Close()
-store.Ingest(ctx, warm.Document{ID: "a", Text: "...", TitleWeight: 3})
-k1, b := 1.2, 0.75
-hits, _ := store.Search(ctx, "query", &warm.SearchOptions{K: 5, BM25K1: &k1, BM25B: &b})
+--8<-- "bindings/go/example_test.go:example"
 ```
+
+`go test` runs this function as an example and checks its output (`rust`).
+
+Options: `warm.WithEncryptionKey(key)` on `Open`; `SearchOptions{K, BM25K1, BM25B, ...}` on `Search`.
+
 `Ingest`, `Search`, `Delete`, `Stats`, `SecurityStatus`, `Flush`, `Compact`, `Maintain`, `Snapshot`, `ChunkDocument`; errors are `*warm.Error` (`errors.Is(err, warm.ErrLocked)` etc.). `Store` is goroutine safe; `Close` waits for calls in flight and is idempotent; unclosed stores are closed by a GC cleanup.
 
 Context: checked before the call; with a cancellable context the call runs on its own goroutine and returns `ctx.Err()` at once. The native call cannot be interrupted, so it completes in the background (inputs stay pinned); after a cancelled mutation the outcome is unknown.
