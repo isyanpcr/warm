@@ -7,13 +7,10 @@ random references; see
 [the evaluation](../research/KMER-ENCODER-EVAL-2026-11-03.md) for what was and was not measured.
 
 ```rust
-use writerslogic_warm::core::kmer::{KmerConfig, KmerEncoder};
-
-let encoder = KmerEncoder::new(KmerConfig { k: 15, dim: 1 << 20, ..KmerConfig::default() })?;
-let reference = encoder.encode(b"ACGTACGT...")?;
-let read = encoder.encode(b"acgtacgu...")?; // case-insensitive; U is read as T
-let score = read.containment_similarity(&reference); // fraction of the read's bits in the reference
+--8<-- "examples/kmer_encoder.rs:kmer"
 ```
+
+Run it: `cargo run --release --features experimental --example kmer_encoder`.
 
 ## What it computes
 

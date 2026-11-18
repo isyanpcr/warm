@@ -10,20 +10,9 @@ Nothing changes for a store that never receives one; no sparse file is written a
 byte for byte what it was.
 
 The Python `Warm` class used here needs `warm-python` 0.7.0 or later.
-Until then, build it from a checkout with `maturin develop --release`.
 
 ```python
-from writerslogic_warm import Warm
-
-w = Warm(path="store")
-# One (term ids, weights) pair per document, or None. Weights are finite and >= 0.
-w.memorize_documents_sparse(
-    [{"id": "d1", "text": "..."}, {"id": "d2", "text": "..."}],
-    [([101, 2045, 9120], [1.2, 0.4, 2.0]), None],
-)
-hits = w.search_documents_ranked(
-    "query text", {"k": 10}, ranking="fused", sparse_query=([2045, 9120], [0.9, 1.4])
-)
+--8<-- "examples/quickstart/python/sparse.py:sparse"
 ```
 
 `ranking` is `"lexical"` (default, ignores the sparse query), `"sparse"` (inner product with the

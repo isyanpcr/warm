@@ -28,4 +28,4 @@ var hits = await store.SearchAsync("query", new SearchOptions { K = 5, Bm25K1 = 
 ```sh
 WARM_LIBRARY_PATH="$PWD/bindings/c/target/release" dotnet test bindings/dotnet/tests/WarmMemory.Tests
 ```
-Verified here: .NET SDK 8 on macOS arm64, 11 xunit tests; `dotnet pack` produces `runtimes/osx-arm64/native/`. A consumer restoring the package from a feed, Linux and Windows are not verified locally.
+Verified here: .NET SDK 8 on macOS arm64, 19 xunit tests; `dotnet pack` produces `runtimes/osx-arm64/native/`. A consumer restoring the package from a feed, Linux and Windows are not verified locally.
