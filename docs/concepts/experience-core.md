@@ -91,48 +91,27 @@ has no map, and its first call after opening labels an unresolved handle `bid 12
 
 No flag and no separate API are needed.
 
-- `remember`: a request (or an entry of `facts`) that is an object with an `episode` string, a
-  `step` number and a `tree` object is an observation: `{"episode", "step", "tree", "url"?,
-  "action"?, "goal"?, "outcome"?, "accessibilityTree"?}`. `tree` nodes are `{"role", "name", "props"?, "handle"?,
-  "children"?}`. Everything else is a fact and is handled exactly as before. Facts in one call are
-  stored in one transaction first; observations follow in order, each durable when the call
-  returns, and a failing observation leaves the ones before it stored. `Memory::remember_observations`
-  is the typed form. Depth, node count and string bytes are checked on the JSON value before a
-  tree is built from it (`ExperienceConfig`), and `warm-server` checks them before the core sees
-  the request. Over HTTP the JSON parser refuses nesting past 128 levels, and a tree level takes
-  two (an object and a `children` array), so a request can carry 63 tree levels; the depth limit
-  of 128 applies to the library and the bindings. A request nested deeper than the parser allows is
-  refused with 400 `nesting_too_deep`. `warm-server`'s `--max-documents-per-tenant` counts one unit
-  per stored document plus one per episode, step, region and effect row, and one per started
-  4 KiB of a step's form-control text; a step that would pass it gets 429 `quota_exceeded` and
-  leaves nothing stored (steps before it in the same call stay). Apart from the control text the
-  quota counts entries, not bytes. The shape and limits of every entry in a batch are
-  checked before anything in it is stored; an out-of-order or conflicting step is still found only
-  when it is applied.
-- `recall`: the best regions and the best action-effect rows merge with the fact results into one
-  list. Regions, effect rows and facts are ranked by three lexical indexes (the effect index holds
-  each row as rendered text, `On page 'P': click X (x3) -> now shown: ...`); they have separate
-  corpus statistics, so their scores are not on one scale and are not compared. The merge uses
-  ranks only: a result at position `r` of its list contributes `1 / (60 + r)`, results are ordered
-  by that value (a fact before a region on a tie, a better rank before a worse one) and `score` is
-  the merged value. A recall without regions, or one that sets `subject`, `entities`, `filter`,
-  `knownAt` or historical mode (which regions do not have) returns the fact results unchanged,
-  with their own scores. Region results have the id `experience:r<N>`, the page text and
-  breadcrumb as `text`, and `metadata.provenance` listing up to eight `{episode, step, count}`.
-  Effect rows have the id `experience:x<template>:<action>` and the rendered row as `text`; their
-  provenance lists the first transitions that produced the row (found by scanning the stored
-  steps, so `explain` on an effect row is linear in the stored steps).
-  Region ids are stable while the store stays open and across a snapshot reload; a purge followed
-  by new observations can reuse a freed id.
-- `explain`: for an id `experience:r<N>` or `experience:x<template>:<action>`, rank among the best 100 regions, lexical score, matched
-  terms and `provenance`.
-- `forget` with `{"kind": "episode", "episode": "<id>"}` removes the episode and everything only it
-  held. It is always a scrubbing purge: the purge is journaled, the snapshot is rewritten without
-  the episode, and the old snapshot and journal are overwritten with zeros before the call
-  returns (`dryRun` lists what would go; `purge` and `synchronous` do not apply). A region that
-  other episodes also show is kept, but what the episode contributed to it (its value variants and
-  the page title, breadcrumb and text taken from its first occurrence) is re-derived from the
-  episodes that remain, so no text of the forgotten episode stays in the snapshot.
+**`remember`.** A request (or an entry of `facts`) that is an object with an `episode` string, a `step` number and a `tree` object is an observation: `{"episode", "step", "tree", "url"?, "action"?, "goal"?, "outcome"?, "accessibilityTree"?}`, with `tree` nodes `{"role", "name", "props"?, "handle"?, "children"?}`. Everything else is a fact, handled as before. `Memory::remember_observations` is the typed form.
+
+- Facts in one call are stored in one transaction first; observations follow in order, each durable when the call returns, and a failing observation leaves the ones before it stored.
+- Depth, node count and string bytes are checked on the JSON value before a tree is built (`ExperienceConfig`); `warm-server` checks them before the core sees the request. The shape and limits of every entry in a batch are checked before anything is stored; an out-of-order or conflicting step is found only when it is applied.
+- Over HTTP the JSON parser refuses nesting past 128 levels and a tree level takes two (an object and a `children` array), so a request carries 63 tree levels; the depth limit of 128 applies to the library and bindings. Deeper requests are refused with 400 `nesting_too_deep`.
+- `--max-documents-per-tenant` counts one unit per stored document plus one per episode, step, region and effect row, and one per started 4 KiB of a step's form-control text; a step that would pass it gets 429 `quota_exceeded` and leaves nothing stored (earlier steps in the same call stay). Apart from the control text the quota counts entries, not bytes.
+
+**`recall`.** The best regions and best action-effect rows merge with the fact results into one list.
+
+- Regions, effect rows and facts come from three lexical indexes (the effect index holds each row as rendered text, `On page 'P': click X (x3) -> now shown: ...`) with separate corpus statistics, so their scores are not on one scale and are not compared.
+- The merge uses ranks only: a result at position `r` of its list contributes `1 / (60 + r)`; results are ordered by that value (a fact before a region on a tie, a better rank before a worse one) and `score` is the merged value.
+- A recall without regions, or one that sets `subject`, `entities`, `filter`, `knownAt` or historical mode (which regions do not have), returns the fact results unchanged with their own scores.
+
+| Result | Id | `text` | Provenance |
+|---|---|---|---|
+| Region | `experience:r<N>` (stable while the store stays open and across a snapshot reload; a purge followed by new observations can reuse a freed id) | page text and breadcrumb | `metadata.provenance` lists up to eight `{episode, step, count}` |
+| Effect row | `experience:x<template>:<action>` | the rendered row | the first transitions that produced the row, found by scanning stored steps, so `explain` on an effect row is linear in the stored steps |
+
+**`explain`.** For an id `experience:r<N>` or `experience:x<template>:<action>`: rank among the best 100 regions, lexical score, matched terms and `provenance`.
+
+**`forget`** with `{"kind": "episode", "episode": "<id>"}` removes the episode and everything only it held. It is always a scrubbing purge: the purge is journaled, the snapshot is rewritten without the episode, and the old snapshot and journal are overwritten with zeros before the call returns (`dryRun` lists what would go; `purge` and `synchronous` do not apply). A region that other episodes also show is kept, but what the episode contributed to it (its value variants and the page title, breadcrumb and text taken from its first occurrence) is re-derived from the remaining episodes, so no text of the forgotten episode stays in the snapshot.
 
 ## Form state
 

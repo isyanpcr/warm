@@ -67,7 +67,7 @@ The [offline quality diagnostic](../benchmarks/results/longmemeval_dev_quality_v
 
 ### Conversation memory production validation
 
-The opt-in [conversation memory API](memory-api/README.md#original-conversation-evidence-rust-opt-in) stores immutable original user and assistant turns and retrieves through `Memory::recall`, with no saved-answer, question-ID, question-category or benchmark-rank dependency.
+The opt-in [conversation memory API](memory-api/README.md#original-conversation-evidence-rust-opt-in) stores immutable original user and assistant turns through `Memory::remember_many` and retrieves through `Memory::recall`, with no saved-answer, question-ID, question-category or benchmark-rank dependency.
 
 | Record | Result |
 |---|---|

@@ -140,44 +140,21 @@ lib.rs                          Public Rust exports and module declarations
       +-- graph.rs              Graph operations (KNN, pruning, centroid)
 ```
 
-The crate root keeps the existing public Rust exports. Experimental modules live under
-`core/experimental/`; their existing `core::module_name` imports remain available through
-re-exports. Cargo keeps every binary name and required feature unchanged. Historical
-benchmark manifests retain the paths at their measured revisions.
+The crate root keeps the existing public Rust exports. Experimental modules live under `core/experimental/`, and their existing `core::module_name` imports remain available through re-exports. Cargo keeps every binary name and required feature unchanged; historical benchmark manifests retain the paths at their measured revisions.
 
 ## Meaning Memory Module Graph
 
-```
-WarmCore (engine/mod.rs)
-  |
-  +-- atom_memory.rs            AtomMemory: concept vector store
-  |     +-- indexed_memory.rs   IndexedMemory: posting lists + IDF + tombstones
-  |           +-- posting.rs    PostingShard: inverted posting lists per dimension
-  |           +-- idf.rs        IdfWeights: IDF weighting with proportional clipping
-  |           +-- tombstone.rs  TombstoneMap: soft-delete tracking
-  |
-  +-- composite_memory.rs       CompositeMemory: role-bound triple vectors
-  |     +-- indexed_memory.rs   (shared substrate with AtomMemory)
-  |
-  +-- triple_store.rs           TripleStore: symbolic (S, R, O) index
-  |                             Four-way FxHash index: by_subject, by_relation,
-  |                             by_object, by_composite
-  |
-  +-- role.rs                   RoleRegistry: role -> cyclic-shift mapping
-  |                             compose(), unbind(), compose_triple()
-  |
-  +-- rules.rs                  RuleStore: CompositionRule definitions
-  |                             Maps relation chains to derived relations
-  |
-  +-- admission.rs              AdmissionControl: fan-out gating
-  |                             Algebraic vs. MaterializedLookup decision
-  |
-  +-- decompose.rs              Decomposer: vector decomposition
-  |
-  +-- engine/
-      +-- structural.rs         fuzzy_structural_query(): algebraic + materialized paths
-      +-- multi_hop.rs          multi_hop_query(): rule rewrite + chained lookup
-```
+Files are described in the module graph above; this is how `WarmCore` (`engine/mod.rs`) wires them.
+
+| Component | Role |
+|---|---|
+| `AtomMemory` and `CompositeMemory` | Concept vectors and role-bound triple vectors; both sit on the shared `IndexedMemory` substrate (`PostingShard` per-dimension posting lists, `IdfWeights` with proportional clipping, `TombstoneMap` soft deletes) |
+| `TripleStore` | Symbolic (S, R, O) index: four-way FxHash index `by_subject`, `by_relation`, `by_object`, `by_composite` |
+| `RoleRegistry` | Role to cyclic-shift mapping: `compose()`, `unbind()`, `compose_triple()` |
+| `RuleStore` | `CompositionRule` definitions mapping relation chains to derived relations |
+| `AdmissionControl` | Fan-out gating: algebraic versus `MaterializedLookup` |
+| `Decomposer` | Vector decomposition |
+| `engine/structural.rs`, `engine/multi_hop.rs` | `fuzzy_structural_query()` (algebraic + materialized paths); `multi_hop_query()` (rule rewrite + chained lookup) |
 
 ### Data Flow: Structural Query
 

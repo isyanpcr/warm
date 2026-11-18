@@ -309,57 +309,27 @@ let evidence = memory.recall(
 )?;
 ```
 
-`remember` atomically stores a complete ordered session, its manifest, one exact original
-per turn, and bounded searchable chunks. Retrying identical input is idempotent; changing
-an existing session/version fails. A new version preserves the earlier observations.
-Roles, source IDs, turn positions, whitespace and observation timestamps survive hydration.
-Assistant statements remain assistant evidence and do not become user assertions. Observation
-time does not establish a fact's effective date or remove later-recorded observations.
+`remember` atomically stores a complete ordered session, its manifest, one exact original per turn, and bounded searchable chunks. Retrying identical input is idempotent; changing an existing session/version fails; a new version preserves the earlier observations. Roles, source IDs, turn positions, whitespace and observation timestamps survive hydration. Assistant statements stay assistant evidence and do not become user assertions. Observation time does not establish a fact's effective date or remove later-recorded observations.
 
-Recall searches the actual `Memory::recall` path separately for the requested roles. It
-oversamples chunks up to `candidate_limit`, collapses them to at most `k` distinct sources
-per role, and interleaves the roles with equal-weight reciprocal rank fusion. Each selected
-turn includes its opening user context and, for assistant turns, the nearest preceding user
-turn within the same session/version. The assistant reply immediately before that user is
-also retained, so confirmations can keep the recommendation they refer to. Required context
-and its anchor are admitted together;
-an oversized or incomplete group is reported in `dropped`. Returned originals are never
-clipped. These context links preserve source premises; they do not resolve every discourse
-reference or infer missing facts.
+**Recall.** It runs the actual `Memory::recall` path separately per requested role, oversamples chunks up to `candidate_limit`, collapses them to at most `k` distinct sources per role, and interleaves the roles with equal-weight reciprocal rank fusion. Each selected turn includes its opening user context and, for assistant turns, the nearest preceding user turn in the same session/version plus the assistant reply immediately before that user, so confirmations keep the recommendation they refer to. Required context and its anchor are admitted together; an oversized or incomplete group is reported in `dropped`. Returned originals are never clipped. Context links preserve source premises; they do not resolve every discourse reference or infer missing facts.
 
-The opt-in `expand_aggregation_context` first admits candidates with their immediate
-premises in score order. It then uses remaining capacity to complete admitted anchors'
-transitive premise links from the exact stored session and version, including anchors
-already present in the seed. This recovers earlier original turns even when their text
-did not match the query. Each added closure must fit
-`ConversationContextLimits.max_sources`, `max_rounds` and the compact context's exact
-serialized UTF-8 `max_bytes`; otherwise the existing local context remains intact.
-Candidate admission precedes enrichment so a long episode cannot displace other
-candidates merely by requiring more premises. A missing stored premise fails expansion
-instead of restoring deleted evidence.
-The default aggregation gate still applies; set `aggregation_only: false` for other
-queries. `unresolved_premise_ids()` reports remaining links when a closure does not fit,
-and the context remains `unverified` rather than asserting an exhaustive answer.
+**`expand_aggregation_context`** (opt-in). It first admits candidates with their immediate premises in score order, then uses remaining capacity to complete admitted anchors' transitive premise links from the exact stored session and version (including anchors already in the seed), recovering earlier original turns even when their text did not match the query.
 
-`ConversationRecallOptions.max_bytes` counts the exact serialized JSON `sources` array, including provenance; it is
-not a tokenizer or complete reader-request budget. Callers must count their final prompt
-with the reader's tokenizer. `max_sources` also applies to context turns. Sessions accept
-up to 2 MiB of raw text and 4096 stored records; each serialized source and session manifest
-must fit 60 KiB. Escaping and provenance count toward that metadata limit. Invalid or
-oversized input fails before any session record is written.
-Searchable chunks are bounded to 1024 UTF8 bytes and 256 words, reducing truncation by the
-local encoder's 2048-token window; hydration restores the complete original.
+- Each added closure must fit `ConversationContextLimits.max_sources`, `max_rounds` and the compact context's exact serialized UTF-8 `max_bytes`; otherwise the existing local context stays intact.
+- Candidate admission precedes enrichment, so a long episode cannot displace other candidates by requiring more premises.
+- A missing stored premise fails expansion instead of restoring deleted evidence.
+- The default aggregation gate still applies; set `aggregation_only: false` for other queries.
+- `unresolved_premise_ids()` reports remaining links when a closure does not fit, and the context stays `unverified` rather than asserting an exhaustive answer.
 
-With `local-models`, configure `extract_facts: false` and set the embedder's query task to
-`EmbeddingQueryTask::Conversation` before installing the stages. The constructor rejects
-user-only fact extraction and embedding instructions. `StageParams::subquery_weight` enables
-up to four distinct query-plan subqueries; its default is zero, preserving existing query
-behavior. The configured subquery weight is shared across the admitted queries, so emitting
-more queries does not multiply their total influence. Missing usable expansions fall back
-to the original query when no positive retrieval weight remains. Generated time ranges do
-not silently filter observation dates.
+| Limit | Value |
+|---|---|
+| `ConversationRecallOptions.max_bytes` | Exact serialized JSON `sources` array, provenance included; not a tokenizer or complete reader-request budget (count the final prompt with the reader's tokenizer). `max_sources` also applies to context turns. |
+| Session input | up to 2 MiB raw text and 4096 stored records |
+| Serialized source / session manifest | each must fit 60 KiB (escaping and provenance count toward this metadata limit) |
+| Searchable chunk | 1024 UTF-8 bytes and 256 words, reducing truncation by the local encoder's 2048-token window; hydration restores the complete original |
 
-This optional API is experimental and currently Rust-only. Its retrieval regressions use
-independently written conversations; no LongMemEval QA score has been established for this
-production path. Existing dev harness scores are documented separately in
-[evaluation.md](../evaluation.md).
+Invalid or oversized input fails before any session record is written.
+
+**With `local-models`:** configure `extract_facts: false` and set the embedder's query task to `EmbeddingQueryTask::Conversation` before installing the stages; the constructor rejects user-only fact extraction and embedding instructions. `StageParams::subquery_weight` (default zero, preserving existing query behavior) enables up to four distinct query-plan subqueries; its weight is shared across the admitted queries, so more queries do not multiply their total influence. Missing usable expansions fall back to the original query when no positive retrieval weight remains. Generated time ranges do not silently filter observation dates.
+
+This optional API is experimental and Rust-only. Its retrieval regressions use independently written conversations; no LongMemEval QA score is established for this production path. Dev harness scores: [evaluation.md](../evaluation.md).
