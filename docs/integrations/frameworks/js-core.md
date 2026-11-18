@@ -2,10 +2,17 @@
 
 Shared record API used by the JS adapters. It runs the optional native engine in process (`writerslogic-warm`) and adds `remember`, `recall`, `get`, `list` and `forget` with explicit collection metadata. It mirrors the Python framework core (`writerslogic_warm_integrations.core`); the native temporal memory API carries its own fact and policy contracts. These adapters are separate from the portable `warm-sdk` HTTP client.
 
+## Install
+
+```sh
+npm install @writerslogic/warm-core writerslogic-warm
+```
+
+The framework packages are released together by the `js-adapters-vX.Y.Z` tag, separately from the engine and the `warm-sdk` client ([RELEASING](../../RELEASING.md#framework-adapter-releases)).
+
 ## Source setup
 
-The framework packages are available from the source workspace; they are not published by the
-engine or SDK release. From the repository root, build the native engine and adapters:
+To work on the adapters, build the native engine and adapters from the repository root:
 
 ```sh
 npm ci --omit=optional

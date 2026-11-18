@@ -3,7 +3,7 @@
 Adapters that put WARM behind the interfaces of agent frameworks, editors and Claude. Each row links to its canonical page; the package README only carries install, a short quickstart and an options table.
 
 Python frameworks reach `warm-server` through `warm-sdk`; JS frameworks run the native engine in process; editors and the Claude memory tool speak MCP to `warm-mcp`.
-Python install is always `pip install "writerslogic-warm-integrations[<extra>]"` against a running `warm-server`; install one framework extra per environment, because their dependency trees conflict. JS packages are not published yet; build them from the [source workspace](frameworks/js-core.md#source-setup).
+Python install is always `pip install "writerslogic-warm-integrations[<extra>]"` against a running `warm-server`; install one framework extra per environment, because their dependency trees conflict. JS packages install from npm as `@writerslogic/warm-<framework>` ([JS core](frameworks/js-core.md#install)).
 
 ## Python frameworks
 

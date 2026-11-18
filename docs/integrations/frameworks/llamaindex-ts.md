@@ -2,9 +2,9 @@
 
 A `BaseVectorStore` and a `BaseKVStore` (for `KVDocumentStore` and `KVIndexStore`) for LlamaIndex.TS, running the native engine in process through [`@writerslogic/warm-core`](js-core.md). ESM and CJS, typed.
 
-Use the [source workspace setup](js-core.md#source-setup). This adapter depends on the
+Install: `npm install @writerslogic/warm-llamaindex llamaindex @llamaindex/core` (see [JS core](js-core.md#install)). This adapter depends on the
 embedded `writerslogic-warm` engine, `llamaindex` and `@llamaindex/core`; it is separate from
-the portable `warm-sdk` HTTP client and is not published by the SDK release.
+the portable `warm-sdk` HTTP client.
 
 ## Quickstart
 

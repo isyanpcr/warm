@@ -1,6 +1,6 @@
 # Mastra
 
-Package: `@writerslogic/warm-mastra` (peer: `@mastra/core` >=1.78 <2). Built on `@writerslogic/warm-core` (see [js-core.md](js-core.md)).
+Package: `@writerslogic/warm-mastra` (peer: `@mastra/core` >=1.78 <2). Built on `@writerslogic/warm-core` (see [js-core.md](js-core.md)). Install: `npm install @writerslogic/warm-mastra @mastra/core`.
 
 `WarmVector` implements `MastraVector` (`createIndex`, `listIndexes`, `describeIndex`, `deleteIndex`, `upsert`, `query`, `updateVector`, `deleteVector`, `deleteVectors`) over the in-process native engine, so it plugs into Mastra Memory semantic recall, `MastraVector` RAG tools and anything else that takes a vector store.
 
