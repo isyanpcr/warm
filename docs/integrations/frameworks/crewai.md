@@ -19,15 +19,22 @@ Run `warm-server --input-dim N` where `N` is the length of your CrewAI embedder'
 
 ## Quickstart
 
+<!-- quickstart-check: python crewai -->
 ```python
 from crewai.memory.unified_memory import Memory
-from writerslogic_warm_integrations.core import WarmConfig
+from writerslogic_warm_integrations.core import HashingEmbedder, WarmConfig
 from writerslogic_warm_integrations.crewai import WarmMemoryStorage
 
-storage = WarmMemoryStorage(WarmConfig(url="http://127.0.0.1:8080", api_key="...", tenant_id="my_crew", input_dim=1536))
-memory = Memory(storage=storage, embedder={"provider": "openai", "config": {"model": "text-embedding-3-small"}})
-crew = Crew(agents=[...], tasks=[...], memory=memory)
+storage = WarmMemoryStorage(WarmConfig(url="http://127.0.0.1:8080", tenant_id="my_crew", input_dim=384))
+# HashingEmbedder is offline and lexical; use {"provider": "openai", ...} (and --input-dim 1536) for real embeddings
+memory = Memory(storage=storage, embedder=HashingEmbedder(384).embed_documents)
+memory.remember("The launch codename is Bluebird", scope="/project", categories=["fact"], importance=0.9)
+for match in memory.recall("launch codename", depth="shallow", limit=3):
+    print(f"{match.score:.3f}  {match.record.scope}  {match.record.content}")
+# crew = Crew(agents=[...], tasks=[...], memory=memory)   # needs an LLM
 ```
+
+Runs offline as written against `warm-server --no-auth --input-dim 384`; checked by `scripts/check-readme-snippets.py docs`.
 
 Knowledge: `Knowledge(collection_name="docs", sources=[...], storage=WarmKnowledgeStorage(config=WarmConfig(...)))`. The knowledge storage embeds with `config.embedder` (default: offline `HashingEmbedder`), so give it the same encoder you want at query time.
 

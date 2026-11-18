@@ -24,8 +24,11 @@ DSPy no longer has a retriever base class to subclass. A retriever is a callable
 
 ## Quickstart
 
+<!-- quickstart-check: python dspy -->
 ```python
+from importlib.metadata import version
 import dspy
+from dspy.utils import DummyLM                       # offline stand-in; use dspy.LM("openai/gpt-5") for real
 from writerslogic_warm_integrations.dspy import WarmRetriever
 
 dspy.configure_cache(enable_disk_cache=False, enable_memory_cache=True)
@@ -41,7 +44,13 @@ class RAG(dspy.Module):
 
     def forward(self, question):
         return self.answer(context=self.retrieve(question).passages, question=question)
+
+field = "plan" if tuple(map(int, version("dspy").split(".")[:2])) >= (3, 5) else "reasoning"      # DSPy 3.5 asks a non-reasoning LM for `plan`
+with dspy.context(lm=DummyLM([{field: "the passage says so", "answer": "locally"}])):
+    print(RAG()("Where does WARM run?").answer)
 ```
+
+Runs offline as written against `warm-server --no-auth --input-dim 384`; checked by `scripts/check-readme-snippets.py docs`.
 
 Runnable (offline, `DummyLM`): `integrations/python/examples/dspy_rag.py`.
 

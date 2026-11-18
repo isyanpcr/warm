@@ -8,6 +8,7 @@ portable `warm-sdk` HTTP client and is not published by the SDK release.
 
 ## Quickstart
 
+<!-- quickstart-check: skip: requires API key (offline: examples/quickstart.mjs) -->
 ```ts
 import { Agent, run } from '@openai/agents'
 import { WarmSession, WarmStore, createMemoryTools } from '@writerslogic/warm-openai-agents'

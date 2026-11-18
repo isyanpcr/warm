@@ -14,15 +14,36 @@ You need a running `warm-server` (see `docs/SERVER.md`); its `--input-dim` must 
 
 ## Session
 
+<!-- quickstart-check: python openai-agents -->
 ```python
+import asyncio
 from agents import Agent, Runner
+from agents.items import ModelResponse
+from agents.models.interface import Model
+from agents.usage import Usage
+from openai.types.responses import ResponseOutputMessage, ResponseOutputText
 from writerslogic_warm_integrations.core import WarmConfig
 from writerslogic_warm_integrations.openai_agents import WarmSession
 
-config = WarmConfig(url="http://127.0.0.1:8080", tenant_id="acme")
-session = WarmSession("conversation-42", config)
-result = await Runner.run(Agent(name="a"), "hello", session=session)
+class Offline(Model):                  # stands in for the LLM; omit `model=` to use OpenAI (needs OPENAI_API_KEY)
+    async def get_response(self, *args, **kwargs):
+        text = ResponseOutputText(type="output_text", text="hi", annotations=[])
+        message = ResponseOutputMessage(id="m", type="message", role="assistant", status="completed", content=[text])
+        return ModelResponse(output=[message], usage=Usage(), response_id=None)
+
+    def stream_response(self, *args, **kwargs):
+        raise NotImplementedError
+
+async def main():
+    session = WarmSession("conversation-42", WarmConfig(url="http://127.0.0.1:8080", tenant_id="acme"))
+    result = await Runner.run(Agent(name="a", model=Offline()), "hello", session=session)
+    print(result.final_output, len(await session.get_items()), "items stored")
+    await session.aclose()
+
+asyncio.run(main())
 ```
+
+Runs offline as written against `warm-server --no-auth --input-dim 384`; checked by `scripts/check-readme-snippets.py docs`.
 
 `WarmSession` subclasses `agents.memory.SessionABC` and implements `get_items(limit)`, `add_items`, `pop_item`, `clear_session`, `session_id` and `session_settings` exactly as the protocol defines them (`limit` returns the latest N items in chronological order; `SessionSettings.limit` is the default). `Runner.run`, `run_sync` and `run_streamed` all take it. `isinstance(s, agents.memory.Session)` holds.
 
@@ -42,10 +63,15 @@ Text queries are not used for sessions; the stored vector is only needed because
 
 ## Memory tools
 
+<!-- quickstart-check: python openai-agents -->
 ```python
+from agents import Agent
+from writerslogic_warm_integrations.core import WarmConfig
 from writerslogic_warm_integrations.openai_agents import memory_tools
 
+config = WarmConfig(url="http://127.0.0.1:8080", tenant_id="acme")
 agent = Agent(name="assistant", tools=memory_tools(config, user_id="alice"))
+print([tool.name for tool in agent.tools])
 ```
 
 Returns `remember(text, tags?)`, `recall(query, k?)` and `forget(memory_id)` as `FunctionTool`s. `user_id` is stored as metadata; `recall` is restricted to it (equality filter, pushed to the service) and `forget` refuses ids owned by another user. `k` is clamped to `max_k` (default 20). `sync=True` builds blocking tools on `WarmBackend`; the default uses `AsyncWarmBackend`.

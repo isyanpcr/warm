@@ -11,6 +11,7 @@ Both connect to an `warm-mcp` server over stdio (they start it) or streamable HT
 
 ## Use
 
+<!-- quickstart-check: skip: requires API key (ANTHROPIC_API_KEY) -->
 ```python
 import anthropic
 from warm_memory_tool import WarmMemoryToolSync
@@ -24,6 +25,7 @@ with WarmMemoryToolSync.connect(command="warm-mcp") as memory:
     ).until_done()
 ```
 
+<!-- quickstart-check: skip: requires API key (ANTHROPIC_API_KEY) -->
 ```ts
 const memory = await WarmMemoryTool.connect({ connection: { command: "warm-mcp" } });
 const final = await client.beta.messages.toolRunner({

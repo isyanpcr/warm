@@ -23,23 +23,40 @@ covered by the memory-tool tests.
 
 ## Use
 
+<!-- quickstart-check: python litellm -->
 ```python
+import litellm
 from writerslogic_warm_integrations.core import WarmConfig
 from writerslogic_warm_integrations.litellm import MemoryTools
 
 tools = MemoryTools(WarmConfig(url="http://127.0.0.1:8080", tenant_id="acme"), user_id="alice")
 
+def offline(**kwargs):                                          # mock LLM; omit `completion=` to call a real model
+    return litellm.completion(**kwargs, mock_response="Noted.")
+
 messages = [{"role": "user", "content": "Remember that I prefer dark roast."}]
-response = tools.run(messages, model="gpt-5")                 # litellm.completion loop
-response = await tools.arun(messages, model="gpt-5")          # litellm.acompletion loop
+print(tools.run(messages, model="gpt-5", completion=offline).choices[0].message.content)   # arun() is the async twin
 ```
+
+Runs offline as written against `warm-server --no-auth --input-dim 384`; checked by `scripts/check-readme-snippets.py docs`.
 
 Manual control:
 
+<!-- quickstart-check: python litellm -->
 ```python
-r = litellm.completion(model=..., messages=messages, tools=MemoryTools.tools_schema())
-for call in r.choices[0].message.tool_calls:
-    messages.append(tools.handle_tool_call(call))             # or: await tools.ahandle_tool_call(call)
+import json
+import litellm
+from writerslogic_warm_integrations.core import WarmConfig
+from writerslogic_warm_integrations.litellm import MemoryTools
+
+tools = MemoryTools(WarmConfig(url="http://127.0.0.1:8080", tenant_id="acme"), user_id="alice")
+call = [{"id": "1", "type": "function", "function": {"name": "remember", "arguments": json.dumps({"text": "Alice likes dark roast"})}}]
+messages = [{"role": "user", "content": "Remember that I prefer dark roast."}]
+r = litellm.completion(model="gpt-5", messages=messages, tools=MemoryTools.tools_schema(), mock_tool_calls=call)   # mock LLM
+messages.append(r.choices[0].message)
+for tool_call in r.choices[0].message.tool_calls:
+    messages.append(tools.handle_tool_call(tool_call))        # or: await tools.ahandle_tool_call(tool_call)
+print(messages[-1])
 ```
 
 - `tools_schema()` returns `remember(text, tags?)`, `recall(query, k?)`, `forget(memory_id)` as `{"type": "function", "function": {...}}` (a fresh copy per call).

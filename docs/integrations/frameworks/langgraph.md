@@ -11,13 +11,26 @@ warm-server --input-dim 384
 
 ## Quickstart
 
+<!-- quickstart-check: python langgraph -->
 ```python
+from langgraph.graph import END, START, MessagesState, StateGraph
+from writerslogic_warm_integrations.core import HashingEmbedder
+from writerslogic_warm_integrations.langchain import EmbedderAsLangChain
 from writerslogic_warm_integrations.langgraph import WarmSaver, WarmStore
 
+embeddings = EmbedderAsLangChain(HashingEmbedder(384))
 saver = WarmSaver(url="http://127.0.0.1:8080", tenant_id="acme")
 store = WarmStore(index={"embed": embeddings, "dims": 384, "fields": ["text"]}, url="http://127.0.0.1:8080", tenant_id="acme")
+
+graph = StateGraph(MessagesState)
+graph.add_node("hello", lambda state: {"messages": [("ai", "hi")]})
+graph.add_edge(START, "hello")
+graph.add_edge("hello", END)
 app = graph.compile(checkpointer=saver, store=store)
+print(app.invoke({"messages": [("user", "hello")]}, {"configurable": {"thread_id": "t1"}}))
 ```
+
+Runs offline as written against `warm-server --no-auth --input-dim 384`; checked by `scripts/check-readme-snippets.py docs`.
 
 Runnable example: `integrations/python/examples/langgraph_memory.py`.
 
