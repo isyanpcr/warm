@@ -1215,6 +1215,11 @@ fn search_ranks_like_lexical_recall_and_returns_fields_only_on_request() {
         .json(&json!({"query": "quartz", "top_k": 1, "include": ["text", "metadata"]}))
         .send()
         .json();
+    let tuned = s
+        .req("POST", "/api/v1/search")
+        .json(&json!({"query": "quartz", "top_k": 1, "bm25_k1": 0, "bm25_b": 1}))
+        .send();
+    assert_eq!(tuned.status, 200);
     let hit = &full["hits"][0];
     assert!(hit["text"].as_str().unwrap().contains("quartz"));
     assert!(hit["metadata"].is_object());
@@ -1225,6 +1230,9 @@ fn search_ranks_like_lexical_recall_and_returns_fields_only_on_request() {
         (json!({"query": "  "}), 422),
         (json!({"query": "apple", "include": ["vector"]}), 422),
         (json!({"query": "apple", "k": 3}), 400),
+        (json!({"query": "apple", "bm25_k1": -0.5}), 422),
+        (json!({"query": "apple", "bm25_b": 1.5}), 422),
+        (json!({"query": "apple", "bm25_b": -0.1}), 422),
     ] {
         assert_eq!(
             s.req("POST", "/api/v1/search").json(&bad).send().status,
