@@ -10,13 +10,13 @@ after inspecting throughput. Original research hypotheses have their own gates;
 this comparison supplies a control for a future advance.
 
 Exposed measurements now identify a filtered-query slowdown when the generic
-dense tree is trained. [FILTERED-DENSE.md](FILTERED-DENSE.md) records the code-path
+dense tree is trained. [FILTERED-DENSE.md](https://github.com/writerslogic/warm/blob/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/milestones-20261102/FILTERED-DENSE.md) records the code-path
 evidence, the completed same-store counterfactual and a passing bounded-tree
 development screen. The fix is integrated and a fresh arm64 server build is in
 progress in the original preparation; WARM's recalibration v5 is now complete. This is an engineering
 diagnosis, not a qualified comparison; no running qualification binary was changed.
 
-The later [certified arithmetic screen](CERTIFIED-SCAN.md) preserves all 6,912
+The later [certified arithmetic screen](https://github.com/writerslogic/warm/blob/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/milestones-20261102/CERTIFIED-SCAN.md) preserves all 6,912
 paired result comparisons but fails six of its fixed performance cells; it is
 not promoted. The serving comparison therefore retains the calibrated bounded-
 traversal binary `b61f4e70bcddb3673ef551ea921903124d364b6fb34dc48bb01af8642bd58709`.
@@ -281,7 +281,7 @@ launcher v3 checks actual argument paths and runs from a script file. All failed
 receipts remain. Auditor source is frozen in `calibration-audit-driver-v2`;
 successful output directories use suffix `v3`.
 
-The [same-store tree/scan diagnostic](FILTERED-DENSE.md) now establishes a
+The [same-store tree/scan diagnostic](https://github.com/writerslogic/warm/blob/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/milestones-20261102/FILTERED-DENSE.md) now establishes a
 maintenance-triggered filtered-route slowdown: 1%-filtered tree queries are
 12–17x slower than the existing exact scan on these exposed inputs, with identical
 results. This must be addressed and recalibrated before held-out qualification;
@@ -292,7 +292,7 @@ The bounded exact-traversal correction now passes its frozen development gate,
 server was built. WARM-only recalibration v5 and its response audit pass on the same exposed
 COCO/DEEP cohorts (32 selected cells / 32,000 verified query responses); the unchanged competitor selections remain controls. Attempts
 v3/v4 failed in their launchers before queries and are retained. See
-[FILTERED-DENSE.md](FILTERED-DENSE.md) for hashes and launch receipts. Held-out
+[FILTERED-DENSE.md](https://github.com/writerslogic/warm/blob/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/milestones-20261102/FILTERED-DENSE.md) for hashes and launch receipts. Held-out
 qualification remains unopened. The change improves exposed filtered medians
 1.7–4.9x across the four states, but filtered cells remain slower than the strongest
 calibrated competitor. These are development selections, not a qualified win.

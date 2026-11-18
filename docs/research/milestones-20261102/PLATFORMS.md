@@ -282,7 +282,7 @@ Intel WSL soak, so no Windows build or installation was started. Receipts:
 | Python native package | `python-wheels.yml` declares manylinux2014 and musllinux_1_2 arm64/x64, macOS arm64/x64, Windows x64; abi3 minimum Python 3.9 | macOS arm64 and Linux arm64 glibc 2.34 wheels each pass fresh installs, 119 tests and smoke checks on three runtimes. Advertised older glibc, musl, x64 and Windows targets remain open. |
 | C, Java, .NET | `bindings.yml` runs Linux x64/arm64, macOS and Windows; C executable tests run only outside Windows | Resolve advertised coverage from each binding's docs, then execute fresh-install lifecycle checks. A configured skip is not evidence that the corresponding advertised workflow works. |
 | Go | Same binding workflow, currently excludes Windows | Establish documented support before treating the Windows exclusion as acceptable. Run race-enabled lifecycle tests on declared targets. |
-| WASM | Existing tests for Node, Deno, Bun, bundlers and browser | macOS arm64 installed package passes 18 lifecycle tests on each of Node/Deno/Bun, seven cases plus four Rust tests per Chrome/Firefox, two webpack entries, and 18 killed-writer/54 reader recovery checks. Other hosts/browsers/bundlers and legacy migration remain open; see [WASM.md](WASM.md). |
+| WASM | Existing tests for Node, Deno, Bun, bundlers and browser | macOS arm64 installed package passes 18 lifecycle tests on each of Node/Deno/Bun, seven cases plus four Rust tests per Chrome/Firefox, two webpack entries, and 18 killed-writer/54 reader recovery checks. Other hosts/browsers/bundlers and legacy migration remain open; see [WASM.md](https://github.com/writerslogic/warm/blob/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/milestones-20261102/WASM.md). |
 | UniFFI / Kotlin / Swift | Source-built JVM/Android libraries and Swift iOS/macOS/Catalyst/visionOS package | macOS arm64 passes 18 UniFFI tests and seven tests each through fresh Kotlin JAR and Swift XCFramework consumers; iOS 27 arm64 simulator passes seven fresh-consumer tests. Android API 35 arm64 passes ten native checks, nine app lifecycle cases and plaintext/encrypted process-death recovery after completed snapshots. Other Android ABIs are build-only; physical devices, other hosts, legacy migration and remaining recovery surfaces stay open. |
 | Rust library and CLI | CI default/all-feature tests, feature-specific clippy, Windows suite, CLI migration/verification contracts | Focused qgraph tests completed; full fresh-install/public lifecycle and recovery matrix remains open. |
 | HTTP server and Python HTTP SDK | Local HTTP API plus framework adapters/importers | Linux server: 24 API tests, 13 operations tests, 10 durable-receipt tests passed after restoring omitted archive fixtures. Frozen soak running. macOS arm64 SDK wheel passes base client/transport/memory/evidence/importer-validation contracts on Python 3.11.14 and 3.14.7 (54 tests plus 46 subtests each, zero skips). Live SDK lifecycle and optional integrations remain open. |
@@ -348,7 +348,7 @@ on the existing Apple M4, not another physical hardware configuration. No other
 Lima guest was changed. Its private state and disk are under
 `/Volumes/A/.hms-lima`; invoke it with `LIMA_HOME=/Volumes/A/.hms-lima`.
 No host directories are mounted, and agent/public-key forwarding is disabled.
-The [configuration](linux-arm64-lima.yaml) pins the Ubuntu image SHA256.
+The [configuration](https://github.com/writerslogic/warm/blob/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/milestones-20261102/linux-arm64-lima.yaml) pins the Ubuntu image SHA256.
 
 Lima ignores XDG_CACHE_HOME on macOS and initially downloaded/converts the image
 under `~/Library/Caches/lima`. The specific newly used image cache was preserved
@@ -439,7 +439,7 @@ deleted results, duplicate memory retries, temporal/source links and tenant
 separation, followed by chain purge and another reopen. These are process-death
 boundaries, not power-loss coverage. No remote soak data is used.
 
-The [driver](linux-python-sdk-live.py) installs the frozen wheel into fresh Linux
+The [driver](https://github.com/writerslogic/warm/blob/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/milestones-20261102/linux-python-sdk-live.py) installs the frozen wheel into fresh Linux
 arm64 consumers, compares every installed package file against the wheel, requires
 all twelve live tests with zero skips, and runs both recovery cases. It uses the
 existing frozen server binary, with no build or serving-source changes. Guest

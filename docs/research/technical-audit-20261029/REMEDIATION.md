@@ -1071,7 +1071,7 @@ Weaviate skip (54.86s); it uses local stores and fixture HTTP servers. The optio
 fast transport passes 31 cases on Python 3.14. Workflow lint, 214 pinned-action
 checks, and diff whitespace checks pass. Final PR gate remains pending.
 
-Evidence: [maintained-integrations-20261031/](maintained-integrations-20261031/)
+Evidence: [maintained-integrations-20261031/](https://github.com/writerslogic/warm/tree/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/technical-audit-20261029/maintained-integrations-20261031)
 contains the repeatable `scan_lock.py`, hash-bound complete OSV responses,
 GitHub alert snapshot, primary advisory records, lock/build logs, contract logs,
 and wheel check. `docs/SECURITY.md` corrects the older mem0ai 0.1.116 attribution:
@@ -1384,7 +1384,7 @@ memory-cache profile covers the verified WARM retrieval path, not arbitrary
 DiskCache or Chroma use. Matching advisory versions do not establish exploitability
 through these adapters; no-match snapshots do not prove absence of vulnerabilities.
 
-Evidence: [integration-profile-security-20261031/](integration-profile-security-20261031/)
+Evidence: [integration-profile-security-20261031/](https://github.com/writerslogic/warm/tree/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/technical-audit-20261029/integration-profile-security-20261031)
 contains all baseline profile locks, the explicitly synthetic deduplicated
 inventory, complete scan responses, the changed profile lock/scan, final per-extra
 coverage, upstream metadata, test logs, and wheel verification. These additions
@@ -1495,7 +1495,7 @@ chunk, forgetting, HTTP, error-mapping and strict Clippy gates subsequently pass
 Working branch: `fix/checked-document-reads`, based on PR #366 head
 `8448619e91939798bebd7d5c40fb234fa725bf32`; exact-head remote CI is still required.
 Evidence, commands, source hashes, and failed attempts are archived in
-[document-reads-20261031/](document-reads-20261031/). Other infallible metadata,
+[document-reads-20261031/](https://github.com/writerslogic/warm/tree/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/technical-audit-20261029/document-reads-20261031). Other infallible metadata,
 count and memory-view accessors are not generally qualified by these tests.
 
 Final review reproduced an additional listing panic with a CRC-valid checkpoint
@@ -1561,7 +1561,7 @@ Final local validation also passes 41 MCP, six allocation, ten checkpoint and
 twenty HTTP API tests, strict all-feature/all-target Clippy, scoped formatting
 and diff checks. Assertions and deadlines are unchanged. Exact-head remote CI
 and merge remain required. Reproduction inputs and
-baseline evidence: [metadata-reads-20261031/](metadata-reads-20261031/).
+baseline evidence: [metadata-reads-20261031/](https://github.com/writerslogic/warm/tree/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/technical-audit-20261029/metadata-reads-20261031).
 
 PR #370 merged as `740e93e2a91900d7c0e0aa4163f593c458d96987` after all 72
 exact-head checks succeeded or were skipped, including required `check` from
@@ -1587,7 +1587,7 @@ lookahead without fetching an extra record's text. All 47 Rust MCP tests and
 20 official SDK tests pass, as do strict all-feature/all-target Clippy and scoped
 formatting. Exact-head remote CI and merge remain required. No performance gain or
 transactional cross-page snapshot is claimed. Reproduction and baseline
-evidence: [mcp-list-bounds-20261031/](mcp-list-bounds-20261031/).
+evidence: [mcp-list-bounds-20261031/](https://github.com/writerslogic/warm/tree/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/technical-audit-20261029/mcp-list-bounds-20261031).
 
 PR #371 merged as `e4f653c817ab8864dac4c240b490d7b385fcba24` after all 82
 exact-head checks succeeded or were skipped, including required `check` from
@@ -1604,7 +1604,7 @@ and try_summaries, under CRC mismatch and truncation. Malformed checkpoint
 metadata reproduced another five panics, including presence lookup. Restoring
 the fixtures repaired reads; the old Memory path unnecessarily hydrated a valid
 checkpoint. Baseline evidence and commands are in
-[memory-reads-20261101/](memory-reads-20261101/).
+[memory-reads-20261101/](https://github.com/writerslogic/warm/tree/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/technical-audit-20261029/memory-reads-20261101).
 
 The candidate propagates checked read and index-rebuild errors through existing
 Result APIs. Metadata scans, preflight and presence checks avoid retained-text
@@ -1642,7 +1642,7 @@ all vector state. The candidate reads and trains from that overlay, removes the
 now-unused private infallible hydration helper, and preserves explicit fallible
 hydration for operations that need the complete lexical store. No public return
 type changes. Baseline and reproduction evidence:
-[checkpoint-vectors-20261101/](checkpoint-vectors-20261101/).
+[checkpoint-vectors-20261101/](https://github.com/writerslogic/warm/tree/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/technical-audit-20261029/checkpoint-vectors-20261101).
 
 Local validation passes all 26 integration tests, 37 library tests and 12
 compaction tests; one pre-existing external-index census remains ignored.
@@ -1714,7 +1714,7 @@ with the experiment rather than generalized into a production performance claim.
 Rare-query peak requested memory remains 83,864 bytes above the historical
 baseline and matches the prior revision. The coordinator regenerated the summary
 from hashed raw reports without a diff. See the
-[historical comparison](retrieval-tail-20261101/INVESTIGATION.md).
+[historical comparison](https://github.com/writerslogic/warm/blob/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/technical-audit-20261029/retrieval-tail-20261101/INVESTIGATION.md).
 
 Audit entries can be verified with a retained trusted public key after the
 original signing key is removed; this does not add automatic key rotation or
@@ -1818,7 +1818,7 @@ shows roughly 52% lower rare-query requested allocation peaks and identical orde
 results across 7,680 oracle checks. Updated-rare empirical p99 increased 10.37%;
 the preregistered sustained-regression trigger did not fire, and concurrent host
 activity prevents a latency noninferiority or speedup claim. See
-[query memory evidence](query-memory-20261101/README.md).
+[query memory evidence](https://github.com/writerslogic/warm/blob/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/technical-audit-20261029/query-memory-20261101/README.md).
 
 Stale exact-vector capture releases the store lock before scoring, but its first
 frozen comparison failed the fresh 16-dimensional p99 threshold. A separately
@@ -2535,7 +2535,7 @@ external metadata, paged revisions and separate-process reopen.
 The fully integrated release addon was built with Rust 1.99 and two jobs; its
 loader and binary hash were checked. The [synthetic validation receipt](vectra-comparison-20261102/combined-development.json)
 records 17 vector and 16 hybrid passing tests, no skips, source hashes, local addon
-and logs. This is not a study result. The [accounting review](vectra-comparison-20261102/ACCOUNTING.md)
+and logs. This is not a study result. The [accounting review](https://github.com/writerslogic/warm/blob/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/technical-audit-20261029/vectra-comparison-20261102/ACCOUNTING.md)
 records the required workload arithmetic and limits: combined freeze and execution
 remain pending final verification and feasibility review. No input scoring, study
 timing, model download, paid operation, pruning, publication or ToIP work ran.
@@ -2730,7 +2730,7 @@ cover both added engines, save/reopen, cosine scores, query
 identities, rounding at quality boundaries, duplicate oracle rejection and monitored
 workers. The final release addon passed 27 Node tests (three optional local-embedding
 tests skipped), including the high-recall profile across reopen. Untimed graph development
-diagnostics are documented in [DEVELOPMENT.md](vectra-comparison-followup-20261102/DEVELOPMENT.md).
+diagnostics are documented in [DEVELOPMENT.md](https://github.com/writerslogic/warm/blob/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/technical-audit-20261029/vectra-comparison-followup-20261102/DEVELOPMENT.md).
 The first standalone competitor freeze at
 `/Volumes/A/.hms-bench-cache/warm-competitors-20261102-v1` was never started and
 is invalidated by subsequent harness changes; retain it as a preparatory artifact
@@ -2811,7 +2811,7 @@ are exclusive and no-retry; neither supports a latency or performance-advantage 
 ### User-authorized repaired exploratory attempt
 
 The user authorized the separately frozen attempts described in
-[REPAIRED-ATTEMPT.md](vectra-comparison-followup-20261102/REPAIRED-ATTEMPT.md).
+[REPAIRED-ATTEMPT.md](https://github.com/writerslogic/warm/blob/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/technical-audit-20261029/vectra-comparison-followup-20261102/REPAIRED-ATTEMPT.md).
 The combined run at
 `/Volumes/A/.hms-bench-cache/vectra-comparison-repaired-20261102-v1` stopped
 during the 100,000-row Vectra import after its worker exceeded the fixed 8 GiB
@@ -2864,7 +2864,7 @@ is `/Volumes/A/.hms-bench-cache/vectra-import-harness-validation-20261102-v1/tes
 
 ### Graph traversal investigation
 
-The [local graph trace](vectra-comparison-followup-20261102/GRAPH-TRACE.md)
+The [local graph trace](https://github.com/writerslogic/warm/blob/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/technical-audit-20261029/vectra-comparison-followup-20261102/GRAPH-TRACE.md)
 reproduced all 3,000 saved ordered rankings for three configurations on the
 exposed 100,000-row GloVe data. Every oracle neighbor missing from the final
 top ten was absent from the evaluated set: 141 at default ef 512, seven at
@@ -2883,7 +2883,7 @@ cloning or mutating fixtures because the default profile omits the optional
 its synthetic graph mutation and separate-process reopen test passes. This was
 not a frozen study phase, and its failure remains preserved.
 
-The completed [update and union diagnostics](vectra-comparison-followup-20261102/GRAPH-UPDATES.md)
+The completed [update and union diagnostics](https://github.com/writerslogic/warm/blob/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/technical-audit-20261029/vectra-comparison-followup-20261102/GRAPH-UPDATES.md)
 preserved the source fixtures and validated 100 upserts per profile through
 flush and separate-process reopen. Three graph/exact probes matched at every
 recorded post-update boundary. On the shared host, one observed post-update
@@ -2894,7 +2894,7 @@ mean/worst recall on the already exposed queries; it requires two graphs and
 has no implemented or timed merged query. No held-out or product advantage is
 established.
 
-The [adjacency encoding diagnostic](vectra-comparison-followup-20261102/ADJACENCY.md)
+The [adjacency encoding diagnostic](https://github.com/writerslogic/warm/blob/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/technical-audit-20261029/vectra-comparison-followup-20261102/ADJACENCY.md)
 found identical candidate order and saved/reopened behavior on all 1,000 exposed
 queries when the same high-recall graph used three-byte rather than four-byte
 neighbor IDs. Its logical graph index shrank from 49,234,176 to 42,834,176 bytes.
@@ -2902,7 +2902,7 @@ The host exceeded the fixed load threshold during 23 of 84 observations, so its
 timing is unqualified and no production encoding was changed. The representation
 has a 2^24−1-row sentinel boundary; retained vectors and metadata were not pruned.
 
-The [selective-fallback analysis](vectra-comparison-followup-20261102/ADAPTIVE.md)
+The [selective-fallback analysis](https://github.com/writerslogic/warm/blob/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/technical-audit-20261029/vectra-comparison-followup-20261102/ADAPTIVE.md)
 selected a low-top-score rule on the first 500 exposed queries: 50 fallback
 calls recovered five of nine missing neighbors. Its fixed threshold triggered
 49 fallbacks on the other 500 queries and recovered none of six misses. This
@@ -2912,7 +2912,7 @@ graph queries or timings were collected.
 
 ### Filter cache follow-on
 
-The [filter-cache implementation and evidence](vectra-comparison-followup-20261102/FILTER-CACHE.md)
+The [filter-cache implementation and evidence](https://github.com/writerslogic/warm/blob/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/technical-audit-20261029/vectra-comparison-followup-20261102/FILTER-CACHE.md)
 retain up to eight complete filters for one checked revision, bounded to
 100,000 IDs per entry and 2 MiB of UTF-8 keys and ID bytes in aggregate. A
 conflict clears the cache; explicit ID subsets bypass it. On ten alternating
@@ -2928,7 +2928,7 @@ local compiler. Logs are retained under
 
 ### Native equality filtering
 
-The [native-filter implementation](vectra-comparison-followup-20261102/NATIVE-FILTER.md)
+The [native-filter implementation](https://github.com/writerslogic/warm/blob/7f1fdb469e484753b56d1844e3b42ddbcaf5e28f/docs/research/technical-audit-20261029/vectra-comparison-followup-20261102/NATIVE-FILTER.md)
 routes supported scalar equality conjunctions through revision-consistent native
 metadata postings, updated with document mutations and reconstructed on reopen.
 Unsupported selectors preserve the existing JavaScript selector and cache.
