@@ -17,7 +17,7 @@ on `main`, or publication from the Python release workflows. MCP manual runs do 
 | `server-vX.Y.Z` | `.github/workflows/warm-server-release.yml` | five `warm-server` binaries and a `SHA256SUMS` table on a GitHub release; X.Y.Z is the crate version. `scripts/install-warm-server.sh` installs from it. Pull requests touching the workflow run a build-and-smoke dry run |
 | `mcp-vX.Y.Z` | `.github/workflows/warm-mcp-release.yml` | five `warm-mcp` binaries, checksum tables embedded in npm and PyPI launchers, a GitHub release, then the launcher packages and official MCP Registry entry |
 | `js-adapters-vX.Y.Z` | `.github/workflows/adapters-js-release.yml` | the six `warm-*` JS adapters and `warm-claude-tool` on npm |
-| `py-adapters-vX.Y.Z` | `.github/workflows/adapters-py-release.yml` | `warm-integrations` (15 framework extras) and `warm-claude-tool` on PyPI |
+| `py-adapters-vX.Y.Z` | `.github/workflows/adapters-py-release.yml` and `adapters-py-claude-tool-release.yml` | `warm-integrations` (15 framework extras) and `warm-claude-tool` on PyPI |
 
 Publish a new model pack before a native wheel that requires that new version through `[embed]`.
 The existing `warm-models==0.1.0` pin does not require another model release for engine 0.7.0.
@@ -56,7 +56,7 @@ SDK release available until both registry installs have been verified.
 | Package set | Tag | Workflow | Version files | Registry |
 | --- | --- | --- | --- | --- |
 | `warm-core`, `-langchain`, `-llamaindex`, `-mastra`, `-openai-agents`, `-vercel-ai`, `warm-claude-tool` | `js-adapters-vX.Y.Z` | `adapters-js-release.yml` | `package.json` of `integrations/js/packages/*` and `integrations/claude-memory-tool/typescript` | npm |
-| `warm-integrations`, `warm-claude-tool` | `py-adapters-vX.Y.Z` | `adapters-py-release.yml` | `pyproject.toml` and `__version__` of `integrations/python` and `integrations/claude-memory-tool/python` | PyPI |
+| `warm-integrations`, `warm-claude-tool` | `py-adapters-vX.Y.Z` | `adapters-py-release.yml`, `adapters-py-claude-tool-release.yml` | `pyproject.toml` and `__version__` of `integrations/python` and `integrations/claude-memory-tool/python` | PyPI |
 
 Each set moves in lockstep: every package in it carries the tag's version, and each JS adapter
 depends on `warm-core` at `^X.Y.Z`. `python3 scripts/ci/check-adapter-versions.py {js,py} --tag <tag>`
@@ -198,9 +198,9 @@ These cannot be committed; the publish jobs wait on them.
    `warm-sdk` uses `warm-sdk-release.yml`. The MCP launcher uses
    `warm-mcp-release.yml` with the same owner, repository and environment. PyPI permits three pending
    projects at a time; publish one before registering the fourth. The adapters add two more:
-   `warm-integrations` (environment `pypi`) and `warm-claude-tool` (environment
-   `pypi-claude-tool`), both using `adapters-py-release.yml`; PyPI rejects two pending publishers
-   with the same workflow and environment.
+   `warm-integrations` (`adapters-py-release.yml`) and `warm-claude-tool`
+   (`adapters-py-claude-tool-release.yml`), both with environment `pypi`; PyPI allows one pending
+   publisher per workflow file, so each distribution has its own.
 5. npm adapters: `NPM_TOKEN` (on the `npm` environment) must be able to create the six `warm-*`
    adapter packages and `warm-claude-tool`.
    Packages are public (`publishConfig.access`).
