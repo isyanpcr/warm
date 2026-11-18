@@ -5,7 +5,7 @@
 ## Install
 
 ```sh
-pip install "writerslogic-warm-integrations[langgraph]"
+pip install "warm-integrations[langgraph]"
 warm-server --input-dim 384
 ```
 

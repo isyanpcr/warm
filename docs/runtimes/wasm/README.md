@@ -1,11 +1,11 @@
 # WebAssembly runtime
 
-`@writerslogic/warm-wasm` runs the document store locally in browsers, Node, Deno and Bun. It is the
+`warm-wasm` runs the document store locally in browsers, Node, Deno and Bun. It is the
 same engine code as the native and Node bindings: ingest, stemmed BM25 passage search with metadata
 filters, `titleWeight`, `bm25K1` / `bm25B`, optional caller-supplied dense embeddings with blend or RRF
 fusion, delete, stats, and a serialized store you can export, import and persist. No service calls.
 
-The package is available as source in this repository; `@writerslogic/warm-wasm` is not published on npm yet. Build it locally with the steps below.
+The package is available as source in this repository; `warm-wasm` is not published on npm yet. Build it locally with the steps below.
 
 Package documentation (entry points, usage, storage, encryption): `bindings/wasm/npm/README.md`.
 Encryption decision and measurements: [ENCRYPTION.md](ENCRYPTION.md).

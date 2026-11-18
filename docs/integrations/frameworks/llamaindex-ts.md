@@ -1,8 +1,8 @@
-# LlamaIndex.TS (`@writerslogic/warm-llamaindex`)
+# LlamaIndex.TS (`warm-llamaindex`)
 
-A `BaseVectorStore` and a `BaseKVStore` (for `KVDocumentStore` and `KVIndexStore`) for LlamaIndex.TS, running the native engine in process through [`@writerslogic/warm-core`](js-core.md). ESM and CJS, typed.
+A `BaseVectorStore` and a `BaseKVStore` (for `KVDocumentStore` and `KVIndexStore`) for LlamaIndex.TS, running the native engine in process through [`warm-core`](js-core.md). ESM and CJS, typed.
 
-Install: `npm install @writerslogic/warm-llamaindex llamaindex @llamaindex/core` (see [JS core](js-core.md#install)). This adapter depends on the
+Install: `npm install warm-llamaindex llamaindex @llamaindex/core` (see [JS core](js-core.md#install)). This adapter depends on the
 embedded `writerslogic-warm` engine, `llamaindex` and `@llamaindex/core`; it is separate from
 the portable `warm-sdk` HTTP client.
 
@@ -10,7 +10,7 @@ the portable `warm-sdk` HTTP client.
 
 ```ts
 import { Document, Settings, VectorStoreIndex, storageContextFromDefaults } from 'llamaindex'
-import { WarmVectorStore } from '@writerslogic/warm-llamaindex'
+import { WarmVectorStore } from 'warm-llamaindex'
 
 const vectorStore = await WarmVectorStore.create({
   path: './memory',
@@ -33,7 +33,7 @@ Key-value store, for a docstore or index store held in WARM too (use a separate 
 
 ```ts
 import { KVDocumentStore, KVIndexStore } from 'llamaindex'
-import { WarmKVStore, WarmStore } from '@writerslogic/warm-llamaindex'
+import { WarmKVStore, WarmStore } from 'warm-llamaindex'
 const kv = new WarmKVStore(new WarmStore({ path: './kv' }))
 const storageContext = await storageContextFromDefaults({ vectorStore, docStore: new KVDocumentStore(kv), indexStore: new KVIndexStore(kv) })
 ```

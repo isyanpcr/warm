@@ -5,7 +5,7 @@
 ## Install
 
 ```sh
-pip install "writerslogic-warm-integrations[semantic-kernel]"
+pip install "warm-integrations[semantic-kernel]"
 ```
 
 ## Quickstart
@@ -72,7 +72,7 @@ Vectors are not returned (`include_vectors` is ignored): the service does not re
 
 ## Dependency policy
 
-Install `writerslogic-warm-integrations[semantic-kernel]`. The extra requires
+Install `warm-integrations[semantic-kernel]`. The extra requires
 `werkzeug>=3.1.9` so published consumer installs exclude the affected Windows
 `safe_join` versions. Semantic Kernel 1.46.0 requires OpenAPI Core below 0.20;
 OpenAPI Core 0.19.5 caps Werkzeug below 3.1.2, so the tested resolver selects

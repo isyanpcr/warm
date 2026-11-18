@@ -12,7 +12,7 @@ print(m.search("hiking", filters={"user_id": "alice"}))   # {"results": [...]}
 
 Runs offline as written against `warm-server --no-auth --input-dim 384`; checked by `scripts/check-readme-snippets.py docs`.
 
-Install: `pip install "writerslogic-warm-integrations[mem0]"` (the extra only adds mem0ai for the conformance test; the shim itself needs no extra).
+Install: `pip install "warm-integrations[mem0]"` (the extra only adds mem0ai for the conformance test; the shim itself needs no extra).
 
 Tested against mem0ai 2.2.1, Python 3.12, a real `warm-server` built from this repository. `tests/mem0/test_mem0_conformance.py` runs one scenario (add, get, get_all, search, update, history, delete, delete_all) through real mem0 (local qdrant, offline) and through the shim and requires identical result shapes, key by key; `tests/mem0/test_mem0_shim.py` covers behaviour against the server.
 

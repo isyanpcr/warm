@@ -5,7 +5,7 @@
 Tested: `llama-index-core==0.14.25`, Python 3.12, against a real `warm-server`.
 
 ```sh
-pip install "writerslogic-warm-integrations[llamaindex]"
+pip install "warm-integrations[llamaindex]"
 WARM_API_KEY=... warm-server --input-dim 1536 --data-dir ./hms-data   # input-dim = your embedding model's dimension
 ```
 
@@ -101,4 +101,4 @@ Deviation: `text_match` on list-valued metadata does membership instead of raisi
 ## Conformance
 
 - No published third-party conformance suite exists for LlamaIndex vector stores, so the oracle is `SimpleVectorStore`: 21 filter cases compared id-for-id, plus nested filters, `VectorStoreIndex.from_documents` / `from_vector_store` / retriever / `delete_ref_doc`, the full `StorageContext` (vector + doc + index store) reload through `load_index_from_storage`, `SimpleDocumentStore` and `SimpleChatStore` differential tests, `Memory.from_defaults(chat_store=WarmAsyncChatStore, memory_blocks=[...])`, and the stock `VectorMemoryBlock`.
-- Run: `WARM_SERVER_BIN=<warm-server> pytest integrations/python/tests/llamaindex` in an environment with `writerslogic-warm-integrations[llamaindex]`. 51 tests pass against `llama-index-core 0.14.25` and the real server.
+- Run: `WARM_SERVER_BIN=<warm-server> pytest integrations/python/tests/llamaindex` in an environment with `warm-integrations[llamaindex]`. 51 tests pass against `llama-index-core 0.14.25` and the real server.

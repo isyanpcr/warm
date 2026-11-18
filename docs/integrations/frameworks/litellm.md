@@ -9,7 +9,7 @@ when `tools=` is passed; no paid model calls are used in these tests.
 ## Install
 
 ```sh
-pip install "writerslogic-warm-integrations[litellm]"
+pip install "warm-integrations[litellm]"
 ```
 
 Needs a running `warm-server` whose `--input-dim` matches the embedder (default: 384).

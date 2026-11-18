@@ -1,8 +1,8 @@
-# OpenAI Agents SDK, JS (`@writerslogic/warm-openai-agents`)
+# OpenAI Agents SDK, JS (`warm-openai-agents`)
 
-A `Session` and a set of memory tools for the OpenAI Agents SDK for JavaScript/TypeScript (`@openai/agents`), running the native engine in process through [`@writerslogic/warm-core`](js-core.md). ESM and CJS, typed.
+A `Session` and a set of memory tools for the OpenAI Agents SDK for JavaScript/TypeScript (`@openai/agents`), running the native engine in process through [`warm-core`](js-core.md). ESM and CJS, typed.
 
-Install: `npm install @writerslogic/warm-openai-agents @openai/agents zod` (see [JS core](js-core.md#install)). This adapter depends on the
+Install: `npm install warm-openai-agents @openai/agents zod` (see [JS core](js-core.md#install)). This adapter depends on the
 embedded `writerslogic-warm` engine, `@openai/agents` and `zod`; it is separate from the
 portable `warm-sdk` HTTP client.
 
@@ -11,7 +11,7 @@ portable `warm-sdk` HTTP client.
 <!-- quickstart-check: skip: requires API key (offline: examples/quickstart.mjs) -->
 ```ts
 import { Agent, run } from '@openai/agents'
-import { WarmSession, WarmStore, createMemoryTools } from '@writerslogic/warm-openai-agents'
+import { WarmSession, WarmStore, createMemoryTools } from 'warm-openai-agents'
 
 const store = new WarmStore({ path: './memory' })
 const session = new WarmSession({ store, sessionId: 'ada-chat' })        // conversation memory

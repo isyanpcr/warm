@@ -7,7 +7,7 @@ Tested against `openai-agents==0.24.0` (`openai==3.35.1`), Python 3.12.
 ## Install
 
 ```sh
-pip install "writerslogic-warm-integrations[openai-agents]"
+pip install "warm-integrations[openai-agents]"
 ```
 
 You need a running `warm-server` (see `docs/SERVER.md`); its `--input-dim` must equal your embedder's dimension (default embedder: 384).

@@ -3,7 +3,7 @@
 Adapters that put WARM behind the interfaces of agent frameworks, editors and Claude. Each row links to its canonical page; the package README only carries install, a short quickstart and an options table.
 
 Python frameworks reach `warm-server` through `warm-sdk`; JS frameworks run the native engine in process; editors and the Claude memory tool speak MCP to `warm-mcp`.
-Python install is always `pip install "writerslogic-warm-integrations[<extra>]"` against a running `warm-server`; install one framework extra per environment, because their dependency trees conflict. JS packages install from npm as `@writerslogic/warm-<framework>` ([JS core](frameworks/js-core.md#install)).
+Python install is always `pip install "warm-integrations[<extra>]"` against a running `warm-server`; install one framework extra per environment, because their dependency trees conflict. JS packages install from npm as `warm-<framework>` ([JS core](frameworks/js-core.md#install)).
 
 ## Python frameworks
 
@@ -35,12 +35,12 @@ Native engine in process; Node 20+ (tested 26.8), `writerslogic-warm` >= 0.6.5.
 
 | Adapter | Host and tested version | Package | Status |
 |---|---|---|---|
-| [Core](frameworks/js-core.md) | none | `@writerslogic/warm-core` | tested |
-| [LangChain.js](frameworks/langchainjs.md) | @langchain/core 1.2.19 | `@writerslogic/warm-langchain` | tested |
-| [LlamaIndex.TS](frameworks/llamaindex-ts.md) | llamaindex 0.12.1 | `@writerslogic/warm-llamaindex` | tested |
-| [Mastra](frameworks/mastra.md) | @mastra/core 1.78.0 | `@writerslogic/warm-mastra` | tested |
-| [OpenAI Agents JS](frameworks/openai-agents-js.md) | @openai/agents 0.20.0 | `@writerslogic/warm-openai-agents` | tested |
-| [Vercel AI SDK](frameworks/vercel-ai.md) | ai 7.0.146 | `@writerslogic/warm-vercel-ai` | tested |
+| [Core](frameworks/js-core.md) | none | `warm-core` | tested |
+| [LangChain.js](frameworks/langchainjs.md) | @langchain/core 1.2.19 | `warm-langchain` | tested |
+| [LlamaIndex.TS](frameworks/llamaindex-ts.md) | llamaindex 0.12.1 | `warm-llamaindex` | tested |
+| [Mastra](frameworks/mastra.md) | @mastra/core 1.78.0 | `warm-mastra` | tested |
+| [OpenAI Agents JS](frameworks/openai-agents-js.md) | @openai/agents 0.20.0 | `warm-openai-agents` | tested |
+| [Vercel AI SDK](frameworks/vercel-ai.md) | ai 7.0.146 | `warm-vercel-ai` | tested |
 
 ## MCP, editors and Claude
 
@@ -49,7 +49,7 @@ All of these speak to [`warm-mcp`](mcp/README.md).
 | Adapter | Host | Install | Status |
 |---|---|---|---|
 | [warm-mcp launcher](mcp/README.md) | any MCP client | `npx -y writerslogic-warm-mcp` or `uvx warm-mcp` | tested |
-| [Claude memory tool](mcp/memory-tool.md) | Anthropic `memory_20250818` (Python, TypeScript) | `pip install writerslogic-warm-claude-tool` or `npm install writerslogic-warm-claude-tool` | tested |
+| [Claude memory tool](mcp/memory-tool.md) | Anthropic `memory_20250818` (Python, TypeScript) | `pip install warm-claude-tool` or `npm install warm-claude-tool` | tested |
 | [Claude Code](editors/README.md#claude-code) | plugin | `claude plugin install` from the repo marketplace | plugin validated, headless session run |
 | [Codex CLI](editors/README.md) | 0.163.0 | `codex mcp add` | CLI verified, no model session |
 | [Gemini CLI](editors/README.md) | 0.64.0 | `gemini mcp add` or extension | CLI verified, no model session |
