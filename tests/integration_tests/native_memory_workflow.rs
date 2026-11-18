@@ -90,14 +90,14 @@ fn run_fixture(fixture: &Value, name: &str) -> usize {
 #[test]
 fn frozen_native_lifecycle_preserves_sources_and_forgetting_across_restarts() {
     let fixture: Value =
-        serde_json::from_str(include_str!("fixtures/native_memory_lifecycle_v1.json")).unwrap();
+        serde_json::from_str(include_str!("../fixtures/native_memory_lifecycle_v1.json")).unwrap();
     assert_eq!(run_fixture(&fixture, "lifecycle-v1"), 19);
 }
 
 #[test]
 fn frozen_native_temporal_partitions_preserve_fixed_budgets_and_sources() {
     let fixture: Value =
-        serde_json::from_str(include_str!("fixtures/native_memory_evidence_v1.json")).unwrap();
+        serde_json::from_str(include_str!("../fixtures/native_memory_evidence_v1.json")).unwrap();
     for partition in ["development", "evaluation"] {
         for scenario in fixture["partitions"][partition].as_array().unwrap() {
             run_fixture(
@@ -111,7 +111,7 @@ fn frozen_native_temporal_partitions_preserve_fixed_budgets_and_sources() {
 #[test]
 fn shared_memory_negotiation_and_validation_contract() {
     let fixture: Value =
-        serde_json::from_str(include_str!("fixtures/memory_contract_cases_v1.json")).unwrap();
+        serde_json::from_str(include_str!("../fixtures/memory_contract_cases_v1.json")).unwrap();
     let directory = tempfile::tempdir().unwrap();
     let memory = Memory::new(Arc::new(
         WarmCore::new(1024, Some(directory.path().display().to_string()), None).unwrap(),

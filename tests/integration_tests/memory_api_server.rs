@@ -4,14 +4,12 @@
 //! The memory API through the real `warm-server` process: HTTP contract, error classes,
 //! limits, tenant isolation, configuration file and persistence across a restart.
 
-#![cfg(feature = "server")]
-
 use std::path::Path;
 use std::process::{Command, Stdio};
 
 use serde_json::{json, Value};
 
-mod server_support;
+use crate::server_support;
 use server_support::{Server, DIM};
 
 fn start(dir: &Path, extra: &[&str]) -> Server {
@@ -53,7 +51,7 @@ fn ids(response: &Value) -> Vec<&str> {
 #[test]
 fn frozen_native_lifecycle_has_the_same_http_contract() {
     let fixture: Value =
-        serde_json::from_str(include_str!("fixtures/native_memory_lifecycle_v1.json")).unwrap();
+        serde_json::from_str(include_str!("../fixtures/native_memory_lifecycle_v1.json")).unwrap();
     let dir = tempfile::tempdir().unwrap();
     for (phase, steps) in fixture["phases"].as_array().unwrap().iter().enumerate() {
         let server = start(dir.path(), &[]);
@@ -80,7 +78,7 @@ fn frozen_native_lifecycle_has_the_same_http_contract() {
 #[test]
 fn shared_memory_negotiation_and_validation_http_contract() {
     let fixture: Value =
-        serde_json::from_str(include_str!("fixtures/memory_contract_cases_v1.json")).unwrap();
+        serde_json::from_str(include_str!("../fixtures/memory_contract_cases_v1.json")).unwrap();
     let dir = tempfile::tempdir().unwrap();
     let server = start(dir.path(), &[]);
     for case in fixture["cases"].as_array().unwrap() {

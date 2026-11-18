@@ -5,9 +5,7 @@
 //! synthetic corpus, deletes and replaces are visible before and after the next maintenance,
 //! and the route options validate.
 
-#![cfg(feature = "server")]
-
-mod server_support;
+use crate::server_support;
 
 use serde_json::{json, Value};
 use server_support::*;

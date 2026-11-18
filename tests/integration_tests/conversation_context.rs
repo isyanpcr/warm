@@ -1,8 +1,6 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-#![cfg(feature = "conversation-memory")]
-
 use serde_json::{json, Value};
 use writerslogic_warm::core::memory_api::{
     ConversationContext, ConversationContextLimits, ConversationEvidence, ConversationInput,
@@ -432,7 +430,7 @@ fn missing_local_forward_duplicate_and_cross_version_premises_are_rejected() {
 #[test]
 fn python_golden_context_reconstructs_the_exact_canonical_rust_sources() {
     let context =
-        ConversationContext::from_json(include_bytes!("fixtures/conversation_context_v1.json"))
+        ConversationContext::from_json(include_bytes!("../fixtures/conversation_context_v1.json"))
             .unwrap();
     let sources = context.sources().unwrap();
     assert_eq!(sources[0].text, "  Café 東京 🦀\n");

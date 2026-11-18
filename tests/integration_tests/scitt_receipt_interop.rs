@@ -1,6 +1,5 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
-#![cfg(feature = "provenance")]
 
 use base64::Engine;
 use ed25519_dalek::VerifyingKey;
@@ -16,7 +15,7 @@ use writerslogic_warm::core::provenance::{
 #[test]
 fn independently_signed_python_receipts_require_inclusion_identity_trust_and_freshness() {
     let fixture: Value =
-        serde_json::from_str(include_str!("fixtures/scitt_receipt_python_v1.json")).unwrap();
+        serde_json::from_str(include_str!("../fixtures/scitt_receipt_python_v1.json")).unwrap();
     let decode = |value: &Value| {
         base64::engine::general_purpose::STANDARD
             .decode(value.as_str().unwrap())

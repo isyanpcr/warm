@@ -7,6 +7,7 @@
 //! posting list), replacements and a deferred encoding catch-up reach the results of a fresh
 //! store holding the same documents.
 
+use crate::support::open;
 use serde_json::{json, Value};
 use writerslogic_warm::core::documents::{EncodeMode, IngestOptions};
 use writerslogic_warm::{DocumentInput, SearchOptions, WarmCore};
@@ -148,10 +149,6 @@ fn queries() -> Vec<String> {
             text
         })
         .collect()
-}
-
-fn open(dir: &tempfile::TempDir) -> anyhow::Result<WarmCore> {
-    WarmCore::new(1024, Some(dir.path().display().to_string()), None)
 }
 
 /// Unfiltered rankings (the posting-list path) with a deep candidate pool, plus a shallower

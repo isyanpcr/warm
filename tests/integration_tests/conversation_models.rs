@@ -1,8 +1,6 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-#![cfg(all(feature = "conversation-memory", feature = "local-models"))]
-
 use std::sync::Arc;
 
 use anyhow::{Context, Result};

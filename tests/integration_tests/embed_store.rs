@@ -4,7 +4,6 @@
 //! The local embedder through the engine: ingest, search and persistence with
 //! `TextEncoder::LocalEmbedV1`, using a random-weight pack so no model download is needed.
 //! Retrieval quality on real weights is measured by benchmarks/embedding, not here.
-#![cfg(feature = "local-embed")]
 
 use std::sync::Arc;
 

@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 //! With encryption on, no file under the store directory may hold document text, and the
 //! text segment must authenticate what it returns.
-#![cfg(feature = "security")]
 
 use serde_json::json;
 use std::path::Path;

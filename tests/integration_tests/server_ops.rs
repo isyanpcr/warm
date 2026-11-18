@@ -1,9 +1,7 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-#![cfg(feature = "server")]
-
-mod server_support;
+use crate::server_support;
 
 use std::io::{Read, Write};
 use std::time::{Duration, Instant};

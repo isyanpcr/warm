@@ -1,14 +1,12 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-#![cfg(feature = "server")]
-
 use std::ops::{Deref, DerefMut};
 use std::process::Command;
 
 use serde_json::{json, Value};
 
-mod server_support;
+use crate::server_support;
 
 const DIM: usize = server_support::DIM;
 

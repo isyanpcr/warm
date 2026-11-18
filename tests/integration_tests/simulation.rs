@@ -26,6 +26,7 @@ use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+use crate::support::{files_containing, history_error};
 use serde_json::{json, Value};
 use writerslogic_warm::core::memory_api::*;
 use writerslogic_warm::core::WarmConfig;
@@ -42,7 +43,6 @@ const DOC_IDS: usize = 5;
 const WORDS: usize = 5;
 const T0: Millis = 1_000;
 
-// ---------------------------------------------------------------------------------------------
 // Utilities
 
 struct Rng(u64);
@@ -81,32 +81,6 @@ fn record_hash(parts: &[&str]) -> u128 {
     (half(1) << 64) | half(2)
 }
 
-fn history_error(error: anyhow::Error) -> HistoryError {
-    error
-        .downcast::<HistoryError>()
-        .unwrap_or_else(|e| panic!("not a history error: {e:#}"))
-}
-
-fn files_containing(dir: &Path, needle: &[u8], out: &mut Vec<String>) {
-    for entry in std::fs::read_dir(dir).unwrap().filter_map(Result::ok) {
-        let path = entry.path();
-        // The open store holds an exclusive lock on its lock file, which Windows refuses to
-        // read; the file never holds store content.
-        if path.file_name().is_some_and(|name| name == ".hms.lock") {
-            continue;
-        }
-        if path.is_dir() {
-            files_containing(&path, needle, out);
-        } else if std::fs::read(&path)
-            .unwrap()
-            .windows(needle.len())
-            .any(|w| w == needle)
-        {
-            out.push(path.display().to_string());
-        }
-    }
-}
-
 /// Copies a store's files by reading them, as `files_containing` does, skipping the lock file.
 fn copy_tree(from: &Path, to: &Path) {
     std::fs::create_dir_all(to).unwrap();
@@ -139,7 +113,6 @@ fn search(k: u32) -> SearchOptions {
     }
 }
 
-// ---------------------------------------------------------------------------------------------
 // Reference model
 
 #[derive(Clone, Debug)]
@@ -264,7 +237,6 @@ impl Model {
     }
 }
 
-// ---------------------------------------------------------------------------------------------
 // Wall-clock resolution model (docs/memory-api/TIME-TRAVEL.md#as-of-a-wall-clock-time)
 
 #[derive(Clone, Debug)]
@@ -335,7 +307,6 @@ impl Epoch {
     }
 }
 
-// ---------------------------------------------------------------------------------------------
 // The live side
 
 #[derive(Clone, Debug, PartialEq)]
@@ -1735,7 +1706,6 @@ fn simulation_long_run() {
     });
 }
 
-// ---------------------------------------------------------------------------------------------
 // Schedules of a background compaction's tail that the seeds reach only by timing
 
 /// A simulation with documents and facts in a store that has not been compacted, on a seed
@@ -1816,7 +1786,6 @@ fn a_tail_write_after_the_snapshot_resolves_past_the_prefix() {
     );
 }
 
-// ---------------------------------------------------------------------------------------------
 // Deterministic gates
 
 fn j<T: serde::Serialize>(value: &T) -> Value {

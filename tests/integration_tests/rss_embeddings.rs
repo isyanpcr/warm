@@ -16,7 +16,7 @@ use writerslogic_warm::core::WarmConfig;
 use writerslogic_warm::{DocumentInput, DocumentResult, EmbeddingSpace, SearchOptions, WarmCore};
 
 #[cfg(feature = "server")]
-mod server_support;
+use crate::server_support;
 
 const DIM: usize = 64;
 const DOCS: usize = 300;
