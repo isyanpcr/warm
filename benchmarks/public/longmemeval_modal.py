@@ -2,6 +2,8 @@
 
   uvx modal run benchmarks/public/longmemeval_modal.py --dataset s --part dev --models small --cap 5
   uvx modal run benchmarks/public/longmemeval_modal.py --dataset m --part all --models large --cap <USD>
+  uvx modal run benchmarks/public/longmemeval_modal.py --dataset s --part all --models small --cap <USD> \
+      --tag <tag> --variant <name> --out <result.json>   # disclosed non-frozen config, label-blind export
 
 Stages (each cached in the Modal Volume `warm-lme`, keyed by sha256 of model@revision + prompt +
 text, written shard by shard with a volume commit, so an interrupted run resumes where it stopped):
@@ -558,6 +560,8 @@ def _rerank_doc(q, target: str, level: str) -> str:
         if level == "session" and s.sid == target:
             return f"Conversation date: {s.date_text}\n{s.user_text[:12000]}"
         for tid, user, reply in s.turns:
+            if tid == target and tid == s.opening_tid:
+                return f"Conversation date: {s.date_text}\nassistant: {reply[:3000]}"
             if tid == target:
                 return f"Conversation date: {s.date_text}\nuser: {user[:3000]}\nassistant: {reply[:1500]}"
     raise KeyError(target)
@@ -585,7 +589,7 @@ def driver(dataset: str, part: str, models: str, cap: float, config: dict, tag: 
     facts = None
     if any(k in kinds for k in ("fact", "turn_exp", "session_exp")):
         need = {P.fact_key(s, llm): P.FACT_PROMPT.format(messages=s.fact_input())
-                for q in qs for s in q.sessions}
+                for q in qs for s in q.sessions if s.user_turns}  # nothing to extract from an opening unit alone
         facts = _llm_stage("facts", models, need, budget)
     queries = None
     uses_llm_queries = all_kinds or any(
@@ -771,7 +775,8 @@ def _verify_heldout_final(frozen: str, frozen_sha256: str, config: str, models: 
 @app.local_entrypoint()
 def main(dataset: str = "s", part: str = "dev", models: str = "small", cap: float = 5.0,
          config: str = str(HERE / "longmemeval_config.json"), tag: str = "", all_kinds: bool = False,
-         out: str = "", cache_ns: str = "", engine: str = "python", heldout_final: str = "", frozen_sha256: str = ""):
+         out: str = "", cache_ns: str = "", engine: str = "python", heldout_final: str = "", frozen_sha256: str = "",
+         variant: str = ""):
     if dataset not in ("s", "m") or part not in ("dev", "heldout", "all") or models not in MODELS:
         sys.exit("bad --dataset / --part / --models")
     if engine not in ("python", "warm") or (engine == "warm" and models != "small"):
@@ -784,6 +789,13 @@ def main(dataset: str = "s", part: str = "dev", models: str = "small", cap: floa
             sys.exit("--heldout-final runs --dataset s --part all with --tag and --out")
         manifest = _verify_heldout_final(heldout_final, frozen_sha256, config, models, engine, tag, cap,
                                          all_kinds, cache_ns)
+    elif variant:
+        # A disclosed non-frozen configuration on all 500 questions: the same label-blind pools and export
+        # as the frozen run, but no frozen-protocol claim (the manifest says so) and no revision gate.
+        if dataset != "s" or part != "all" or not out or not tag:
+            sys.exit("--variant runs --dataset s --part all with --tag and --out")
+        manifest = {"frozen": False, "variant": variant,
+                    "note": "benchmark-informed fixed config, label-blind export; not the frozen protocol"}
     elif dataset == "s" and part != "dev":
         sys.exit("on S only dev is run; held-out questions are scored only in the final M run")
     cfg = json.loads(Path(config).read_text())
