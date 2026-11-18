@@ -13,4 +13,8 @@ WARM processes everything locally: the core engine makes no network calls and th
 | Vector masking hides vectors from a remote store | `VectorMask` (Python SDK `zero_trust_key`) is obfuscation: pairwise similarity is preserved, so the store learns the similarity graph, and known plaintext/masked pairs reveal the permutation progressively. | [PRIVACY.md](../PRIVACY.md#client-side-vector-masking) |
 | Differential privacy covers the engine | It applies only to the configured **bundle** operation, is not audited as a finite-precision mechanism, and WARM keeps no persistent budget accountant. | [PRIVACY.md](../PRIVACY.md#differentially-private-bundling) |
 
+## What encryption protects
+
+What encryption protects: with the `security` feature, AES-256-GCM encryption (Argon2id key) covers arena payloads, persisted index caches and the passage text segment (`documents.text`). Encryption does not protect schema metadata, file names, sizes, topology or salts, and encrypted data is plaintext in process memory while queried.
+
 Not implemented: search over encrypted data, query privacy against the server, PoSME receipts, RATS attestation verification and `did:web` resolution for access credentials. The experimental [private search](../PRIVATE-SEARCH.md) scoring hides the query vector from the scoring server only, under the limits stated there.
