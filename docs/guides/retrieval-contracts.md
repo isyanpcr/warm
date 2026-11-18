@@ -1,34 +1,25 @@
 # Retrieval contracts
 
-`search_vectors` in exact mode selects and ranks with the same sequential `f64` cosine
-used by document search. Stored embeddings remain normalized `f32` values. Graph mode
-selects approximate candidates and then computes their canonical scores. Equal scores
-use document ID and chunk index order.
+| Mode | Selects and ranks with |
+|---|---|
+| `exact` | The same sequential `f64` cosine as document search; stored embeddings remain normalized `f32`. Always keeps the full-dimensional ranking contract. |
+| `graph` | Approximate candidates, then canonical scores. Requires an available graph. |
+| `auto` | Graph when available; can build or use an exact snapshot. |
+
+Equal scores use document ID and chunk index order.
 
 ## Optional Matryoshka candidates
 
-This is an experimental opt-in policy. The
-[fresh native SciFact evaluation](../research/technical-audit-20261029/matryoshka-native-20261102/README.md)
-did not qualify either tested configuration: 256 dimensions with 100 candidates or
-512 dimensions with 50 candidates. Both lost more recall than the preset limits,
-and host load prevented query timing. Neither setting is recommended as a default;
-no measured latency advantage is established for this path.
+Experimental opt-in. The [fresh native SciFact evaluation](../research/technical-audit-20261029/matryoshka-native-20261102/README.md) qualified neither tested configuration (256 dimensions with 100 candidates; 512 dimensions with 50 candidates): both lost more recall than the preset limits, and host load prevented query timing. Neither is recommended as a default and no latency advantage is established.
 
-For an embedding model trained to preserve useful information in vector prefixes,
-`WarmConfig::vector_candidates` can build the graph from a normalized prefix while
-retaining full embeddings for final cosine ranking. Set both
-`VectorCandidateConfig { dimensions, rerank_candidates }` fields; leaving the option
-absent preserves the existing full-width graph. The prefix width is between 1 and
-the configured embedding width, and the shortlist is between 1 and 4,096. When the
-graph actually selects candidates, `k` must fit the shortlist. A full-width prefix provides a control with
-the same shortlist size.
+For a model trained to keep information in vector prefixes (Qwen3-Embedding-0.6B supports prefixes of 32 through 1024 dimensions per its pinned model card), `WarmConfig::vector_candidates` builds the graph from a normalized prefix and keeps full embeddings for final cosine ranking. This changes retrieval work, not embedding inference cost (inference still generates the full vector once), and is separate from the default BERT-family local embedder.
 
-The graph selects candidate chunks using separately L2-normalized prefixes. WARM
-then reranks those candidates using the original full vectors and canonical scores.
-Full reranking cannot recover a relevant item omitted from the shortlist. Measure
-recall against exact search on representative queries before choosing a width or
-shortlist; truncating a model that was not trained for prefixes has no such quality
-contract. Inference still generates the full vector once.
+| `VectorCandidateConfig` field | Range |
+|---|---|
+| `dimensions` (prefix width) | 1 to the configured embedding width; a full-width prefix is a control with the same shortlist size |
+| `rerank_candidates` (shortlist) | 1 to 4,096; when the graph selects candidates, `k` must fit the shortlist |
+
+Set both fields; leaving the option absent keeps the full-width graph. The graph selects candidate chunks on separately L2-normalized prefixes, then WARM reranks them with the original full vectors and canonical scores. Reranking cannot recover a relevant item missing from the shortlist: measure recall against exact search on representative queries before choosing a width or shortlist; truncating a model not trained for prefixes has no quality contract.
 
 The Node API accepts the same policy in the constructor:
 
@@ -44,79 +35,33 @@ const hits = await warm.searchVectors(fullQueryEmbedding, 10, { mode: 'auto', ef
 const exact = await warm.searchVectors(fullQueryEmbedding, 10, { mode: 'exact' })
 ```
 
-`fullEmbeddingConfig` supplies the full model, revision and embedding dimensions;
-the candidate width never replaces that identity. All supplied document and query
-vectors must have the full width. The constructor's first argument is WARM's sparse
-memory dimension, which is independent of the embedding dimension. Node maintenance
-builds a graph at 4,096 embedded chunks; smaller stores use exact search in `auto`
-mode. Rust callers can set a different threshold with `rebuild_vector_index`.
+`fullEmbeddingConfig` supplies the full model, revision and embedding dimensions; the candidate width never replaces that identity, and all supplied document and query vectors must have the full width. The constructor's first argument is WARM's sparse memory dimension, independent of the embedding dimension. Node maintenance builds a graph at 4,096 embedded chunks (smaller stores use exact search in `auto` mode); Rust callers can set another threshold with `rebuild_vector_index`.
 
-`filter`, `sourceUri` and `documentIds` use exact eligibility before full-dimensional
-top-k selection. Projected snapshots with updates or deletions use full exact search
-until rebuilt. A zero-norm prefix in a stored row or query also falls back to exact
-search. These routes retain correctness but do not provide projected-search speed.
-Explicit `graph` mode otherwise requires an available graph; `auto` can build or
-use an exact snapshot. `exact` always retains the full-dimensional ranking contract.
+Routing and fallbacks:
 
-Rust `search_vectors_with_report` reports the route actually used, candidate width
-and effective shortlist. `vector_index_status` separates the full embedding identity
-from prefix normalization and shortlist policy. Its graph byte counts describe
-retained graph buffers, including the separately reported residual subset; they
-exclude stored full embeddings, text, allocator overhead, build scratch and other
-snapshots still in use. Shorter candidates do not shrink retained full vectors or
-the model. The candidate policy is runtime configuration and must be reapplied on
-reopen; changing it rebuilds derived state without changing the stored embedding
-schema. The policy applies to vector graph search, not ordinary hybrid document search.
+- `filter`, `sourceUri` and `documentIds` use exact eligibility before full-dimensional top-k selection.
+- Projected snapshots with updates or deletions use full exact search until rebuilt; a zero-norm prefix in a stored row or query also falls back to exact search. These routes keep correctness but not projected-search speed.
+
+Rust `search_vectors_with_report` reports the route actually used, candidate width and effective shortlist. `vector_index_status` separates the full embedding identity from prefix normalization and shortlist policy; its graph byte counts cover retained graph buffers (including the separately reported residual subset) and exclude stored full embeddings, text, allocator overhead, build scratch and other snapshots in use. Shorter candidates do not shrink retained full vectors or the model. The candidate policy is runtime configuration to reapply on reopen; changing it rebuilds derived state without changing the stored embedding schema. It applies to vector graph search, not ordinary hybrid document search.
 
 ## Other retrieval paths
 
-Sparse `query` results report Jaccard similarity for every route. Hopfield attention is
-available through `query_hopfield`; its weights are a separate retrieval contract. Index
-training can affect approximate candidate membership, but it does not change the meaning
-of `similarity`.
+- **Similarity meaning.** Sparse `query` results report Jaccard similarity for every route. Hopfield attention (`query_hopfield`) has separate weights and its own contract. Index training can affect approximate candidate membership but not the meaning of `similarity`.
+- **Trained exact tree.** After `train_document_index`, broad metadata-filtered hybrid queries reuse the bounding-box tree and keep at most `candidateLimit` lexical owners before semantic fusion; the tree checks document filters before scoring a row, and small filtered sets scan directly. Both keep the filtered corpus's BM25 statistics and canonical scores: the execution plan changes, not the search or filtering contract.
+- **Filtered postings.** Filtered lexical and trained hybrid queries use filtered postings when that is less work than scanning every eligible chunk for every term; dense traversal reuses the captured eligibility. Posting acceleration is capped at 524,288 store slots and the dense eligibility set at that many matching documents; beyond them the scan or predicate path applies. BM25 normalization belongs to the captured filter and generation, including legacy zero-frequency terms.
+- **Changed-document delta.** The trained tree stays usable after mutations through a bounded delta: changed base documents are excluded before top-k selection, and current changed chunks join canonical scoring and fusion.
 
-After `train_document_index`, broad metadata-filtered hybrid queries reuse the exact
-bounding-box tree and retain at most `candidateLimit` lexical owners before semantic
-fusion. The tree checks document filters before scoring a row. Small filtered sets use a
-direct scan. Both paths retain the filtered corpus's BM25 statistics and canonical scores.
-This changes the execution plan, not the search or filtering contract.
+  | Delta bound | Limit |
+  |---|---|
+  | document IDs | 128 |
+  | live chunks | 1,024 |
+  | ID bytes | 64 KiB |
 
-Filtered lexical queries and trained hybrid queries use filtered postings when their work
-is smaller than scanning every eligible chunk for every term. The captured eligibility is
-also used by dense traversal. Posting acceleration is capped at 524,288 store slots; the
-dense eligibility set is separately capped at that many matching documents. Beyond these
-limits the existing scan or predicate path applies. BM25 normalization belongs to the
-captured filter and generation, including legacy zero-frequency terms.
-
-The trained exact tree remains usable after mutations through a bounded changed-document
-delta. Changed base documents are excluded before top-k selection, and current changed
-chunks participate in canonical scoring and fusion. The delta holds at most 128 document
-IDs, 1,024 live chunks and 64 KiB of ID bytes. Exceeding a bound drops the acceleration;
-queries retain their exact fallback and maintenance can rebuild. Replacing the same ID
-updates its delta entry. Explicit training publishes only at its captured generation and
-resets the delta. The `trained` status still means the base itself is current.
-
-Dense training shares the existing vector-build admission gate and reports a retryable
-maintenance error when occupied. Queries add no background workers or queues. Server
-admission retains its bounded queue and busy response; cancellation of a waiting request
-releases its queue entry, while a running blocking query owns its permit until completion.
-These bounds describe additional search state, not a process RSS guarantee.
-
-Phrase queries use persisted positions where available. For a candidate chunk without
-positions, the engine reconstructs them from retained text using that chunk's analyzer.
-An unrelated chunk without positions does not disable phrase search. A candidate whose
-phrase cannot be resolved because both positions and text are absent returns an error;
-it is never silently excluded. Persisting positions avoids reconstruction work.
-
-Whole-document lexical ingest still requires positions, but it can also accept one dense
-embedding in the configured embedding space. This supports phrase matching across chunk
-boundaries and vector/hybrid retrieval of the same article. It does not create a sparse
-text hypervector in lexical ingest mode.
-
-The standalone `FilteredIndex` accepts dimensions from 1 through 66,051 so every squared
-u8 Euclidean distance fits its `u32` result. It accepts at most 1,048,576 labels in its
-dense label tables, validates training and CSR shapes, and bounds result capacity by the
-live candidate count. Use a compact label mapping for sparse external label identifiers.
+  Exceeding a bound drops the acceleration (queries keep their exact fallback; maintenance can rebuild). Replacing the same ID updates its entry. Explicit training publishes only at its captured generation and resets the delta; `trained` still means the base is current.
+- **Admission.** Dense training shares the vector-build admission gate and returns a retryable maintenance error when occupied. Queries add no background workers or queues. Server admission keeps its bounded queue and busy response; cancelling a waiting request releases its queue entry, while a running blocking query owns its permit until completion. These bound additional search state, not process RSS.
+- **Phrase queries.** They use persisted positions where available; for a candidate chunk without positions the engine reconstructs them from retained text with that chunk's analyzer, and an unrelated chunk without positions does not disable phrase search. A candidate with neither positions nor text returns an error and is never silently excluded. Persisting positions avoids the reconstruction work.
+- **Whole-document lexical ingest.** It still requires positions but can also take one dense embedding in the configured space, supporting phrase matching across chunk boundaries and vector/hybrid retrieval of the same article. It creates no sparse text hypervector in lexical ingest mode.
+- **Standalone `FilteredIndex`.** Dimensions 1 through 66,051 (so every squared u8 Euclidean distance fits its `u32` result); at most 1,048,576 labels in its dense label tables; training and CSR shapes are validated and result capacity is bounded by the live candidate count. Use a compact label mapping for sparse external label identifiers.
 
 ## Reasoning budgets
 

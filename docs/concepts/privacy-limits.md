@@ -1,66 +1,16 @@
 # Privacy limits
 
-WARM processes everything locally: the core engine makes no network calls, and the model
-adapters only read local directories. The `offline` job in [ci.yml](https://github.com/writerslogic/warm/blob/main/.github/workflows/ci.yml)
-checks this on every change: the default dependency tree has no HTTP, TLS or socket client crate, and the default-feature
-test suite passes in a network namespace that has no external interface. That removes the cloud as a threat. It does not make the
-stored representation private. This page summarises the limits; [Privacy and security
-boundaries](../PRIVACY.md) is the complete statement and wins on any difference.
+WARM processes everything locally: the core engine makes no network calls and the model adapters only read local directories. The `offline` job in [ci.yml](https://github.com/writerslogic/warm/blob/main/.github/workflows/ci.yml) checks this on every change: the default dependency tree has no HTTP, TLS or socket client crate, and the default-feature test suite passes in a network namespace with no external interface. That removes the cloud as a threat; it does not make the stored representation private. [Privacy and security boundaries](../PRIVACY.md) is the complete statement and wins on any difference.
 
-## The stored representation is not anonymous
+| Claim | Reality | Detail |
+|---|---|---|
+| Hypervector sketches and term counts protect text | They are not encryption: the encoder is deterministic and public, so anyone with a store can test candidate texts. The number of bit patterns is not a defence. | [PRIVACY.md](../PRIVACY.md#local-processing-and-retained-data) |
+| `storeText: false` is private | It drops passages but keeps term counts, metadata, source URIs, IDs and supplied embeddings. | same |
+| Embeddings are safe to share | A dense embedding is a function of the text and inversion attacks exist; treat embeddings as sensitive as the text. | same |
+| Queries are protected | Queries and model inference run in plaintext in process memory. | same |
+| Encryption covers everything | AES-256-GCM (Argon2id key) covers arena payloads, persisted index caches and the passage text segment (`documents.text`). Not covered: schema metadata, file names, sizes, topology, salts, access patterns, process memory, swap and crash dumps. A wrong passphrase fails authenticated decryption and the store does not open ([quickstart](../quickstart/index.md)). | [PRIVACY.md](../PRIVACY.md#encryption-and-signing), [file-format/ENCRYPTION.md](../file-format/ENCRYPTION.md) |
+| Deleting erases | Removed records can persist in obsolete segments, snapshots and backups; compaction is not secure erasure. CRC32 detects accidents only. | [ERASURE.md](../memory-api/ERASURE.md) |
+| Vector masking hides vectors from a remote store | `VectorMask` (Python SDK `zero_trust_key`) is obfuscation: pairwise similarity is preserved, so the store learns the similarity graph, and known plaintext/masked pairs reveal the permutation progressively. | [PRIVACY.md](../PRIVACY.md#client-side-vector-masking) |
+| Differential privacy covers the engine | It applies only to the configured **bundle** operation, is not audited as a finite-precision mechanism, and WARM keeps no persistent budget accountant. | [PRIVACY.md](../PRIVACY.md#differentially-private-bundling) |
 
-- **Hypervector sketches and term counts are not encryption.** The text encoder is
-  deterministic and public. Anyone with a store can encode candidate texts and compare, infer
-  membership, or use lexical and similarity signals. The number of possible bit patterns is not a
-  defence.
-- **`storeText: false` is not a privacy guarantee.** It drops the passages but keeps term
-  counts, metadata, source URIs, IDs and any embeddings you supplied.
-- **Embeddings leak.** A dense embedding is a function of the text; inversion attacks exist.
-  Treat supplied embeddings as sensitive as the text.
-- **Queries run in plaintext** in process memory, and model inference sees plaintext.
-
-## What encryption covers
-
-With the `security` feature and encryption enabled, arena payloads, persisted index caches and
-the file-backed passage text segment (`documents.text`) are encrypted with AES-256-GCM under an Argon2id-derived key, and an existing encrypted store
-cannot be silently reopened as plaintext. A wrong passphrase fails authenticated decryption and
-the store does not open (the [quickstart](../quickstart/index.md) demonstrates this).
-
-What it does not cover:
-
-- Schema metadata, file names, sizes, topology, salts and access patterns.
-- Memory of the running process, swap and crash dumps.
-- Deletion: removed records can persist in obsolete segments, snapshots and backups. Compaction
-  is not secure erasure.
-- Integrity is not authentication for checksummed files: CRC32 detects accidents only.
-
-## Text segment record layout
-
-`documents.text` is a file-backed cache of chunk text. It is rebuilt from the journal when the
-store opens, so it is never the only copy of a passage.
-
-- Header: magic `WARMT`, version `2`, and a flags byte. Bit 0 set means the records are encrypted.
-- Unencrypted store: each record is the raw UTF-8 text.
-- Encrypted store: each record is `[nonce: 12 bytes][ciphertext + tag: 16 bytes after the ciphertext]`
-  (AES-256-GCM). The additional authenticated data is the record's offset in the segment as a
-  little-endian `u64`, so a record cannot be moved to another offset undetected.
-
-## Masking vectors for a remote store
-
-`VectorMask` (and the Python SDK's `zero_trust_key`) permutes coordinates with a secret derived
-from a passphrase so a store can rank vectors without seeing the originals. It is obfuscation,
-not encryption: every pairwise similarity is preserved, so the store learns the full
-similarity graph, and known plaintext-and-masked pairs reveal the permutation progressively.
-
-## Differential privacy
-
-Differential privacy applies only to the configured **bundle** operation, not to ingestion,
-retrieval, metadata or passages. The mechanism has not been audited as a finite-precision
-implementation, and WARM keeps no persistent budget accountant.
-
-## Not implemented
-
-Search over encrypted data, query privacy against the server, PoSME receipts, RATS attestation
-verification and `did:web` resolution for access credentials. The experimental
-[private search](../PRIVATE-SEARCH.md) scoring hides the query vector from the scoring server
-only, under the limits stated there.
+Not implemented: search over encrypted data, query privacy against the server, PoSME receipts, RATS attestation verification and `did:web` resolution for access credentials. The experimental [private search](../PRIVATE-SEARCH.md) scoring hides the query vector from the scoring server only, under the limits stated there.

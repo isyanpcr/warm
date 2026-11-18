@@ -7,10 +7,10 @@
 semantics agents need: facts that hold over time, newer facts that replace older ones without
 destroying them, queries "as of" a moment, and an answer to "why did this come back".
 
-Minimal opinion: every policy has a documented default that changes nothing and a knob. A fact
-is an ordinary document, so `search_documents`, `delete_document`, vectors and the raw index keep
-working on a store the memory API wrote, and nothing is persisted that an older build cannot
-open ([PERSISTED-FORMAT.md](PERSISTED-FORMAT.md)).
+Every policy has a documented default that changes nothing, and a knob. A fact is an ordinary
+document, so `search_documents`, `delete_document`, vectors and the raw index keep working on a
+store the memory API wrote, and nothing is persisted that an older build cannot open
+([PERSISTED-FORMAT.md](PERSISTED-FORMAT.md)).
 
 ## Quick start
 
@@ -80,8 +80,7 @@ open ([PERSISTED-FORMAT.md](PERSISTED-FORMAT.md)).
     await memory.recall('where does Alice live', { asOf: new Date('2021-06-01') })   // Paris
     ```
 
-    Runnable [Node temporal workflow](../../examples/temporal-memory.cjs): from the repository root,
-    after `npm run build`, use a new directory and run each step as a separate process:
+    Runnable [Node temporal workflow](../../examples/temporal-memory.cjs): from the repository root, after `npm run build`, use a new directory and run each step as a separate process:
 
     ```sh
     node examples/temporal-memory.cjs remember ./temporal-demo
@@ -90,12 +89,7 @@ open ([PERSISTED-FORMAT.md](PERSISTED-FORMAT.md)).
     node examples/temporal-memory.cjs verify ./temporal-demo
     ```
 
-    `replace` returns Berlin for current recall, Paris for `asOf: 2021-06-01`, and an explanation
-    linking the replacement to its predecessor. The example reapplies `latest-by-subject` on
-    every open: policies are runtime configuration, while facts and supersession links persist.
-    `forget` targets the latest ID with `{ includeChain: true, purge: true, synchronous: true, dryRun: false }`, then
-    flushes. The final process reports empty current, historical and document results and `null`
-    for both IDs. This workflow uses lexical retrieval and needs no embedding model or service.
+    `replace` returns Berlin for current recall, Paris for `asOf: 2021-06-01`, and an explanation linking the replacement to its predecessor. The example reapplies `latest-by-subject` on every open: policies are runtime configuration, while facts and supersession links persist. `forget` targets the latest ID with `{ includeChain: true, purge: true, synchronous: true, dryRun: false }`, then flushes. The final process reports empty current, historical and document results and `null` for both IDs. The workflow is lexical and needs no embedding model or service.
 
 === "Python (HTTP)"
 
@@ -110,44 +104,19 @@ open ([PERSISTED-FORMAT.md](PERSISTED-FORMAT.md)).
 
 ## Concepts
 
-**Fact.** A document with one chunk of text (at most 64 KiB and 4096 words) and, optionally, a
-subject, entities, caller metadata, an embedding, an event time and a validity interval.
-Without an id the id is derived from the content, so retrying a call stores one fact.
-
-**Two time axes.** Valid time is when a fact holds: `valid_from` (inclusive) to `valid_to`
-(exclusive), plus the `event_time` it describes. Knowledge time is when the store ingested it,
-which the store records itself (`ingest_time`) from an injectable clock. `recall` evaluates
-validity `as_of` a time (default: now) and can restrict to what was `known_at` an ingest time.
-Event time orders supersession and drives recency; it does not by itself open or close a
-validity interval. Set `valid_from` for that.
-
-**Supersession.** A fact supersedes the facts listed in its `supersedes`, or the ones a
-supersession policy picks. The link is written once, on the new fact; the old fact is not
-rewritten, stays stored, and is returned by `recall` with `history` set to `all` or
-`historical`, by `history(id)` and by `get(id)`. A supersession takes effect at the new fact's
-valid-from (else event time, else ingest time), so `as_of` a time before it still sees the old
-fact. Links to facts that were forgotten are ignored.
-
-**Status.** Every returned fact has a status at the evaluation time: `current`, `superseded`,
-`expired` (past `valid_to`) or `not-yet-valid` (before `valid_from`).
-
-**Recall.** Document search (BM25, and cosine when an embedding is given) followed by a filter
-on status. By default only current facts are returned. With nothing in the store that has a
-validity window or a supersession link, and no recency policy, recall asks document search for
-exactly `k` results with the options you gave and returns its scores unmodified; this is
-asserted bit for bit in the tests.
-
-**Explain.** `recall(..., explain: true)` attaches an `Explanation` to each result, and
-`explain(query, id)` explains one fact, including one that did not come back. It reports the
-lexical and semantic scores, the fusion and weights, the matched terms, the recency and
-historical multipliers, validity at the evaluation time, the rank, and the supersession chain.
-Nothing is computed unless it is asked for.
+| Term | Meaning |
+|---|---|
+| Fact | A document with one chunk of text (at most 64 KiB and 4096 words) and optionally a subject, entities, caller metadata, an embedding, an event time and a validity interval. Without an id the id is derived from the content, so retrying a call stores one fact. |
+| Valid time | When a fact holds: `valid_from` (inclusive) to `valid_to` (exclusive), plus the `event_time` it describes. Event time orders supersession and drives recency; it does not by itself open or close a validity interval. Set `valid_from` for that. |
+| Knowledge time | When the store ingested the fact (`ingest_time`, from an injectable clock). `recall` evaluates validity `as_of` a time (default: now) and can restrict to what was `known_at` an ingest time. |
+| Supersession | A fact supersedes the facts in its `supersedes`, or the ones a supersession policy picks. The link is written once, on the new fact; the old fact is not rewritten, stays stored, and is returned by `recall` with `history` set to `all` or `historical`, by `history(id)` and by `get(id)`. It takes effect at the new fact's valid-from (else event time, else ingest time), so `as_of` a time before it still sees the old fact. Links to forgotten facts are ignored. |
+| Status | At the evaluation time: `current`, `superseded`, `expired` (past `valid_to`) or `not-yet-valid` (before `valid_from`). |
+| Recall | Document search (BM25, and cosine when an embedding is given), then a status filter; by default only current facts are returned. With no validity window or supersession link in the store and no recency policy, recall asks document search for exactly `k` results with your options and returns its scores unmodified, asserted bit for bit in the tests. |
+| Explain | `recall(..., explain: true)` attaches an `Explanation` to each result; `explain(query, id)` explains one fact, including one that did not come back. It reports lexical and semantic scores, fusion and weights, matched terms, recency and historical multipliers, validity at the evaluation time, rank and the supersession chain. Nothing is computed unless asked. |
 
 ## Configuration and policies
 
-Every field has a default that does nothing surprising. `MemoryConfig` is plain data
-(camelCase JSON), so bindings and the server select built-ins by name; Rust callers can also
-pass any implementation of the traits through the `with_*` builders.
+`MemoryConfig` is plain data (camelCase JSON), so bindings and the server select built-ins by name; Rust callers can also pass any implementation of the traits through the `with_*` builders.
 
 | knob (`MemoryConfig`) | default | what it changes |
 |---|---|---|
@@ -172,101 +141,25 @@ Rust traits, each with a documented default:
 | `MemoryObserver` | none | reacting to durable `remember` / `forget`, for a graph or an index |
 | `Clock` | `SystemClock` | ingest time and "now"; `ManualClock` makes runs reproducible |
 
-Entities and relationships are hooks, not a graph: the store keeps an exact-match entity
-posting and nothing more. Build a graph in an observer if you want one.
-
-Maintenance never runs by itself. `apply_forgetting` and `consolidate` take `dry_run`; the
-defaults of the bindings are dry runs. A consolidation only adds a fact that supersedes its
-sources (the sources stay as history) unless the policy asks to remove them *and* the call sets
-`allow_destructive`.
+- Entities and relationships are hooks, not a graph: the store keeps an exact-match entity posting and nothing more. Build a graph in an observer.
+- Maintenance never runs by itself. `apply_forgetting` and `consolidate` take `dry_run`; the bindings default to dry runs.
+- A consolidation only adds a fact that supersedes its sources (the sources stay as history) unless the policy asks to remove them *and* the call sets `allow_destructive`.
 
 ## Forgetting
 
-`forget` takes exactly one scope (`ids`, `subject`, `entity`, `ingested_before`,
-`event_before`, `matching` metadata) and is idempotent: repeating it removes nothing more. It
-removes the matched facts, and:
+`forget` takes exactly one scope (`ids`, `subject`, `entity`, `ingested_before`, `event_before`, `matching` metadata) and is idempotent: repeating it removes nothing more.
 
-- without `include_chain`, only those. A removed *newest* version makes its predecessor current
-  again. A removed *middle* version does not resurrect older ones: the surviving successor is
-  re-linked to what the removed fact superseded;
-- with `include_chain`, every fact connected to a match by supersession, in both directions, so
-  no version of the chain survives;
-- with `dry_run`, nothing; the report lists what would go;
-- with `purge` (the default), the delete is recorded as a durable pending purge, and a
-  scrubbing compaction overwrites what it replaced: before the call returns with
-  `synchronous: true`, otherwise at the next `compact`, open, or the 64th waiting purge, which
-  erases every deferred delete in one compaction (see below and [ERASURE.md](ERASURE.md)).
-  `purge: false` is a logical delete that keeps the deleted frames in the journal.
+| Option | Removes |
+|---|---|
+| default | Only the matched facts. A removed *newest* version makes its predecessor current again. A removed *middle* version does not resurrect older ones: the surviving successor is re-linked to what the removed fact superseded. |
+| `include_chain` | Every fact connected to a match by supersession, in both directions, so no version of the chain survives. |
+| `dry_run` | Nothing; the report lists what would go. |
+| `purge` (default `true`) | A durable pending purge; a scrubbing compaction overwrites what the delete replaced, before return with `synchronous: true`, otherwise deferred ([modes and triggers](ERASURE.md)). |
+| `purge: false` | A logical delete that keeps the deleted frames in the journal until a compaction. |
 
-What "gone" means: removed from search, `has_document`, `recall`, `get`, `history`, `explain`
-and the in-memory index at once, and after a restart. Removal is one journal transaction per
-4096 facts; a crash between transactions leaves a prefix removed and the same call finishes it.
+"Gone" means removed from search, `has_document`, `recall`, `get`, `history`, `explain` and the in-memory index at once, and after a restart. Removal is one journal transaction per 4096 facts; a crash between transactions leaves a prefix removed and the same call finishes it.
 
-Physical erasure, checked by `tests/purge.rs` (a marker string scanned for in every file under
-the store directory, before reopen, after an abort in a child process, and after restart):
-
-- **Always, before `forget` returns:** the deleted chunks' records in `documents.text` are
-  overwritten with zeros and synced. Postings and the memory-API index live in memory and are
-  rebuilt from the journal; no file stores terms. A bare `WarmCore::delete_document` zeroes the
-  records too but leaves their fsync to the next `forget`, purge or compaction (a design that
-  synced the text segment in every delete measured about 4 ms instead of 60 us on macOS;
-  `benchmarks/results/purge_v1.json`, recorded before journal commits used `F_FULLFSYNC`). The
-  journal frame that records the delete is durable when the call returns.
-  `DELETE /api/v1/documents/{id}` purges by default (deferred; `?synchronous=true` scrubs before
-  the response); `?purge=false` opts out.
-- **Updates:** replacing a document zeroes the old text records in `documents.text` the same
-  way (synced by the next `forget`, purge or compaction); the journal keeps the old frame
-  until a purge.
-- **With `purge: true, synchronous: true`, before it returns** (by default the same work is
-  deferred, see [ERASURE.md](ERASURE.md)): the journal is rewritten without the
-  text, then the replaced generation and any unreferenced generation left by an interrupted
-  compaction are overwritten with zeros through the file API, synced and unlinked. A
-  `purge.pending` ticket is made durable before the first delete commits and removed by the
-  scrubbing compaction that covers it; a crash in between leaves the ticket, and the next open finishes the purge
-  before returning the store. `tests/erase.rs` cuts the process at every durability point of
-  the purge and requires that a document the reopened store no longer holds is in no file.
-- **With `purge: false`:** the deleted frames stay in the append-only journal segments
-  (`vectors_data.bin/gen-*/seg_*.bin`, and nothing else; pinned by `tests/erase.rs`) until a
-  compaction. This is the one bounded exception; leave `purge` on when the text must be
-  gone. Opt-in
-  historical views ([TIME-TRAVEL.md](TIME-TRAVEL.md)) read those frames: at a position before
-  the delete they return the fact. After a purge no position returns it.
-- **What the tests establish and what they do not:** see [ERASURE.md](ERASURE.md). They scan
-  the files of the store and, on Linux CI, the raw bytes of an ext4 image. They say nothing
-  about flash translation layers.
-- **Not controlled by any file API:** copies kept by SSD wear levelling or over-provisioning,
-  copy-on-write or snapshotting filesystems, filesystem journals, OS swap or hibernation
-  images, backups, and bytes the caller already returned from `recall`. Use full-disk
-  encryption (or `security` encryption, which makes the files ciphertext) when those matter.
-  Derived data (hashed n-gram vectors in the ANN index files, fact ids) is rewritten without
-  the deleted entries by the purge but is not text.
-
-After a purge the store is indistinguishable from one that never held the forgotten facts and
-was purged at the same point: the same results, ranks and score bits in lexical, hybrid and
-embedding search (exact and graph), the same listings and index status, and byte-identical files
-except the generation directory's name, which carries the compaction time. Lexical statistics
-(document frequencies, chunk and word counts) are integers and match after any delete; the
-purge rebuilds what a delete leaves shaped by history: the text segment and the slots (in id
-order, as a reopen lays them out), a published vector snapshot and its graph (with the same
-graph choice, so a purge costs one graph build when the snapshot has one), and the dense
-document index. Compaction
-writes vectors in id order. `WarmCore::revision` and the vector index status `generation`
-advance by one per mutation from a random value per open, so a reading does not reveal how
-many inserts and deletes came before it. Checked by `tests/forget_equivalence.rs` and by the
-paired-store experiment `forget-experiment` (feature `experimental`; results in
-`benchmarks/results/forget_equivalence_*.json`). Not covered:
-
-- a delete without `purge`: until the purge the journal holds the frames, the text segment
-  holds zeroed records, and a vector snapshot keeps the deleted vertex in its graph, so
-  graph-mode results near the deleted vector can differ;
-- decisions taken while the fact was stored: a `max-facts` eviction it caused, a
-  consolidation or supersession that used it, or a chain forget that re-linked survivors;
-- file timestamps, inode numbers and the generation name; encrypted bytes (same lengths,
-  fresh nonces); `audit.bin` and the provenance log under `security`, which record the delete;
-- retrieval over raw hypervectors (`query`, `query_vector`) and the shard IVF/NSG indexes: a
-  delete drops trained shard indexes and leaves a registry slot that later inserts reuse;
-- relations, atoms, composites, triples and rules, which compaction writes in their
-  containers' order (not checked).
+Physical erasure (what each mode scrubs, the tests behind it, what no file API controls, and the equivalence to a store that never held the facts) is specified in [ERASURE.md](ERASURE.md). Opt-in historical views ([TIME-TRAVEL.md](TIME-TRAVEL.md)) return a fact deleted without `purge`; after a purge no position returns it.
 
 ## Guarantees
 
@@ -293,28 +186,18 @@ Each is covered by `tests/memory_api.rs`, `tests/memory_api_server.rs` and the b
 
 ## Cost
 
-See [Measured cost](#measured-cost) for numbers. The default path adds one metadata parse and
-one map lookup per result to document search. When the store has validity windows or
-supersession links, recall resolves eligibility before retrieval. Subject, entity and metadata
-filters constrain the documents and reverse links captured for temporal evaluation. Scalar
-metadata filters use the existing postings; object and array matches can require a metadata
-scan. Superseders outside the query scope still determine a selected fact's status. Capture
-uses the default `QueryLimits` work and byte budgets and returns `resource_limit` on exhaustion
-through Node and HTTP (429), without a partial answer. Eligible IDs enter the existing
-filtered-search path, so stale history
-does not consume `candidate_limit`. Recency adjustment remains bounded by that candidate
-budget. Metadata-only preselection adds source-scan work; its performance is not yet measured.
+The default path adds one metadata parse and one map lookup per result to document search. When the store has validity windows or supersession links, recall resolves eligibility before retrieval:
 
-## Measured cost
+- Subject, entity and metadata filters constrain the documents and reverse links captured for temporal evaluation. Scalar metadata filters use the existing postings; object and array matches can require a metadata scan. Metadata-only preselection adds source-scan work; its performance is not yet measured.
+- Superseders outside the query scope still determine a selected fact's status.
+- Capture uses the default `QueryLimits` work and byte budgets and returns `resource_limit` on exhaustion through Node and HTTP (429), without a partial answer.
+- Eligible IDs enter the existing filtered-search path, so stale history does not consume `candidate_limit`. Recency adjustment remains bounded by that candidate budget.
+
+### Measured cost
 
 These historical measurements precede temporal preselection and do not validate its cost.
 
-`benchmarks/results/memory_api_overhead.json` (`memory-api-bench`, release build, Apple
-silicon, synthetic 24-word texts, 400 queries x 5 interleaved passes, lexical search, one
-process per store kind so RSS is comparable). `raw` stores plain documents, `memory` stores
-the same texts as facts, `history` stores facts of which a fifth are superseded and a fifth
-expired. Latencies are mean microseconds per query; `search_documents` and `recall` run on
-the same store in the same process.
+`benchmarks/results/memory_api_overhead.json` (`memory-api-bench`, release build, Apple silicon, synthetic 24-word texts, 400 queries x 5 interleaved passes, lexical search, one process per store kind so RSS is comparable). `raw` stores plain documents, `memory` stores the same texts as facts, `history` stores facts of which a fifth are superseded and a fifth expired. Latencies are mean microseconds per query; `search_documents` and `recall` run on the same store in the same process.
 
 | facts | RSS raw -> memory | `search_documents` | `recall` default | `recall` with explain | `recall` on `history` store |
 |---|---|---|---|---|---|
@@ -322,38 +205,22 @@ the same store in the same process.
 | 10,000 | 30 -> 34 MB | 64.8 | 89.8 | 214.4 | 175.0 (raw 51.1) |
 | 100,000 | 182 -> 196 MB | 71.9 | 76.3 | 139.3 | 194.4 (raw 69.1) |
 
-- Resident memory: +7.7 % at 100,000 facts (about 140 bytes per fact for the stamp, with the
-  index empty). A first version stored the stamp as a metadata object and cost +84 %; the
-  compact `version` placement removed that.
-- Default recall returns the same ranking as `search_documents` for all 2,000 compared
-  queries per size. Its latency is within measurement noise of search at 1,000 and 100,000
-  facts (+9 % and +6 % mean); the 10,000 row is noisier (+25 us) and the runs are not
-  isolated benchmarks, so treat the overhead as "a few percent, tens of microseconds at
-  most", not as zero.
-- The former post-filter path ranked 100 candidates instead of `k`: about 2.5x to 3x
-  document search at 10,000 and 100,000 facts. It could still underfill when history
-  exhausted those candidates; the current implementation selects temporal eligibility first.
-- Explanations cost about 2x to 6x a recall because they re-tokenize and read chain
-  documents; they are off by default.
+- Resident memory: +7.7 % at 100,000 facts (about 140 bytes per fact for the stamp, with the index empty). A first version stored the stamp as a metadata object and cost +84 %; the compact `version` placement removed that.
+- Default recall returns the same ranking as `search_documents` for all 2,000 compared queries per size. Its latency is within measurement noise of search at 1,000 and 100,000 facts (+9 % and +6 % mean); the 10,000 row is noisier (+25 us) and the runs are not isolated benchmarks, so read the overhead as "a few percent, tens of microseconds at most", not zero.
+- The former post-filter path ranked 100 candidates instead of `k`: about 2.5x to 3x document search at 10,000 and 100,000 facts, and it could underfill when history exhausted those candidates. The current implementation selects temporal eligibility first.
+- Explanations cost about 2x to 6x a recall because they re-tokenize and read chain documents; they are off by default.
 
-Retrieval sanity check, `benchmarks/results/memory_api_longmemeval_dev.json`
-(`memory-api-lme`): 40 LongMemEval_S dev questions (15 knowledge-update, 25
-temporal-reasoning, abstention excluded), lexical retrieval over session facts, no LLM, no
-held-out id read. Default recall ranked identically to document search on 40/40 questions;
-evaluating as of the question date returned no future-dated fact on 40/40, and as of just
-before the newest evidence session removed that session on 40/40. Recall of an evidence
-session (recall_any@5/@10): knowledge-update 1.00/1.00 for search and for as-of; exponential
-recency did not beat plain search on either type (best: 1.00/1.00 at a 365-day half-life
-for knowledge-update; temporal-reasoning 0.88/0.96 for search against at most 0.80/0.88
-with recency). As-of the question date lowers temporal-reasoning recall to 0.76/0.84 because
-this dataset dates some evidence sessions after the question date. The sample is small and
-this is a sanity check, not a result: WARM does not win on temporal reasoning here with
-recency or as-of, and no tuned value is claimed.
+Retrieval sanity check, `benchmarks/results/memory_api_longmemeval_dev.json` (`memory-api-lme`): 40 LongMemEval_S dev questions (15 knowledge-update, 25 temporal-reasoning, abstention excluded), lexical retrieval over session facts, no LLM, no held-out id read.
+
+- Default recall ranked identically to document search on 40/40 questions; evaluating as of the question date returned no future-dated fact on 40/40, and as of just before the newest evidence session removed that session on 40/40.
+- recall_any@5/@10: knowledge-update 1.00/1.00 for search and for as-of; exponential recency did not beat plain search on either type (best: 1.00/1.00 at a 365-day half-life for knowledge-update; temporal-reasoning 0.88/0.96 for search against at most 0.80/0.88 with recency).
+- As-of the question date lowers temporal-reasoning recall to 0.76/0.84 because this dataset dates some evidence sessions after the question date.
+
+The sample is small and this is a sanity check, not a result: WARM does not win on temporal reasoning here with recency or as-of, and no tuned value is claimed.
 
 ## HTTP, Node and Python
 
-HTTP, Node and Python carry one JSON contract implemented once in `Memory::call` (`json.rs`): the
-camelCase serde form of the Rust types, unknown fields rejected. Method names are the same in every runtime.
+HTTP, Node and Python carry one JSON contract implemented once in `Memory::call` (`json.rs`): the camelCase serde form of the Rust types, unknown fields rejected. Method names are the same in every runtime.
 
 | op | request | response |
 |---|---|---|
@@ -366,36 +233,18 @@ camelCase serde form of the Rust types, unknown fields rejected. Method names ar
 | `applyForgetting` | `{"includeChain", "dryRun" (default true), "purge"}` | as `forget` |
 | `consolidate` | `{"dryRun" (default true), "allowDestructive"}` | `{"created", "forgotten", "dryRun"}` |
 
-Observations of tree-structured agent trajectories use the same operations: `remember` routes an
-object with `episode`, `step` and `tree` to the experience core, `recall` merges region and action-effect
-hits with fact results by rank, `explain` returns their provenance and `forget` takes the scope
-`{"kind": "episode", "episode": "<id>"}`. See [Experience core](../concepts/experience-core.md).
+| Runtime | Entry point | Times | Errors |
+|---|---|---|---|
+| HTTP (`warm-server`) | `POST /api/v1/memory/{op}`, same tenant header, API key and body limits as the document routes | safe integer Unix milliseconds | 422 `invalid_request`, 404 `not_found`, 409 `conflict` |
+| Portable JavaScript | `new WarmClient(options).memory` from `warm-sdk` | safe integer Unix milliseconds | `WarmError` with `code` and optional `status` |
+| Embedded Node | `new Memory(system, config)` from `writerslogic-warm/memory` | `Date` or integer milliseconds; results carry milliseconds | `MemoryError` with `code` |
+| Python | `WarmClient(...).memory` / `AsyncWarmClient(...).memory` (or `MemoryClient`), typed with a `memory.pyi` stub | `datetime` or integer milliseconds | `MemoryError` with `code` and `status` |
 
-An observation may also carry `accessibilityTree`, the page's accessibility-tree text (one
-`[id] role 'name' props` node per line, up to 4 MiB). The engine parses the form controls of the
-step from it (text fields, selects with their options, checkboxes, buttons, with values and
-states), stores them with the step and drops the text. Rendered, they are a compact table to put
-before a step's page text; the in-process Python `Warm` returns it with
-`experience_form_tables([(episode, step), ...])`, one string per step, leaving out rows already
-shown for an earlier step of the list. `WarmConfig::experience.form_state` (Python
-`Warm(..., experience_form_state=False)`) turns the parsing off; the 4 MiB bound still applies.
-A step retried after the switch changed is a conflict, since its controls differ. See
-[Form state](../concepts/experience-core.md#form-state).
+- Server embeddings must have the server's `--input-dim` values; without one a fact is lexical-only.
+- Policies for every tenant come from `--memory-config <file.json>` (or `WARM_MEMORY_CONFIG`), a `MemoryConfig` in JSON, validated at startup.
+- The client-side vector mask applies to embeddings sent through `remember` and `recall`.
 
-`warm-server` serves them as `POST /api/v1/memory/{op}` with the same tenant header, API key and
-body limits as the document routes. Errors: 422 `invalid_request`, 404 `not_found`, 409
-`conflict`. Embeddings must have the server's `--input-dim` values; without one a fact is
-lexical-only. Policies for every tenant come from `--memory-config <file.json>` (or
-`WARM_MEMORY_CONFIG`), a `MemoryConfig` in JSON, validated at startup.
-
-Portable JavaScript: `new WarmClient(options).memory` from `warm-sdk`; times are safe integer
-Unix milliseconds, and errors are `WarmError` with `code` and optional `status`.
-Embedded Node: `new Memory(system, config)` from `writerslogic-warm/memory`; times are `Date`
-or integer milliseconds, results carry milliseconds, errors are `MemoryError` with `code`. Python:
-`WarmClient(...).memory` / `AsyncWarmClient(...).memory` (or `MemoryClient`),
-fully typed with a `memory.pyi` stub; times are `datetime` or integer milliseconds;
-`MemoryError` carries `code` and `status`. The client-side vector mask applies to embeddings
-sent through `remember` and `recall`.
+Observations of tree-structured agent trajectories use the same operations: `remember` routes an object with `episode`, `step` and `tree` to the experience core, `recall` merges region and action-effect hits with fact results by rank, `explain` returns their provenance and `forget` takes the scope `{"kind": "episode", "episode": "<id>"}`. The observation's `accessibilityTree` field (up to 4 MiB) and its form-state switch are specified in [Experience core](../concepts/experience-core.md#form-state).
 
 ## Limits
 

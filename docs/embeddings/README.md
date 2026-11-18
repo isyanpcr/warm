@@ -1,20 +1,13 @@
 # Local embeddings
 
-Semantic search with no API key, no service and no manual model setup. A pure-Rust CPU engine runs a
-sentence encoder (BERT, RoBERTa or XLM-R family) with int8 or f16 weights; the tokenizer ships inside
-the model file; nothing touches the network at inference.
-
-Everything here is behind cargo features that are **off by default**: the default build, its
-dependencies and its serving memory are unchanged (see [Default build](#default-build)).
+Semantic search with no API key, no service and no manual model setup: a pure-Rust CPU engine runs a sentence encoder (BERT, RoBERTa or XLM-R family) with int8 or f16 weights; the tokenizer ships inside the model file; nothing touches the network at inference. Everything is behind cargo features that are **off by default** ([Default build](#default-build)).
 
 | Feature | Adds |
 |---|---|
 | `local-embed` | the engine, `Embedder`, `SemanticIndex`, `TextEncoder::LocalEmbedV1`, the `warm-embed` tool. No network code. |
 | `local-embed-download` | `ureq`; first-use download of the pinned upstream files. |
 
-Python wheels enable both. The default npm addon build enables `node-api,security` and does
-not export `LocalEmbedder`; build it with `node-api,security,local-embed-download` to use the
-optional native Node API below. The JavaScript `semantic` wrapper has its own embedder adapter.
+Python wheels enable both. The default npm addon build (`node-api,security`) does not export `LocalEmbedder`; build with `node-api,security,local-embed-download` to use the native Node API below. The JavaScript `semantic` wrapper has its own embedder adapter.
 
 ## Use
 
@@ -30,13 +23,7 @@ index.add(&["a", "b"], &["The cat sat on the mat.", "Quarterly revenue grew."])?
 let hits = index.search("feline on a rug", 3)?;                     // [{id, score, text}]
 ```
 
-Python (`uv pip install warm-python`; add `[embed]` for the pinned default offline pack).
-Without `[embed]`, the first `SemanticIndex()` or `Embedder()` downloads the default model
-(`granite-embedding-30m-english`, about 32 MB) from `https://huggingface.co/ibm-granite/granite-embedding-30m-english`
-at a pinned commit, checks every file and the converted pack against the sha256 values in
-`src/core/embed/registry.rs`, caches it, and prints one line on stderr when it starts. Forbid
-the download with `WARM_EMBED_OFFLINE=1` or `Embedder(offline=True)`; the error then names how
-to install the pack:
+Python (`uv pip install warm-python`; add `[embed]` for the pinned default offline pack). Without `[embed]`, the first `SemanticIndex()` or `Embedder()` downloads the default model (`granite-embedding-30m-english`, about 32 MB, from `https://huggingface.co/ibm-granite/granite-embedding-30m-english` at a pinned commit), checks every file and the converted pack against the sha256 values in `src/core/embed/registry.rs`, caches it, and prints one line on stderr. Forbid the download with `WARM_EMBED_OFFLINE=1` or `Embedder(offline=True)`; the error then names how to install the pack:
 
 ```python
 import writerslogic_warm as hm
@@ -46,9 +33,7 @@ index.search("feline on a rug", k=3)             # [(id, score, text), ...]
 hm.Embedder(threads=4, max_length=256).embed_query("what is WARM?")   # list[float]
 ```
 
-Embedded Node (`writerslogic-warm`; `writerslogic-warm-models` adds offline packs).
-See [installation and release availability](../get-started/install.md). The portable
-`warm-sdk` HTTP client does not include an embedder:
+Embedded Node (`writerslogic-warm`; `writerslogic-warm-models` adds offline packs; [installation](../get-started/install.md)). The portable `warm-sdk` HTTP client has no embedder:
 
 ```js
 const { LocalEmbedder, SemanticIndex } = require('writerslogic-warm')
@@ -69,14 +54,7 @@ core.memorize_documents(docs)?;             // chunks are embedded in batches
 core.search_documents("feline on a rug", &SearchOptions::default())?;   // hybrid: BM25 + cosine
 ```
 
-`local-embed-v1` loads the embedder from `WarmConfig::local_embed` (`EmbedOptions`, defaults when
-absent), fills `embedding_space` from the model, embeds chunks that arrive without embeddings, embeds
-text queries, and encodes `encode_text` as a sparse sketch of the embedding. The store schema records
-model, upstream revision, quantization and dimension, so a store opened with a different model is
-rejected. Existing encoders (`multiscale-words-v1`, `multiscale-capped-union-v1`) and their stores are
-untouched; to add dense vectors to a lexical store, install an embedder with
-`WarmCore::set_text_embedder` (the store's `embedding_space` must equal `Embedder::space()`).
-Callers that pass their own `embeddings` / `embedding` are never overridden.
+`local-embed-v1` loads the embedder from `WarmConfig::local_embed` (`EmbedOptions`, defaults when absent), fills `embedding_space` from the model, embeds chunks that arrive without embeddings and text queries, and encodes `encode_text` as a sparse sketch of the embedding. The store schema records model, upstream revision, quantization and dimension, so a store opened with a different model is rejected. Existing encoders (`multiscale-words-v1`, `multiscale-capped-union-v1`) and their stores are untouched; to add dense vectors to a lexical store, install an embedder with `WarmCore::set_text_embedder` (the store's `embedding_space` must equal `Embedder::space()`). Caller-supplied `embeddings` / `embedding` are never overridden.
 
 ## Options
 
@@ -94,39 +72,27 @@ All fields of `EmbedOptions` (camelCase in JSON / Node, keyword arguments in Pyt
 | `offline` | `WARM_EMBED_OFFLINE` | never touch the network |
 | `modelDir`, `cacheDir` | env / platform cache | where packs are searched / downloaded to |
 
-Determinism: output is bit-identical for any `threads`, any `batchSize` and any batch composition on
-one build (no padding; each output element has one fixed reduction order). Across CPU architectures
-the last bits can differ because aarch64 and FMA-enabled x86-64 builds use fused multiply-add.
-Each forward pass admits at most `max(batch budget, maxLength)` tokens, also limited by the
-call's retained-token cap. Working memory additionally depends on model dimensions, thread-local
-tokenizer work, tokenized inputs and output vectors. These are allocation/work limits, not a
-measured process RSS ceiling; model weights, caller-owned inputs, foreign-runtime object copies
-and retained results are separate.
+Determinism: output is bit-identical for any `threads`, `batchSize` and batch composition on one build (no padding; one fixed reduction order per output element). Across CPU architectures the last bits can differ, because aarch64 and FMA-enabled x86-64 builds use fused multiply-add.
 
-`limits` defaults to `maxTexts: 4096`, `maxInputBytes: 67108864` (64 MiB),
-`maxTokens: 1048576`, `maxOutputBytes: 67108864` (including flat output plus row copies),
-and `maxConcurrentCalls: 4`. All limits must be positive. Input bytes count the entire supplied
-text plus the selected prefix for every text, before truncation. Tokens count retained tokens,
-including specials and prefixes. Calls over capacity fail immediately; the embedder has no
-pending queue. Admission covers tokenization, inference and output construction, and releases
-on errors. Separate embedders have separate budgets; hosts must bound their number and their
-own transport/task queues. Split larger workloads into bounded calls. Limits do not change
-the effective embedding identity or successful vectors.
+Memory: each forward pass admits at most `max(batch budget, maxLength)` tokens, also limited by the call's retained-token cap. Working memory also depends on model dimensions, thread-local tokenizer work, tokenized inputs and output vectors. These are allocation/work limits, not a measured process RSS ceiling; model weights, caller-owned inputs, foreign-runtime object copies and retained results are separate.
 
-Node requires finite integer limits in `1..=4294967295`; fractions and JavaScript integer-wrap
-inputs are rejected before loading a model.
+`limits` (all must be positive; Node needs finite integers in `1..=4294967295`, and fractions and JavaScript integer-wrap inputs are rejected before loading a model; Python's dictionary accepts snake_case or camelCase keys):
 
-`Embedder::embed_with_report(texts, kind)` returns `{embeddings, inputs}`. Each input reports
-`inputBytes`, `retainedBytes`, `tokens`, `byteTruncated` and `tokenTruncated`, in input order.
-Node exposes `embedQueryWithReport` and `embedPassagesWithReport`; Python exposes
-`embed_query_with_report` and `embed_passages_with_report` (both take lists and return the
-same fields with snake_case input keys). Python's `limits` dictionary accepts snake_case or
-camelCase keys. Existing vector-only methods retain their output shapes and truncation policy.
+| Limit | Default | Counts |
+|---|---|---|
+| `maxTexts` | 4096 | texts per call |
+| `maxInputBytes` | 67108864 (64 MiB) | the entire supplied text plus the selected prefix for every text, before truncation |
+| `maxTokens` | 1048576 | retained tokens, including specials and prefixes |
+| `maxOutputBytes` | 67108864 | flat output plus row copies |
+| `maxConcurrentCalls` | 4 | calls in flight |
 
-Rust store callers can use `WarmCore::try_encode_text` and `try_find_analogy` to propagate
-model and resource failures. Their legacy infallible counterparts panic on failure instead of
-logging an error and returning an empty vector. Batch writes embed together under one admission;
-encoding failures return before the journal transaction, preserving existing records.
+- Calls over capacity fail immediately; there is no pending queue. Admission covers tokenization, inference and output construction, and releases on errors.
+- Separate embedders have separate budgets; hosts must bound their number and their own transport/task queues. Split larger workloads into bounded calls.
+- Limits do not change the effective embedding identity or successful vectors.
+
+`Embedder::embed_with_report(texts, kind)` returns `{embeddings, inputs}`; each input reports `inputBytes`, `retainedBytes`, `tokens`, `byteTruncated` and `tokenTruncated`, in input order. Node: `embedQueryWithReport`, `embedPassagesWithReport`. Python: `embed_query_with_report`, `embed_passages_with_report` (lists in, same fields with snake_case input keys). Vector-only methods keep their output shapes and truncation policy.
+
+Rust store callers can use `WarmCore::try_encode_text` and `try_find_analogy` to propagate model and resource failures; their legacy infallible counterparts panic on failure instead of returning an empty vector. Batch writes embed together under one admission, and encoding failures return before the journal transaction, preserving existing records.
 
 ## Model packs, hashes and air-gapped installs
 
@@ -141,34 +107,21 @@ upstream file, and the sha256 of the converted pack. Resolution order for a regi
    `https://huggingface.co` (override the host with `WARM_EMBED_MIRROR`), verify every file's size and
    sha256, convert to a pack, verify the pack's sha256, then rename into the cache.
 
-Every load re-hashes exactly the bytes it parses; a mismatch fails before any weight is used
-(`Sha256Mismatch`). A damaged cache entry is replaced by a fresh verified download when allowed; a file
-you named (path, env, model directory) is never modified. An unreachable model fails with the exact
-variables to set. Air-gapped:
+Every load re-hashes exactly the bytes it parses; a mismatch fails before any weight is used (`Sha256Mismatch`). A damaged cache entry is replaced by a fresh verified download when allowed; a file you named (path, env, model directory) is never modified. An unreachable model fails with the exact variables to set. Air-gapped:
 
 ```sh
 warm-embed fetch default --out ./packs            # on a connected machine
 export WARM_EMBED_MODEL_DIR=./packs WARM_EMBED_OFFLINE=1   # on the offline one
 ```
 
-`warm-python[embed]` installs `warm-models`, which carries the pinned
-default Granite embedding pack. The Python `Embedder` also uses packs from
-`WARM_EMBED_MODEL_DIR` or the local cache. Fetch other models on a connected machine with
-`warm-embed fetch`, then copy them to an offline machine if needed. No package ships a
-prebuilt `warm-embed`; build it with
-`cargo install warm-rust --features local-embed-download,cli --bin warm-embed`.
-`warm-embed pack` converts a local BERT-family Hugging Face directory.
+`warm-python[embed]` installs `warm-models`, which carries the pinned default Granite pack; the Python `Embedder` also uses packs from `WARM_EMBED_MODEL_DIR` or the local cache. No package ships a prebuilt `warm-embed`: build it with `cargo install warm-rust --features local-embed-download,cli --bin warm-embed`. `warm-embed fetch` gets other models on a connected machine; `warm-embed pack` converts a local BERT-family Hugging Face directory.
 
 Why not bundle weights in the Rust crate: crates.io caps a crate at 10 MB and the smallest good int8
 pack is about 25 MB. Python wheels (100 MB limit) and npm can carry them, so they do.
 
 ## Model selection and results
 
-See [SELECTION.md](SELECTION.md) (written from `benchmarks/results/embedding_selection_v1.json`) for
-the candidates, the splits, the engine-versus-reference agreement, and the retrieval gain, cost and
-throughput measured against the lexical default (`benchmarks/results/embedding_store_v1.json`).
-Reproduce with `benchmarks/embedding/` (`select_model.py`, `run_engine_eval.py`, `agreement.py`,
-`run_store_eval.py`).
+[SELECTION.md](SELECTION.md) (from `benchmarks/results/embedding_selection_v1.json`): candidates, splits, engine-versus-reference agreement, and retrieval gain, cost and throughput against the lexical default (`benchmarks/results/embedding_store_v1.json`). Reproduce with `benchmarks/embedding/` (`select_model.py`, `run_engine_eval.py`, `agreement.py`, `run_store_eval.py`).
 
 ## Default build
 
@@ -195,15 +148,7 @@ space, so it cannot silently replace another task in an existing store. The
 `Conversation` task remains the instruction for retrieving both conversation roles.
 All three tasks keep the current 2048-token input cap and full model output width.
 
-Qwen3-Embedding-0.6B supports Matryoshka prefixes from 32 through 1024 dimensions,
-according to its pinned model card. WARM's opt-in
-[candidate projection](../guides/retrieval-contracts.md#optional-matryoshka-candidates)
-uses those short prefixes for graph search and the retained full vectors for
-reranking. This changes retrieval work, not embedding inference cost. It is separate
-from the default BERT-family local embedder; prefix compatibility must be established
-for the chosen model and preprocessing. This path remains experimental: the
-[fresh native evaluation](../research/technical-audit-20261029/matryoshka-native-20261102/README.md)
-failed its quality gates for both tested settings and collected no query timings.
+Qwen3-Embedding-0.6B supports Matryoshka prefixes (32 through 1024 dimensions); the opt-in, experimental candidate projection that uses them is in [retrieval contracts](../guides/retrieval-contracts.md#optional-matryoshka-candidates) (its fresh native evaluation failed its quality gates).
 
 Previously created managed-model stores with nominal revisions cannot establish their original
 embedding function. Preserve them with the original binary and configuration; re-embed original

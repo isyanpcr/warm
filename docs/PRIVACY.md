@@ -12,20 +12,14 @@ or use lexical and similarity signals. No resistance to such attacks is implied 
 number of possible bit combinations. The built-in text encoder captures lexical overlap;
 semantic retrieval requires suitable supplied embeddings.
 
-Document ingestion retains raw passages by default. Setting `storeText: false` removes those
-passages but still stores lexical term counts, metadata, source URIs, IDs, and any embeddings.
-Do not use it as a privacy guarantee. Deletion removes logical records; filesystem snapshots,
-backups, obsolete segments, and storage devices may retain previous bytes. Compaction is not
-secure erasure.
+A dense embedding is a function of the text and inversion attacks exist: treat supplied embeddings as sensitive as the text.
 
-Signed deletion/provenance records attest to the stated engine operation and its issuer;
-they do not prove that every physical copy, snapshot, backup or storage-device remnant is gone.
-Cryptographic signatures and logical absence cannot establish universal physical erasure.
+Document ingestion retains raw passages by default. `storeText: false` removes them but still stores lexical term counts, metadata, source URIs, IDs and any embeddings; it is not a privacy guarantee. Deletion removes logical records; filesystem snapshots, backups, obsolete segments and storage devices may retain previous bytes, and compaction is not secure erasure ([what a purge does and does not erase](memory-api/ERASURE.md)). Signed deletion/provenance records attest to the stated engine operation and its issuer; they cannot prove that every physical copy, snapshot, backup or device remnant is gone.
 
 ## Encryption and signing
 
 With `security` compiled and encryption enabled, arena payloads and persisted ANN caches use
-AES-256-GCM. Argon2id derives the encryption key from a passphrase and per-store salt. Prefer
+AES-256-GCM, as does the file-backed passage text segment (`documents.text`; record layout in [file-format/ENCRYPTION.md](file-format/ENCRYPTION.md)). Argon2id derives the encryption key from a passphrase and per-store salt. Prefer
 `encryptionPassphraseEnv` to embedding a secret in application configuration. Schema metadata,
 file names, sizes, topology, salts, and access patterns are not encrypted. Signing keys and
 optional audit/provenance sidecars have their own storage policies.
@@ -33,8 +27,7 @@ optional audit/provenance sidecars have their own storage policies.
 Configuration fails when an unavailable security capability is requested. Schema validation
 prevents switching an existing encrypted store to plaintext, and authenticated decryption
 errors stop opening the store. `securityStatus()` distinguishes compiled support from active
-encryption, signing, audit, and DP settings. Checksums detect accidental corruption; CRC32 is
-not authentication. An audit log records operation timing and ID hashes; low-entropy IDs may
+encryption, signing, audit, and DP settings. Encryption does not cover process memory, swap or crash dumps. Checksums detect accidental corruption; CRC32 is not authentication. An audit log records operation timing and ID hashes; low-entropy IDs may
 still be guessed. Signing does not provide confidentiality.
 
 Signing keys and encryption salts are published from synced temporary files without
