@@ -2,9 +2,9 @@
 
 A `Session` and a set of memory tools for the OpenAI Agents SDK for JavaScript/TypeScript (`@openai/agents`), running the native engine in process through [`@writerslogic/warm-core`](js-core.md). ESM and CJS, typed.
 
-Use the [source workspace setup](js-core.md#source-setup). This adapter depends on the
+Install: `npm install @writerslogic/warm-openai-agents @openai/agents zod` (see [JS core](js-core.md#install)). This adapter depends on the
 embedded `writerslogic-warm` engine, `@openai/agents` and `zod`; it is separate from the
-portable `warm-sdk` HTTP client and is not published by the SDK release.
+portable `warm-sdk` HTTP client.
 
 ## Quickstart
 
