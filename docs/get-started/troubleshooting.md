@@ -19,15 +19,14 @@ uv run --with warm-sdk python -c "from writerslogic_warm_sdk import WarmClient; 
 ```
 
 If this works but your application fails, compare the interpreter and environment used to run it.
-The SDK is an HTTP client; a successful import does not mean the server is running.
+A successful import does not mean the server is running.
 
 ## JavaScript package or API mismatch
 
-The portable `warm-sdk` exports `WarmClient` and calls a separately running server.
-`WarmMemorySystem`, `DocumentMemory` and the native subpaths belong to `writerslogic-warm`.
-There is no `warm-sdk/embedded` export. For a published portable client release, use
-`npm install warm-sdk@0.2.1`; check the [available npm versions](https://www.npmjs.com/package/warm-sdk?activeTab=versions).
-The [installation guide](install.md) also covers source builds and the optional embedded engine.
+`WarmMemorySystem`, `DocumentMemory` and the native subpaths belong to `writerslogic-warm`, not
+`warm-sdk`; there is no `warm-sdk/embedded` export. See [which package](choose.md#which-package)
+and [install](install.md) (`npm install warm-sdk@0.2.1`; check the
+[available npm versions](https://www.npmjs.com/package/warm-sdk?activeTab=versions)).
 
 ## Embedded Node cannot load the native module
 
