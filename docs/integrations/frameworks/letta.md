@@ -18,14 +18,14 @@ with ArchivalMemory(WarmConfig(url="http://127.0.0.1:8080", input_dim=384)) as p
 
 Runs offline as written against `warm-server --no-auth --input-dim 384`; checked by `scripts/check-readme-snippets.py docs`.
 
-Install: `pip install "writerslogic-warm-integrations[letta]"` (adds `letta-client`).
+Install: `pip install "warm-integrations[letta]"` (adds `letta-client`).
 
 ## What was verified
 
 - Tested against letta-client 1.12.1. The Letta server's built-in tool contract was read from the letta-ai/letta 0.16.8 source (`function_sets/base.py`, `core_tool_executor.py`, `agent_manager.py`): `archival_memory_insert(content, tags=None) -> None`; `archival_memory_search(query, tags=None, tag_match_mode="any", top_k=None, start_datetime=None, end_datetime=None)` returning a list of `{"id", "timestamp", "content", "tags"}`, default 5 results, empty query returns `[]`, naive datetimes read in the agent's timezone. `ArchivalMemory.archival_memory_insert/search` implement exactly that, and the uploaded tool signatures are checked against it in `tests/letta/test_letta_archival.py`.
 - The method signatures are checked against `PassagesResource` in the installed letta-client; `register_tools` is exercised through a real `letta_client.Letta` with a mock transport (request shape only).
 - The tool source is executed in a fresh namespace, as Letta's sandbox would, against a real `warm-server`.
-- **Not verified:** a running Letta server. The open-source server is no longer published as a Python package and Letta Cloud needs an account, so the uploaded tools have not been executed by Letta's sandbox and the sandbox's `pip_requirements` installation of `writerslogic-warm-integrations` is untested. The sandbox must reach your warm-server over the network.
+- **Not verified:** a running Letta server. The open-source server is no longer published as a Python package and Letta Cloud needs an account, so the uploaded tools have not been executed by Letta's sandbox and the sandbox's `pip_requirements` installation of `warm-integrations` is untested. The sandbox must reach your warm-server over the network.
 
 ## Knobs
 

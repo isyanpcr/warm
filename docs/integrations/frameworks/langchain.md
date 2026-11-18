@@ -5,7 +5,7 @@
 ## Install
 
 ```sh
-pip install "writerslogic-warm-integrations[langchain]"
+pip install "warm-integrations[langchain]"
 warm-server --input-dim 384        # the vector length your embeddings produce
 ```
 

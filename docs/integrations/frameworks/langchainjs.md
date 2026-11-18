@@ -1,8 +1,8 @@
-# LangChain.js (`@writerslogic/warm-langchain`)
+# LangChain.js (`warm-langchain`)
 
-A `VectorStore`, retriever support, and a chat message history for LangChain.js, running the native engine in process through [`@writerslogic/warm-core`](js-core.md). ESM and CJS, typed.
+A `VectorStore`, retriever support, and a chat message history for LangChain.js, running the native engine in process through [`warm-core`](js-core.md). ESM and CJS, typed.
 
-Install: `npm install @writerslogic/warm-langchain @langchain/core` (see [JS core](js-core.md#install)). This adapter depends on the
+Install: `npm install warm-langchain @langchain/core` (see [JS core](js-core.md#install)). This adapter depends on the
 embedded `writerslogic-warm` engine and `@langchain/core`; it is separate from the portable
 `warm-sdk` HTTP client.
 
@@ -10,7 +10,7 @@ embedded `writerslogic-warm` engine and `@langchain/core`; it is separate from t
 
 ```ts
 import { Document } from '@langchain/core/documents'
-import { WarmVectorStore } from '@writerslogic/warm-langchain'
+import { WarmVectorStore } from 'warm-langchain'
 
 const store = await WarmVectorStore.create(embeddings, {   // any LangChain Embeddings
   path: './memory',
@@ -28,7 +28,7 @@ A runnable version with chat history is `integrations/js/packages/langchain/exam
 Chat history:
 
 ```ts
-import { WarmChatMessageHistory } from '@writerslogic/warm-langchain'
+import { WarmChatMessageHistory } from 'warm-langchain'
 const history = new WarmChatMessageHistory({ store: warmStore, sessionId: 'user-1' })   // an WarmStore
 ```
 

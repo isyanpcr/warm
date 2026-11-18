@@ -4,8 +4,8 @@ Anthropic's client-side [memory tool](https://platform.claude.com/docs/en/agents
 
 | Language | Package | Entry points |
 |---|---|---|
-| Python | `writerslogic-warm-claude-tool` (`warm_memory_tool`) | `WarmMemoryTool` (async, `BetaAsyncAbstractMemoryTool`), `WarmMemoryToolSync` (`BetaAbstractMemoryTool`) |
-| TypeScript | `writerslogic-warm-claude-tool` | `WarmMemoryTool` (implements the SDK's `MemoryToolHandlers`; `asTool()` wraps it with `betaMemoryTool`) |
+| Python | `warm-claude-tool` (`warm_memory_tool`) | `WarmMemoryTool` (async, `BetaAsyncAbstractMemoryTool`), `WarmMemoryToolSync` (`BetaAbstractMemoryTool`) |
+| TypeScript | `warm-claude-tool` | `WarmMemoryTool` (implements the SDK's `MemoryToolHandlers`; `asTool()` wraps it with `betaMemoryTool`) |
 
 Both connect to an `warm-mcp` server over stdio (they start it) or streamable HTTP (`url=`), and both add a companion tool, `memory_recall`, for semantic recall.
 

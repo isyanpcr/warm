@@ -13,8 +13,8 @@ Why AG2 gets tools and not a `KnowledgeStore`: that protocol requires atomic `ap
 ## Install
 
 ```sh
-pip install "writerslogic-warm-integrations[autogen]"   # autogen-agentchat 0.4+ Memory
-pip install "writerslogic-warm-integrations[ag2]"       # AG2 1.x tools
+pip install "warm-integrations[autogen]"   # autogen-agentchat 0.4+ Memory
+pip install "warm-integrations[ag2]"       # AG2 1.x tools
 ```
 
 The two extras conflict (different frameworks); install one per environment.

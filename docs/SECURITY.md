@@ -103,7 +103,7 @@ contract. Phidata's [upstream is archived](https://github.com/agno-agi/phidata),
 and its WARM vector-store adapter also fails construction with six unimplemented
 abstract methods. Its retirement reflects support/correctness failures, not a
 newly discovered vulnerability. This retirement does not remove the separate
-`writerslogic-warm-integrations` package's current Semantic Kernel adapter, whose
+`warm-integrations` package's current Semantic Kernel adapter, whose
 resolved dependencies still require independent review.
 
 The SDK now requires Python 3.11 or newer. [Python 3.10 reached end of life on

@@ -6,7 +6,7 @@
 `writerslogic_warm_integrations.haystack` provides a `DocumentStore` and two retriever components for Haystack 3.
 
 - Tested against `haystack-ai==3.4.0`, Python 3.12, `warm-server` built from this repository.
-- Extra: `pip install "writerslogic-warm-integrations[haystack]"`.
+- Extra: `pip install "warm-integrations[haystack]"`.
 
 ## Quickstart
 

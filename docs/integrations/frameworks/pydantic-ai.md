@@ -7,7 +7,7 @@ Tested against `pydantic-ai-slim==2.58.0`, Python 3.12.
 ## Install
 
 ```sh
-pip install "writerslogic-warm-integrations[pydantic-ai]"
+pip install "warm-integrations[pydantic-ai]"
 ```
 
 Needs a running `warm-server` whose `--input-dim` matches the embedder (default embedder: 384).

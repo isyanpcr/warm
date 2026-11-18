@@ -1,6 +1,6 @@
 # Mastra
 
-Package: `@writerslogic/warm-mastra` (peer: `@mastra/core` >=1.78 <2). Built on `@writerslogic/warm-core` (see [js-core.md](js-core.md)). Install: `npm install @writerslogic/warm-mastra @mastra/core`.
+Package: `warm-mastra` (peer: `@mastra/core` >=1.78 <2). Built on `warm-core` (see [js-core.md](js-core.md)). Install: `npm install warm-mastra @mastra/core`.
 
 `WarmVector` implements `MastraVector` (`createIndex`, `listIndexes`, `describeIndex`, `deleteIndex`, `upsert`, `query`, `updateVector`, `deleteVector`, `deleteVectors`) over the in-process native engine, so it plugs into Mastra Memory semantic recall, `MastraVector` RAG tools and anything else that takes a vector store.
 
@@ -8,7 +8,7 @@ Package: `@writerslogic/warm-mastra` (peer: `@mastra/core` >=1.78 <2). Built on 
 import { Agent } from '@mastra/core/agent'
 import { LibSQLStore } from '@mastra/libsql'
 import { Memory } from '@mastra/memory'
-import { WarmVector } from '@writerslogic/warm-mastra'
+import { WarmVector } from 'warm-mastra'
 
 const vector = new WarmVector({ id: 'warm', dimension: 1536, path: './hms-data' })
 const agent = new Agent({
@@ -45,7 +45,7 @@ Mastra's MongoDB-style syntax: `$eq $ne $gt $gte $lt $lte $in $nin $all $elemMat
 - `describeIndex().count` is maintained by this adapter (updated inside every write); writes made outside it (through the native handle) are not counted.
 - Metadata keys starting with `_warm_` are rejected.
 - One writer process per store directory. Writes inside one `WarmVector` are serialized.
-- Hybrid (BM25 + vector) search is not reachable through `MastraVector.query`, which has no text parameter; use `@writerslogic/warm-core` directly for it.
+- Hybrid (BM25 + vector) search is not reachable through `MastraVector.query`, which has no text parameter; use `warm-core` directly for it.
 
 ## Tested against
 

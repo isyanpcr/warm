@@ -12,7 +12,7 @@ CrewAI replaced its per-memory-type storages (short-term, long-term, entity) wit
 ## Install
 
 ```sh
-pip install "writerslogic-warm-integrations[crewai]"
+pip install "warm-integrations[crewai]"
 ```
 
 Run `warm-server --input-dim N` where `N` is the length of your CrewAI embedder's vectors. `Memory` embeds text itself and hands vectors to the backend.

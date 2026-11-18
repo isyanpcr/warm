@@ -7,7 +7,7 @@ Tested against `smolagents==1.26.0`, Python 3.12.
 ## Install
 
 ```sh
-pip install "writerslogic-warm-integrations[smolagents]"
+pip install "warm-integrations[smolagents]"
 ```
 
 Needs a running `warm-server` whose `--input-dim` matches the embedder (default: 384).

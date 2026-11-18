@@ -9,7 +9,7 @@
 - Tested dependency profile:
 
   ```sh
-  uv add "writerslogic-warm-integrations[dspy]" "dspy==3.4.1" "litellm==1.103.10" "filelock>=4.2.6"
+  uv add "warm-integrations[dspy]" "dspy==3.4.1" "litellm==1.103.10" "filelock>=4.2.6"
   ```
 
   LiteLLM 1.106.6 requires Filelock below 4; the current patched Filelock requires

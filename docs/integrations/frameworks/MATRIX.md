@@ -2,7 +2,7 @@
 
 Every adapter was run against a real `warm-server` (Python) or the native Node addon (JS). Python 3.12, one isolated environment per framework (`integrations/python/run-matrix.sh`). Framework dependency trees conflict, so install exactly one framework extra per environment.
 
-## Python (`pip install "writerslogic-warm-integrations[<extra>]"`)
+## Python (`pip install "warm-integrations[<extra>]"`)
 
 Host versions and install lines are on the [integrations overview](../index.md). Each row is the verification behind its adapter page.
 
@@ -43,9 +43,9 @@ All packages run against the real native addon (`writerslogic-warm`), no mocks o
 
 | Package | Verification |
 |---|---|
-| `@writerslogic/warm-core` | 62 tests |
-| `@writerslogic/warm-vercel-ai` | 5 tests: SDK mock models, real tool loop, `streamText` |
-| `@writerslogic/warm-mastra` | 15 contract tests plus a real `Agent` with semantic recall (Mastra publishes no vector-store test suite) |
-| `@writerslogic/warm-langchain` | 27 tests mirroring the standard VectorStore behaviors (`@langchain/standard-tests` is not published on npm) and a real `RunnableWithMessageHistory` run |
-| `@writerslogic/warm-llamaindex` | 20 tests: `VectorStoreIndex`, all 13 `FilterOperator`s, KV store vs `SimpleKVStore` |
-| `@writerslogic/warm-openai-agents` | 15 tests: `WarmSession` vs `MemorySession`, real `Runner`; ordering at 99/100/101/200+ items |
+| `warm-core` | 62 tests |
+| `warm-vercel-ai` | 5 tests: SDK mock models, real tool loop, `streamText` |
+| `warm-mastra` | 15 contract tests plus a real `Agent` with semantic recall (Mastra publishes no vector-store test suite) |
+| `warm-langchain` | 27 tests mirroring the standard VectorStore behaviors (`@langchain/standard-tests` is not published on npm) and a real `RunnableWithMessageHistory` run |
+| `warm-llamaindex` | 20 tests: `VectorStoreIndex`, all 13 `FilterOperator`s, KV store vs `SimpleKVStore` |
+| `warm-openai-agents` | 15 tests: `WarmSession` vs `MemorySession`, real `Runner`; ordering at 99/100/101/200+ items |
