@@ -198,10 +198,11 @@ These cannot be committed; the publish jobs wait on them.
    `warm-sdk` uses `warm-sdk-release.yml`. The MCP launcher uses
    `warm-mcp-release.yml` with the same owner, repository and environment. PyPI permits three pending
    projects at a time; publish one before registering the fourth. The adapters add two more:
-   `warm-integrations` and `warm-claude-tool`, both using
-   `adapters-py-release.yml`.
-5. npm adapters: the `@writerslogic` scope must be owned by the publishing account or organisation,
-   and `NPM_TOKEN` must be able to create the six scoped packages and `warm-claude-tool`.
+   `warm-integrations` (environment `pypi`) and `warm-claude-tool` (environment
+   `pypi-claude-tool`), both using `adapters-py-release.yml`; PyPI rejects two pending publishers
+   with the same workflow and environment.
+5. npm adapters: `NPM_TOKEN` (on the `npm` environment) must be able to create the six `warm-*`
+   adapter packages and `warm-claude-tool`.
    Packages are public (`publishConfig.access`).
 
 ## Cut a release
