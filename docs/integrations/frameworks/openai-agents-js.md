@@ -62,4 +62,4 @@ Pass any `WarmStoreOptions` of the core to `new WarmStore(...)`:
 
 ## Tested against
 
-`@openai/agents` 0.20.0 (`@openai/agents-core` 0.20.0), `zod` 4.6.7, `writerslogic-warm` 0.6.0 (native build from this repository), Node 26.8, TypeScript 5.9. `npm test --workspace packages/openai-agents` in `integrations/js` builds and runs 15 tests against the real native addon, one temp directory per test.
+`@openai/agents` 0.20.0 (`@openai/agents-core` 0.20.0), `zod` 4.6.7, `writerslogic-warm` (native build from this repository, peer range `>=0.6.5`), Node 26.8, TypeScript 5.9. `npm test --workspace packages/openai-agents` in `integrations/js` builds and runs 15 tests against the real native addon, one temp directory per test.
