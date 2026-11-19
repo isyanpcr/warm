@@ -1,6 +1,6 @@
 # WARM in editors and agents
 
-Every host below talks to `warm-mcp` (see `docs/integrations/mcp/README.md`). Ready-made configs live in `integrations/editors/<host>/`. The commands assume the launcher packages are published (`npx -y writerslogic-warm-mcp`, or `uvx warm-mcp`); until then substitute the path of a binary you built (`cargo build --release --features mcp,security --bin warm-mcp`) for `npx -y writerslogic-warm-mcp`.
+Every host below talks to `warm-mcp` (see `docs/integrations/mcp/README.md`). Ready-made configs live in `integrations/editors/<host>/`. The commands use the published launchers (`npx -y writerslogic-warm-mcp`, or `uvx warm-mcp`). To run a binary you built instead (`cargo build --release --features mcp,security --bin warm-mcp`), substitute its path for `npx -y writerslogic-warm-mcp`.
 
 Two ways to run it, for any host:
 
