@@ -6,6 +6,31 @@
 Requires the `security` feature to read or write. Enabled per store (`store.json` `encrypted:
 true`, fixed for the store's life).
 
+## Default and opt-out
+
+With `security` compiled in, a new store is encrypted without configuration. The configuration
+chooses the key scheme once, at creation:
+
+| Request | Result |
+|---|---|
+| nothing (default) | master key: 32 random bytes in `<store>/master.key` (mode 0600), `store.json` `key_scheme: "master-key"`; no Argon2 on open |
+| `security.encryption_enabled` with a passphrase (or `encryption_passphrase_env`) | passphrase scheme below, `store.json` has no `key_scheme` |
+| `security.plaintext = true`, or `WARM_ENCRYPTION=off` in the environment | plaintext store |
+| `WARM_ENCRYPTION=on` | encryption demanded; an error without `security` |
+
+`security.master_key_file` moves the key out of the store directory. The default key file sits
+next to the data, so it protects against reading the data files alone, not against copying the
+whole directory; keep the key elsewhere for that. `key.check` holds a sealed constant that every
+open verifies, so a wrong key is refused even when the store holds no frame. A missing key is an
+error, never replaced by a new one. Deleting the key file destroys the store's contents.
+
+An existing store keeps the protection recorded in `store.json`. A plaintext store written by an
+earlier release opens unchanged under the default configuration and stays plaintext; nothing
+converts it in place. Asking for encryption on it, or for plaintext on an encrypted store, is an
+error. To encrypt a plaintext store, re-encode its source documents into a new store.
+Limits of encrypted stores: sparse vectors are rejected and the dense graph is off (both would
+store plaintext), so those workloads set the plaintext opt-out.
+
 ## Key
 
 `encryption.salt` is 16 random bytes, written once before the first frame (atomically, fsynced).

@@ -21,9 +21,9 @@ search:
 ## Build and run
 
 ```sh
-# or: cargo install --locked --features server --bin warm-server warm-rust
+# or: cargo install --locked --features server,security --bin warm-server warm-rust
 # (prebuilt binaries via scripts/install-warm-server.sh start with the first server-v release)
-cargo build --release --features server --bin warm-server
+cargo build --release --features server,security --bin warm-server
 
 # One key valid for every tenant (the original setup):
 WARM_API_KEY="$(openssl rand -hex 32)" ./target/release/warm-server --input-dim 384
@@ -43,7 +43,7 @@ from writerslogic_warm_sdk import WarmClient
 client = WarmClient(url="http://127.0.0.1:8080", api_key="<token>", tenant_id="acme")
 ```
 
-Release binaries are built with `--features server,mimalloc` and install `writerslogic_warm::allocator::Tuned` (mimalloc, arenas committed on demand, immediate purge); `MIMALLOC_ARENA_EAGER_COMMIT` and `MIMALLOC_PURGE_DELAY` override the options. A build without `mimalloc` uses the system allocator: identical results, ingest slower by about the allocator's share (roughly 15% at 250k documents), same peak resident size.
+Release binaries are built with `--features server,security,mimalloc` and install `writerslogic_warm::allocator::Tuned` (mimalloc, arenas committed on demand, immediate purge); `MIMALLOC_ARENA_EAGER_COMMIT` and `MIMALLOC_PURGE_DELAY` override the options. A build without `mimalloc` uses the system allocator: identical results, ingest slower by about the allocator's share (roughly 15% at 250k documents), same peak resident size.
 
 ## API keys
 
