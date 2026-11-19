@@ -10,7 +10,7 @@ covered by the [stability policy](../STABILITY.md); "experimental" ones can chan
 | You want | Build |
 |---|---|
 | Encrypted stores and signed audit logs | `cargo add warm-rust --features security` |
-| A self-hosted HTTP service | `cargo install --locked --features server --bin warm-server warm-rust` |
+| A self-hosted HTTP service | `cargo install --locked --features server,security --bin warm-server warm-rust` |
 | An MCP server | `cargo build --release --features mcp,security --bin warm-mcp` (add `local-models` for semantic recall) |
 | Local embeddings without an API | `local-embed` ([embeddings](../embeddings/README.md)) |
 
@@ -18,7 +18,7 @@ covered by the [stability policy](../STABILITY.md); "experimental" ones can chan
 
 | Feature | What it turns on | Status | Network code | Docs |
 |---|---|---|---|---|
-| `security` | AES-256-GCM encrypted stores, Argon2 passphrase keys, Ed25519-signed audit logs | stable | no | [Security](../SECURITY.md), [Encryption format](../file-format/ENCRYPTION.md) |
+| `security` | AES-256-GCM encrypted stores (the default for new stores when compiled in; plaintext is an explicit opt-out), Argon2 passphrase keys, Ed25519-signed audit logs | stable | no | [Security](../SECURITY.md), [Encryption format](../file-format/ENCRYPTION.md) |
 | `keychain` | macOS login-keychain provider for the sealed container master key; implies `security` | experimental | no | `core::sealed` |
 | `provenance` | COSE_Sign1 signed statements and DID identities; implies `security` | experimental | no | [Privacy](../PRIVACY.md) |
 | `provenance-scitt` | Experimental statement submission returning unverified receipt bytes; no VDS inclusion/trust verification; implies `provenance` | experimental | yes (`ureq`), only when you call it | [FAQ](faq.md) |

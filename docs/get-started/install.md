@@ -53,11 +53,11 @@ For Python, create and activate a virtual environment first: `uv venv`, then
     Build and install the server (needs Rust 1.89 or newer), then start it:
 
     ```sh
-    cargo install --locked --features server --bin warm-server warm-rust
+    cargo install --locked --features server,security --bin warm-server warm-rust
     WARM_API_KEY=change-me warm-server --input-dim 384
     ```
 
-    From a checkout, `cargo build --release --features server --bin warm-server` builds the same
+    From a checkout, `cargo build --release --features server,security --bin warm-server` builds the same
     binary. Prebuilt, checksum-verified binaries (`scripts/install-warm-server.sh`, Linux glibc and
     macOS, no Alpine) start with the first `server-v<version>` GitHub release; none is published yet.
 

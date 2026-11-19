@@ -18,7 +18,7 @@ and build the server from the same checkout:
 ```sh
 npm ci --prefix bindings/js/warm-sdk
 npm run build --prefix bindings/js/warm-sdk
-cargo install --locked --path . --features server --bin warm-server
+cargo install --locked --path . --features server,security --bin warm-server
 WARM_API_KEY=quickstart warm-server --input-dim 384
 ```
 
@@ -74,7 +74,7 @@ questions in `examples/quickstart/queries.json`, each with the article that answ
     ```sh
     git clone https://github.com/writerslogic/warm
     cd warm
-    cargo install --locked --path . --features server --bin warm-server
+    cargo install --locked --path . --features server,security --bin warm-server
     WARM_API_KEY=quickstart warm-server --input-dim 384 &
     WARM_API_KEY=quickstart uv run --no-project --with warm-sdk \
         python examples/quickstart/python/quickstart.py
