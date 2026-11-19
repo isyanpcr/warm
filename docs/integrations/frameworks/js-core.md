@@ -76,4 +76,4 @@ A `Hit` is `{id, text, metadata, score, lexicalScore, semanticScore?, span}`: th
 
 ## Tested against
 
-`writerslogic-warm` 0.6.0 native build from this repository, Node 26.8, TypeScript 5.9, tsup 8.5. Run `npm test --workspace packages/core` in `integrations/js` (builds, then `node --test`; real native addon, one temp directory per test).
+`writerslogic-warm` native build from this repository (peer range `>=0.6.5`), Node 26.8, TypeScript 5.9, tsup 8.5. Run `npm test --workspace packages/core` in `integrations/js` (builds, then `node --test`; real native addon, one temp directory per test).
